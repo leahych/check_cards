@@ -213,7 +213,7 @@ fn check_rotations(err_prefix: &str, acro: &TeamAcrobatic) -> CardIssues {
     let rotation_map: &[(Regex, &[&str])] = &[
         (
             Regex::new(r"^r(0.5|1|1.5)$").unwrap(),
-            &["FPx", "FP", "SiSb", "BP", "E", "AP", "SiS", "F1S", "Tw", "S+", "1F1P", "1F1F"],
+            &["FPx", "FP", "SiSb", "Bp", "E", "AP", "SiS", "F1S", "Tw", "S+", "1F1P", "1F1F"],
         ),
         (Regex::new(r"^r(0.5|1|1.5)/$").unwrap(), &["FS"]),
         (Regex::new(r"^r(0.5|1|1.5|2)\+$").unwrap(), &["F1S", "FPx", "FP", "1F1P", "1F1F"]),
