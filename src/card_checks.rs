@@ -45,7 +45,7 @@ macro_rules! tres {
     };
 }
 
-const LATEST_ISS_VERSION: semver::Version = semver::Version::new(3, 0, 1);
+const LATEST_ISS_VERSION: semver::Version = semver::Version::new(3, 0, 3);
 fn check_iss_version(card: &CoachCard) -> CardIssues {
     let mut ci = CardIssues::default();
     if let Some(iss_ver) = card.iss_ver.as_ref() {

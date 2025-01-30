@@ -185,7 +185,7 @@ fn test_parse_iss_team() {
                 },
             ],
             theme: "Test".to_string(),
-            iss_ver: Some(Version::new(3, 0, 1)),
+            iss_ver: Some(Version::new(3, 0, 3)),
             end_time: NaiveTime::from_hms_opt(0, 3, 29).unwrap()
         },
         card
