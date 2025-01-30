@@ -564,7 +564,7 @@ fn check_connections_in_non_team(card: &CoachCard) -> CardIssues {
 
 fn check_routine_has_all_families(card: &CoachCard) -> CardIssues {
     let mut ci = CardIssues::default();
-    if !card.category.free {
+    if !card.category.free || card.category.event == Acrobatic {
         return ci;
     }
 
