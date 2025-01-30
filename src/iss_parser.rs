@@ -1,4 +1,5 @@
 use crate::ElementKind::{ChoHy, Hybrid, PairAcro, SuConn, TeamAcro, TRE};
+use crate::Events::{Duet, Trio};
 use crate::{AgeGroups, CoachCard, Element, Events, TeamAcrobatic};
 use calamine::{Data, DataType, ExcelDateTime, Range, Reader, Rows, Xlsx, XlsxError};
 use chrono::{NaiveTime, Timelike};
@@ -151,7 +152,20 @@ fn parse_sheet(sheet: &Range<Data>) -> CoachCard {
                 Some(col) => {
                     let event_txt = col.to_string().to_uppercase();
                     card.category.free = !event_txt.contains("TECH");
-                    Events::from_str(event_txt.as_str())
+                    let parsed_event = Events::from_str(event_txt.as_str());
+                    if parsed_event == Duet
+                        && (card.theme.to_uppercase().contains(" TRIO")
+                            || card.theme.to_uppercase().contains("TRIO ")
+                            || card.theme.to_uppercase() == "TRIO")
+                    {
+                        // Special case Trio since ISS does not support
+                        // Trios. To avoid matching on a theme that
+                        // has a word that contain "trio", only match if
+                        // "trio" is its own word.
+                        Trio
+                    } else {
+                        parsed_event
+                    }
                 }
                 None => card.category.event,
             }
