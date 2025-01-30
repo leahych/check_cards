@@ -152,7 +152,7 @@ fn element_maxes(category: &Category) -> Option<&ElementLimit> {
                 Category { ag: AG12U, event: Combo, free: true },
                 ElementLimit { cho_hy: 1, su_conn: 0, tre: 0, acrobatic: 3, hybrid: 4 },
             ),
-            // Youth
+            // Youth free
             (
                 Category { ag: Youth, event: Solo, free: true },
                 ElementLimit { cho_hy: 0, su_conn: 0, tre: 0, acrobatic: 0, hybrid: 5 },
@@ -172,6 +172,23 @@ fn element_maxes(category: &Category) -> Option<&ElementLimit> {
             (
                 Category { ag: Youth, event: Combo, free: true },
                 ElementLimit { cho_hy: 1, su_conn: 0, tre: 0, acrobatic: 4, hybrid: 4 },
+            ),
+            // Youth tech - USAAS experimental
+            (
+                Category { ag: Youth, event: Solo, free: false },
+                ElementLimit { cho_hy: 0, su_conn: 0, tre: 5, acrobatic: 0, hybrid: 1 },
+            ),
+            (
+                Category { ag: Youth, event: Duet, free: false },
+                ElementLimit { cho_hy: 0, su_conn: 0, tre: 5, acrobatic: 1, hybrid: 1 },
+            ),
+            (
+                Category { ag: Youth, event: MixedDuet, free: false },
+                ElementLimit { cho_hy: 0, su_conn: 3, tre: 3, acrobatic: 2, hybrid: 2 },
+            ),
+            (
+                Category { ag: Youth, event: Team, free: false },
+                ElementLimit { cho_hy: 0, su_conn: 0, tre: 5, acrobatic: 1, hybrid: 2 },
             ),
             // JR/SR free
             (
@@ -447,12 +464,17 @@ fn check_routine_times(card: &CoachCard) -> CardIssues {
             (Category { ag: AG12U, event: MixedDuet, free: true }, routine_time(2, 30)),
             (Category { ag: AG12U, event: Team, free: true }, routine_time(3, 0)),
             (Category { ag: AG12U, event: Combo, free: true }, routine_time(3, 0)),
-            // Youth
+            // Youth free
             (Category { ag: Youth, event: Solo, free: true }, routine_time(2, 0)),
             (Category { ag: Youth, event: Duet, free: true }, routine_time(2, 30)),
             (Category { ag: Youth, event: MixedDuet, free: true }, routine_time(2, 30)),
             (Category { ag: Youth, event: Team, free: true }, routine_time(3, 0)),
             (Category { ag: Youth, event: Combo, free: true }, routine_time(3, 0)),
+            // Youth tech - USAAS experimental
+            (Category { ag: Youth, event: Solo, free: false }, routine_time(2, 0)),
+            (Category { ag: Youth, event: Duet, free: false }, routine_time(2, 20)),
+            (Category { ag: Youth, event: MixedDuet, free: false }, routine_time(2, 20)),
+            (Category { ag: Youth, event: Team, free: false }, routine_time(2, 50)),
             // JR/SR free
             (Category { ag: JRSR, event: Solo, free: true }, routine_time(2, 15)),
             (Category { ag: JRSR, event: Duet, free: true }, routine_time(2, 45)),
