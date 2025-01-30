@@ -430,7 +430,7 @@ fn check_connection(err_prefix: &str, acro: &TeamAcrobatic) -> CardIssues {
 fn check_positions(err_prefix: &str, acro: &TeamAcrobatic) -> CardIssues {
     const ONE_LEG_CONNECTIONS: &[&str] = &[
         "FPx", "F1S", "1F1P", "1F1F", "FAb", "3pA", "1FA", "3pb", "FA+PF", "SP+L", ">F1P", "3pBb",
-        "3pB+b", "1Fxs/",
+        "3pB+b", "1Fxs/", "FA+PF",
     ];
     let mut ci = CardIssues::default();
     let first_pos = acro.positions.first().map_or("", |v| v.as_str());
