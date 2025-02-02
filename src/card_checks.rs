@@ -127,6 +127,7 @@ struct ElementLimit {
     hybrid: usize,
 }
 
+#[allow(clippy::too_many_lines)]
 fn element_maxes(category: &Category) -> Option<&ElementLimit> {
     static HM: std::sync::OnceLock<HashMap<Category, ElementLimit>> = std::sync::OnceLock::new();
     let map = HM.get_or_init(|| {
@@ -362,17 +363,17 @@ fn check_acros_event(card: &CoachCard) -> CardIssues {
 
 fn check_valid_hybrid_declarations(card: &CoachCard) -> CardIssues {
     let valid_decl_regex = Regex::new(concat!(
-        "^(",
-        r"(S([B1-9]|10)|SCD?[B1-6])(\*0.[35])?",
-        r"|(R[B1-4]|R[CO][B1]|(1R|RD)[B1-6]|(2R|RU)([B1-9]|10))(\*0.[35])?",
-        r"|A(B|1[a-dA-D]|2[abAB]|3[abAB]|4[abAB]|[5-8])(\*0.[35])?",
-        r"|F(B|1[abcABC]|2[abcABC]|3[abc|ABC]|4[a-fA-F]|5[abcABC]|6[a-dA-D]|7|8[abAB]|9|10)(\*0.[35])?",
-        r"|C(B|1[abAB]|2[abcABC]|3|4|5|6[abAB]|7)\+?(\*0.[35])?",
-        r"|T(B|1|2[abAB]|3[a-dA-D]|4[a-eA-E]|5[a-eA-E]|6[abcABC]|7|8|9[abAB])(\*0.[35])?",
-        r"|\dPC",
-        ")$"
+    "^(",
+    r"(S([B1-9]|10)|SCD?[B1-6])(\*0.[35])?",
+    r"|(R[B1-4]|R[CO][B1]|(1R|RD)[B1-6]|(2R|RU)([B1-9]|10))(\*0.[35])?",
+    r"|A(B|1[a-dA-D]|2[abAB]|3[abAB]|4[abAB]|[5-8])(\*0.[35])?",
+    r"|F(B|1[abcABC]|2[abcABC]|3[abc|ABC]|4[a-fA-F]|5[abcABC]|6[a-dA-D]|7|8[abAB]|9|10)(\*0.[35])?",
+    r"|C(B|1[abAB]|2[abcABC]|3|4|5|6[abAB]|7)\+?(\*0.[35])?",
+    r"|T(B|1|2[abAB]|3[a-dA-D]|4[a-eA-E]|5[a-eA-E]|6[abcABC]|7|8|9[abAB])(\*0.[35])?",
+    r"|\dPC",
+    ")$"
     ))
-    .unwrap();
+        .unwrap();
 
     let mut ci = CardIssues::default();
     for (num, hybrid, _) in hybrids!(card.elements) {
