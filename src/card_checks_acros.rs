@@ -414,6 +414,7 @@ fn check_construction(err_prefix: &str, acro: &TeamAcrobatic) -> CardIssues {
     ci
 }
 
+const A_POSITIONS: &[&str] = &["tk", "pk", "kt", "ln", "sp", "ja", "rg"];
 const B_ONE_LEG_POSITIONS: &[&str] = &["he", "vs", "gl", "ba", "sa", "ne", "ey"];
 const B_TWO_LEG_POSITIONS: &[&str] = &["sd"];
 const B_SIT_STAND_LAY_POSITONS: &[&str] =
@@ -506,6 +507,30 @@ fn check_positions(err_prefix: &str, acro: &TeamAcrobatic) -> CardIssues {
         && !all_b_positions.contains(&first_pos)
     {
         ci.warnings.push(format!("{err_prefix}: In fly-above acrobatics, the first featured swimmer is probably the balance, but position 1 is {first_pos}"));
+    }
+    if acro.construction == "Thr^2F" {
+        if first_pos == "spl" {
+            ci.warnings.push(format!(
+                "{err_prefix}: split position in fly-above construction, should that be owl position?"
+            ));
+        }
+        if acro.positions.len() == 1 {
+            ci.warnings.push(format!("{err_prefix}: flyover should have a balance position followed by an airborne position"));
+        }
+    }
+
+    let valid_positions = match acro.group {
+        Airborne => A_POSITIONS,
+        Balance | Platform => &all_b_positions,
+        Combined => &[A_POSITIONS, &all_b_positions].concat(),
+    };
+    for position in &acro.positions {
+        if !valid_positions.contains(&position.strip_prefix('2').unwrap_or(position)) {
+            ci.errors.push(format!(
+                "{err_prefix}: {position} is not a valid position for {:?} acrobatics",
+                acro.group
+            ));
+        }
     }
 
     ci
@@ -770,10 +795,13 @@ mod tests {
         sit_conn_head_sit_pos: check_connection, "B-St-S+-mo", 0, 0,
         handstand_conn_without_bb: check_connection, "B-St-PP-ow", 0, 1,
         handstand_conn_with_bb: check_connection, "B-St-PP-bb/2ow", 0, 0,
+        invalid_airborne_position: check_positions, "A-Sq-Forw-ar", 1, 0,
         one_leg_pos_two_leg_conn: check_positions, "B-St-FS-he", 0, 1,
         one_leg_pos_one_leg_conn: check_positions, "B-St-F1S-he", 0, 0,
         fly_above_airborne_first: check_positions, "C-Thr^2F-Back-tk/2ow", 0, 1,
         fly_above_balance_first: check_positions, "C-Thr^2F-Back-ow/2tk", 0, 0,
+        fly_above_with_spl: check_positions, "C-Thr^2F-Back-spl/2tk", 0, 1,
+        fly_above_just_balance: check_positions, "C-Thr^2F-Back-ow", 0, 1,
     }
 
     #[test]
