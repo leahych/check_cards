@@ -394,7 +394,7 @@ fn check_mixed_duet_elements(card: &CoachCard) -> CardIssues {
         return ci;
     }
 
-    let conn_regex = Regex::new(r"^C[\dB]").unwrap();
+    let conn_regex = Regex::new(r"^C[\dB][A-z]?").unwrap();
     let thrust_regex = Regex::new(r"^T[\dB]").unwrap();
     let other_families_regex = Regex::new(r"^[AFRS]").unwrap();
     let hybrids = hybrids!(card.elements);
@@ -426,6 +426,7 @@ fn check_mixed_duet_elements(card: &CoachCard) -> CardIssues {
 fn check_factoring(card: &CoachCard) -> CardIssues {
     let mut ci = CardIssues::default();
     for (num, hybrid, _) in hybrids!(card.elements) {
+        let mut prev_decl = "";
         for decl in hybrid {
             if card.category.event == Solo && decl.contains("*0.") {
                 ci.errors.push(format!("Element {num}: cannot factor in a Solo`"));
@@ -445,6 +446,36 @@ fn check_factoring(card: &CoachCard) -> CardIssues {
                     card.category.event
                 ));
             }
+
+            let conn_factored_rx = Regex::new(r"^C[\dB][A-z]?\*0.5").unwrap();
+            let conn_plus_factored_rx = Regex::new(r"^C[\dB][A-z]?\+\*0.5").unwrap();
+            if (conn_factored_rx.is_match(decl) && conn_plus_factored_rx.is_match(prev_decl))
+                || (conn_plus_factored_rx.is_match(decl) && conn_factored_rx.is_match(prev_decl))
+            {
+                ci.warnings.push(format!("Element {num}: if factoring a connection because 5-7 are swimming, one connection should be factored by 0.3"));
+            }
+            if (prev_decl.starts_with("C4*0.") && decl == "C4+*0.5")
+                || (prev_decl == "C4+*0.5" && decl.starts_with("C4*0."))
+            {
+                ci.warnings.push(format!("Element {num}: if factoring a C4+ because 5-7 are swimming, is the smaller group still doing C4?"));
+            }
+
+            let decl_parts: Vec<&str> = decl.split('*').collect();
+            let prev_decl_parts: Vec<&str> = prev_decl.split('*').collect();
+            if decl_parts.len() == 2
+                && prev_decl_parts.len() == 2
+                && decl_parts[0] == prev_decl_parts[0]
+            {
+                ci.warnings.push(format!("Element {num}: if two groups are doing the same choreography in two groups, do not factor"));
+            }
+
+            let cplus_less_half_rx = Regex::new(r"^C[\dB][A-z]?\+\*0.3").unwrap();
+            if cplus_less_half_rx.is_match(decl) {
+                ci.warnings
+                    .push(format!("Element {num}: factoring C+ by 0.3 requires 9-10 athletes"));
+            }
+
+            prev_decl = decl;
         }
     }
     ci
@@ -953,6 +984,102 @@ mod tests {
                 .card,
         );
         assert_eq!(tech_duet_factored_conn.warnings.len(), 1);
+
+        let c_c_plus_warn = check_factoring(
+            &CardBuilder::new()
+                .category(Category { ag: AG12U, event: Duet, free: true })
+                .hybrids(&[&["C3*0.5", &"C3+*0.5"]])
+                .card,
+        );
+        assert_eq!(c_c_plus_warn.warnings.len(), 1);
+
+        let c_c_plus_ok1 = check_factoring(
+            &CardBuilder::new()
+                .category(Category { ag: AG12U, event: Duet, free: true })
+                .hybrids(&[&["C3*0.3", &"C3+*0.5"]])
+                .card,
+        );
+        assert_eq!(c_c_plus_ok1.warnings.len(), 0);
+
+        let c_plus_c_warn = check_factoring(
+            &CardBuilder::new()
+                .category(Category { ag: AG12U, event: Duet, free: true })
+                .hybrids(&[&["C3+*0.5", &"C3*0.5"]])
+                .card,
+        );
+        assert_eq!(c_plus_c_warn.warnings.len(), 1);
+
+        let c_plus_c_ok = check_factoring(
+            &CardBuilder::new()
+                .category(Category { ag: AG12U, event: Duet, free: true })
+                .hybrids(&[&["C3+*0.5", &"C3*0.3"]])
+                .card,
+        );
+        assert_eq!(c_plus_c_ok.warnings.len(), 0);
+
+        let c4_c4plus_warn = check_factoring(
+            &CardBuilder::new()
+                .category(Category { ag: AG12U, event: Duet, free: true })
+                .hybrids(&[&["C4*0.3", &"C4+*0.5"]])
+                .card,
+        );
+        assert_eq!(c4_c4plus_warn.warnings.len(), 1);
+
+        let c4_c4plus_ok = check_factoring(
+            &CardBuilder::new()
+                .category(Category { ag: AG12U, event: Duet, free: true })
+                .hybrids(&[&["C2b*0.3", &"C4+*0.5"]])
+                .card,
+        );
+        assert_eq!(c4_c4plus_ok.warnings.len(), 0);
+
+        let c4plus_c4_warn = check_factoring(
+            &CardBuilder::new()
+                .category(Category { ag: AG12U, event: Duet, free: true })
+                .hybrids(&[&["C4+*0.5", &"C4*0.3"]])
+                .card,
+        );
+        assert_eq!(c4plus_c4_warn.warnings.len(), 1);
+
+        let c4plus_c4_ok = check_factoring(
+            &CardBuilder::new()
+                .category(Category { ag: AG12U, event: Duet, free: true })
+                .hybrids(&[&["C4+*0.5", &"C2b*0.3"]])
+                .card,
+        );
+        assert_eq!(c4plus_c4_ok.warnings.len(), 0);
+
+        let c4plus_c4_ok = check_factoring(
+            &CardBuilder::new()
+                .category(Category { ag: AG12U, event: Duet, free: true })
+                .hybrids(&[&["C4+*0.5", &"C2b*0.3"]])
+                .card,
+        );
+        assert_eq!(c4plus_c4_ok.warnings.len(), 0);
+
+        let repeat_decl_warn = check_factoring(
+            &CardBuilder::new()
+                .category(Category { ag: AG12U, event: Duet, free: true })
+                .hybrids(&[&["2R1*0.5", &"2R1*0.3"]])
+                .card,
+        );
+        assert_eq!(repeat_decl_warn.warnings.len(), 1);
+
+        let non_repeat_decl_ok = check_factoring(
+            &CardBuilder::new()
+                .category(Category { ag: AG12U, event: Duet, free: true })
+                .hybrids(&[&["2R1*0.5", &"1R1*0.5"]])
+                .card,
+        );
+        assert_eq!(non_repeat_decl_ok.warnings.len(), 0);
+
+        let cplus_less_half_warn = check_factoring(
+            &CardBuilder::new()
+                .category(Category { ag: AG12U, event: Duet, free: true })
+                .hybrids(&[&["C1a+*0.3"]])
+                .card,
+        );
+        assert_eq!(cplus_less_half_warn.warnings.len(), 1);
     }
 
     #[test]
