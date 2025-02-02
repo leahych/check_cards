@@ -407,6 +407,10 @@ fn check_construction(err_prefix: &str, acro: &TeamAcrobatic) -> CardIssues {
             ));
         }
     }
+
+    if acro.construction == "Sq" && acro.bonuses.contains(&"Dbl".to_string()) {
+        ci.warnings.push(format!("{err_prefix}: Sq with Dbl requires 10 athletes!"));
+    }
     ci
 }
 
@@ -753,6 +757,8 @@ mod tests {
         jump_transit_with_2nd_pos_airborne_ok: check_bonuses, "C-Thr>St-Forw-ow/2ln-Jump>", 0, 0,
         st_bad_connection: check_construction, "B-St>-FS-sd", 0, 1,
         st_good_connection: check_construction, "B-St>-F1S-he", 0, 0,
+        sq_with_dbl: check_construction, "A-Sq-Back-tk-Dbl", 0, 1,
+        thr_with_dbl_ok: check_construction, "A-Thr-Back-tk-Dbl", 0, 0,
         non_st_bad_connection: check_construction, "B-St-FS-sd", 0, 0,
         one_leg_conn_2_leg_pos: check_connection, "B-St-FS-he", 0, 1,
         two_leg_conn_2_leg_pos: check_connection, "B-St-FS-sd", 0, 0,
