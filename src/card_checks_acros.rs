@@ -309,41 +309,56 @@ fn check_bonuses(err_prefix: &str, acro: &TeamAcrobatic) -> CardIssues {
                 ci.warnings.push(format!("{err_prefix}: can claim 'Conn' with {rotation}"));
             }
         }
-        return ci;
-    }
-    if acro.bonuses.len() > 2 {
+    } else if acro.bonuses.len() > 2 {
         ci.errors.push(format!(
             "{err_prefix}: {} bonuses declared, but only 2 bonuses allowed",
             acro.bonuses.len()
         ));
-        return ci;
-    }
-
-    let bonus1 = &acro.bonuses[0];
-    let bonus2 = &acro.bonuses[1];
-    if bonus1 == bonus2 && bonus1 != "CRoll" {
-        ci.errors.push(format!("{err_prefix}: cannot declare the same bonus twice"));
-        return ci;
-    }
-
-    let exclusive_bonuses: &[&[&str]] = &[
-        &["Grip", "Conn", "Catch"],
-        &["Hula", "RetSq", "RetPa"],
-        &["Twirl", "RotF"],
-        &["Jump", "Jump>", "On1Foot", "1F>1F"],
-        &["Run", "BRun"],
-        &["Porp", "Spich"],
-        &["Dive", "Ps1", "Ps1t0.5", "Ps1op", "Ps1t0,5o", "Ps1t1", "CH+"],
-        &["Spider", "Climb"],
-        &["Fall", "FTurn"],
-    ];
-    for exclusive in exclusive_bonuses {
-        if exclusive.contains(&bonus1.as_str()) && exclusive.contains(&bonus2.as_str()) {
-            ci.errors.push(format!(
-                "{err_prefix}: cannot declare {bonus1} and {bonus2} in the same acrobatic"
-            ));
-            return ci;
+    } else {
+        let bonus1 = &acro.bonuses[0];
+        let bonus2 = &acro.bonuses[1];
+        if bonus1 == bonus2 && bonus1 != "CRoll" {
+            ci.errors.push(format!("{err_prefix}: cannot declare the same bonus twice"));
         }
+
+        let exclusive_bonuses: &[&[&str]] = &[
+            &["Grip", "Conn", "Catch"],
+            &["Hula", "RetSq", "RetPa"],
+            &["Twirl", "RotF"],
+            &["Jump", "Jump>", "On1Foot", "1F>1F"],
+            &["Run", "BRun"],
+            &["Porp", "Spich"],
+            &["Dive", "Ps1", "Ps1t0.5", "Ps1op", "Ps1t0,5o", "Ps1t1", "CH+"],
+            &["Spider", "Climb"],
+            &["Fall", "FTurn"],
+        ];
+        for exclusive in exclusive_bonuses {
+            if exclusive.contains(&bonus1.as_str()) && exclusive.contains(&bonus2.as_str()) {
+                ci.errors.push(format!(
+                    "{err_prefix}: cannot declare {bonus1} and {bonus2} in the same acrobatic"
+                ));
+            }
+        }
+    }
+
+    if acro.bonuses.contains(&"Spider".to_string()) && acro.construction != "2S" {
+        ci.errors.push(format!("{err_prefix}: Spider bonus can only be used with 2S construction"));
+    }
+
+    if (acro.bonuses.contains(&"Jump".into()) || acro.bonuses.contains(&"Jump>".into()))
+        && !acro.construction.starts_with("Thr>")
+    {
+        ci.errors
+            .push(format!("{err_prefix}: Jump and Jump> can only be used with Thr> constructions"));
+    }
+
+    if acro.bonuses.contains(&"Jump".into())
+        && (!acro.rotations.is_empty()
+            || (acro.positions.len() == 2 && !A_POSITIONS.contains(&acro.positions[1].as_str())))
+    {
+        ci.warnings.push(format!(
+            "{err_prefix}: Jump should only be used when the featured athlete remains on the construction",
+        ));
     }
 
     ci
@@ -708,8 +723,14 @@ mod tests {
         three_bonuses: check_bonuses, "B-St-FS-ln/2he-Hold/Mov/Dbl", 1, 0,
         dup_bonuses: check_bonuses, "B-LH-Le-mo-Mov/Mov", 1, 0,
         dup_bonuses_ok: check_bonuses, "C-Thr>FF-Forw-ln-CRoll/CRoll", 0, 0,
-        mut_excl_bonuses: check_bonuses, "P-Hand-3pA-ne-Spider/Climb", 1, 0,
+        mut_excl_bonuses: check_bonuses, "P-2S-3pA-ne-Spider/Climb", 1, 0,
         non_mut_excl_bonuses_ok: check_bonuses, "P-Hand-3pA-ne-Climb/Fall", 0, 0,
+        spider_with_flower_err: check_bonuses, "P-Flower-4pAb-ne-Spider", 1, 0,
+        spider_with_2s_ok: check_bonuses, "P-2S-4pAb-ne-Spider", 0, 0,
+        flyover_with_jump_transit_err: check_bonuses, "C-Thr^St-Forw-ow/2ln-Jump>", 1, 0,
+        jump_with_2nd_pos_airborne: check_bonuses, "C-Thr>St-Forw-ow/2ln-Jump", 0, 1,
+        jump_with_rotation: check_bonuses, "C-Thr>St-Forw-sd-Cd-Jump", 0, 1,
+        jump_transit_with_2nd_pos_airborne_ok: check_bonuses, "C-Thr>St-Forw-ow/2ln-Jump>", 0, 0,
         st_bad_connection: check_construction, "B-St>-FS-sd", 0, 1,
         st_good_connection: check_construction, "B-St>-F1S-he", 0, 0,
         non_st_bad_connection: check_construction, "B-St-FS-sd", 0, 0,
