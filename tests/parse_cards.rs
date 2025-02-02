@@ -98,7 +98,7 @@ fn test_parse_iss_team() {
                             construction: "Thr^2F".to_string(),
                             direction: Some(Forwards),
                             connection_grip: "".to_string(),
-                            positions: vec!["bb".to_string()],
+                            positions: vec!["ow".to_string(), "2ln".to_string()],
                             rotations: vec![],
                             bonuses: vec![],
                         },
@@ -139,7 +139,7 @@ fn test_parse_iss_team() {
                     stop_time: NaiveTime::from_hms_opt(0, 1, 38).unwrap(),
                     kind: Hybrid(
                         vec_of_strings![
-                            "A3a", "A6", "A1c", "A6", "F4f*0.3", "F4f*0.5", "F4f*0.5", "F4f",
+                            "A3a", "A6", "A1c", "A6", "F4f*0.3", "F4e*0.5", "F4f*0.5", "F4f",
                             "A1d", "4PC"
                         ],
                         "4.92".into()
