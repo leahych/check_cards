@@ -124,7 +124,9 @@ fn check_team_duplicate_acros(card: &CoachCard) -> CardIssues {
     let group_p: Vec<(usize, &TeamAcrobatic, &String)> =
         team_acros!(card.elements).filter(|(_, acro, _)| acro.group == Platform).collect();
 
-    let positions = |a: &TeamAcrobatic| a.positions.iter().map(|p| p.replace('2', "")).collect();
+    let positions = |a: &TeamAcrobatic| {
+        a.positions.iter().map(|p| p.strip_prefix('2').unwrap_or(p).to_string()).collect()
+    };
     let constructions = |acro: &TeamAcrobatic| vec![acro.construction.clone()];
     let connections = |acro: &TeamAcrobatic| vec![acro.connection_grip.clone()];
 
@@ -159,12 +161,18 @@ fn check_team_acro_validity(err_prefix: &str, acro: &TeamAcrobatic) -> CardIssue
             "{err_prefix}: has second position, {}, but missing first position",
             acro.positions[0]
         ));
-    } else if acro.positions.len() == 2 && (acro.positions[0] == acro.positions[1].replace('2', ""))
-    {
-        ci.errors.push(format!(
-            "{err_prefix}: first position, {}, and second position, {} are the same",
-            acro.positions[0], acro.positions[1]
-        ));
+    } else if acro.positions.len() == 2 {
+        if acro.positions[0] == acro.positions[1].strip_prefix('2').unwrap_or(&acro.positions[1]) {
+            ci.errors.push(format!(
+                "{err_prefix}: first position, {}, and second position, {} are the same",
+                acro.positions[0], acro.positions[1]
+            ));
+        } else if !acro.positions[1].starts_with('2') {
+            ci.errors.push(format!(
+                "{err_prefix}: second position, {}, does not start with '2'",
+                acro.positions[1]
+            ));
+        }
     }
     if acro.bonuses.contains(&"Pos3".into()) && acro.positions.len() < 2 {
         ci.errors.push(format!(
@@ -172,6 +180,7 @@ fn check_team_acro_validity(err_prefix: &str, acro: &TeamAcrobatic) -> CardIssue
             acro.positions.len()
         ));
     }
+
     ci
 }
 
@@ -654,6 +663,7 @@ mod tests {
         duplicate_positions: check_team_acro_validity, "A-Sq-Back-ln/2ln", 1, 0,
         missing_2nd_pos: check_team_acro_validity, "A-Sq-Back-pk-Pos3", 1, 0,
         pos3_bonus_ok: check_team_acro_validity, "A-Sq-Back-pk/2rg-Pos3", 0, 0,
+        bad_2nd_pos: check_team_acro_validity, "A-Sq-Back-pk/3rg", 1, 0,
         back_with_cart_err: check_direction, "A-Sq-Back-ln-ct0.5", 1, 0,
         side_with_cart_ok: check_direction, "A-Sq-Side-ln-ct0.5", 0, 0,
         side_with_hand_err: check_direction, "A-Sq-Side-ln-hd", 1, 0,
