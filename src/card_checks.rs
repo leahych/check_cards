@@ -673,6 +673,14 @@ fn check_category(card: &CoachCard) -> CardIssues {
     if card.category.event == Events::Unknown {
         ci.errors.push("Could not determine Event for card".to_string());
     }
+
+    if card.category.ag == Youth && !card.category.free {
+        ci.warnings.push(
+            "Youth Tech routines are an experimental event, was this routine category detected correctly?"
+                .to_string(),
+        );
+    }
+
     ci
 }
 
@@ -919,6 +927,14 @@ mod tests {
         free_solo_tre4a_err: check_tres, Category{ag: JRSR, event: Solo, free: true}, &[&["TRE4a"]],
         unknown_ag_err: check_category, Category{ag: AgeGroups::Unknown, event: Solo, free: true}, &[],
         unknown_event_err: check_category, Category{ag: JRSR, event: Events::Unknown, free: true}, &[],
+    }
+
+    #[test]
+    fn test_warn_on_youth_tech() {
+        let ci = check_category(
+            &CardBuilder::new().category(Category { ag: Youth, event: Team, free: false }).card,
+        );
+        assert_eq!(ci.warnings.len(), 1);
     }
 
     #[test]
