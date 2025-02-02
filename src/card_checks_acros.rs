@@ -378,14 +378,34 @@ fn check_age_restrictions(card: &CoachCard) -> CardIssues {
 }
 
 fn check_construction(err_prefix: &str, acro: &TeamAcrobatic) -> CardIssues {
-    const ALLOWED_GRIPS: &[&str] = &["PP", "PF", "Bp", "ShF", "E", "F1S", "LayF"];
+    let allowed_grip_map = HashMap::<&str, &[&str]>::from([
+        (
+            "St",
+            &[
+                "Px1P", "PP", "FPx", "FP", "SiSb", "Bp", "E", "PH/", "AP", "SiS", "FS", "F1S",
+                "Tw", "S+", "1F1P", "1F1F",
+            ] as &[&str],
+        ),
+        ("StH", &["1P1F", "FF", "FF/", "PF", "ShF", "LayF", "SiF", "S+", "1F1F"]),
+        ("2SupU", &["Le", "1FH+1FP"]),
+        ("2SupD", &["Tow"]),
+        ("2SupM", &["Le", "Ch"]),
+        ("2SupDF", &["Tow"]),
+        ("St>", &["PP", "PF", "Bp", "ShF", "E", "F1S", "LayF"]),
+        ("L", &["Li"]),
+        ("L2F+", &["Li"]),
+        ("LH", &["LiH"]),
+        ("Lh2F", &["LiH"]),
+    ]);
 
     let mut ci = CardIssues::default();
-    if acro.construction == "St>" && !ALLOWED_GRIPS.contains(&acro.connection_grip.as_str()) {
-        ci.warnings.push(format!(
-                "{err_prefix}: St> cannot be used with {}, must be a connection marked with ∞, such as {}",
-                acro.connection_grip, ALLOWED_GRIPS.join(", ")
-        ));
+    if let Some(allowed_grips) = allowed_grip_map.get(acro.construction.as_str()) {
+        if !allowed_grips.contains(&acro.connection_grip.as_str()) {
+            ci.warnings.push(format!(
+                "{err_prefix}: {} cannot be used with {}, must be a connection marked with ∞, such as {}",
+                acro.construction, acro.connection_grip, allowed_grips.join(", ")
+            ));
+        }
     }
     ci
 }
