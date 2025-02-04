@@ -716,6 +716,25 @@ fn check_category(card: &CoachCard) -> CardIssues {
     ci
 }
 
+fn check_hybrid_common_base_marks(card: &CoachCard) -> CardIssues {
+    const PROBLEM_CODES: &[&str; 2] = &["A5", "F8"]; // F8 catches a&b
+    let mut ci = CardIssues::default();
+    for (num, hybrid, _) in hybrids!(card.elements) {
+        for decl in hybrid {
+            for code in PROBLEM_CODES {
+                if decl.starts_with(code) {
+                    ci.warnings.push(format!("Element {num}: when {decl} is performed quickly, it has a very high risk of base marking"));
+                }
+            }
+
+            if card.category.event == Trio && decl.starts_with("C4") {
+                ci.warnings.push(format!("Element {num}: the two legs in a line variation of C4, requires C4+ and 4+ athletes"));
+            }
+        }
+    }
+    ci
+}
+
 pub fn run_checks(card: &CoachCard) -> CardIssues {
     static CHECKS: &[fn(&CoachCard) -> CardIssues] = &[
         check_iss_version,
@@ -734,6 +753,7 @@ pub fn run_checks(card: &CoachCard) -> CardIssues {
         check_overlapping_elements,
         check_dd_limits,
         check_category,
+        check_hybrid_common_base_marks,
     ];
     let mut ci = CardIssues::default();
     for check in CHECKS {
@@ -1372,5 +1392,28 @@ mod tests {
         base_card.category.ag = Youth;
         let above_limit_youth_ok = check_dd_limits(&base_card);
         assert_eq!(above_limit_youth_ok.errors.len(), 0);
+    }
+
+    #[test]
+    fn test_check_hybrid_common_base_marks() {
+        let card = CardBuilder::new().hybrids(&[&["A5", "F8a*0.5", "F8b"]]).card;
+        let ci = check_hybrid_common_base_marks(&card);
+        assert_eq!(ci.warnings.len(), 3);
+
+        let card = CardBuilder::new().hybrids(&[&["A4b", "F6a*0.5", "F6c"]]).card;
+        let ci = check_hybrid_common_base_marks(&card);
+        assert_eq!(ci.warnings.len(), 0);
+
+        let card = CardBuilder::new().hybrids(&[&["C4"]]).event_type(Trio).card;
+        let ci = check_hybrid_common_base_marks(&card);
+        assert_eq!(ci.warnings.len(), 1);
+
+        let card = CardBuilder::new().hybrids(&[&["C4"]]).event_type(Duet).card;
+        let ci = check_hybrid_common_base_marks(&card);
+        assert_eq!(ci.warnings.len(), 0);
+
+        let card = CardBuilder::new().hybrids(&[&["C4"]]).event_type(MixedDuet).card;
+        let ci = check_hybrid_common_base_marks(&card);
+        assert_eq!(ci.warnings.len(), 0);
     }
 }
