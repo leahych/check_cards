@@ -536,12 +536,38 @@ fn check_positions(err_prefix: &str, acro: &TeamAcrobatic) -> CardIssues {
     ci
 }
 
+fn check_pair_acro_common_base_marks(card: &CoachCard) -> CardIssues {
+    let mut ci = CardIssues::default();
+    if card.category.event != Duet && card.category.event != MixedDuet {
+        return ci;
+    }
+
+    for (num, acro) in pair_acros!(card.elements) {
+        if acro == "J" || acro == "Jf" {
+            // these can crash on the surface even though they don't end
+            // '»', so we won't warn on them
+            continue;
+        }
+        if (acro.starts_with('J') || acro.starts_with('W'))
+            && !acro.contains("s0.5")
+            && !acro.contains("s1")
+            && !acro.ends_with('d')
+            && !acro.ends_with('»')
+        {
+            ci.warnings.push(format!(
+                "Element {num}: {acro} requires the featured-swimmer must be completely in the AIR (top of the head and toes must be above the surface at the same time)"
+            ));
+        }
+    }
+    ci
+}
+
 pub fn run_acro_checks(card: &CoachCard) -> CardIssues {
     let mut ci = CardIssues::default();
 
     let checks: &[fn(&CoachCard) -> CardIssues] = match card.category.event {
         Solo | Events::Unknown => &[],
-        Duet | MixedDuet | Trio => &[check_duplicate_pair_acros],
+        Duet | MixedDuet | Trio => &[check_duplicate_pair_acros, check_pair_acro_common_base_marks],
         Acrobatic | Combo | Team => &[
             check_dd_limits,
             check_groups_for_acro_routine,
@@ -822,11 +848,33 @@ mod tests {
         assert_eq!(different_acros.errors.len(), 0);
     }
 
+    fn pair_acro_helper(event: Events, acro: &str) -> Vec<String> {
+        let card = CardBuilder::new()
+            .category(Category { ag: AG12U, event, free: true })
+            .pair_acros(&[acro])
+            .card;
+        check_pair_acro_common_base_marks(&card).warnings
+    }
+    #[test]
+    fn test_check_pair_acro_common_base_marks() {
+        assert_eq!(pair_acro_helper(Duet, "Jr0.5").len(), 1);
+        assert_eq!(pair_acro_helper(Trio, "Jr0.5").len(), 0);
+        assert_eq!(pair_acro_helper(Duet, "W!fr1").len(), 1);
+        assert_eq!(pair_acro_helper(Trio, "W!fr1").len(), 0);
+
+        assert_eq!(pair_acro_helper(Duet, "W!s0.5").len(), 0);
+        assert_eq!(pair_acro_helper(Duet, "J").len(), 0);
+        assert_eq!(pair_acro_helper(Duet, "Jd").len(), 0);
+        assert_eq!(pair_acro_helper(Duet, "Jf").len(), 0);
+        assert_eq!(pair_acro_helper(Duet, "W!»").len(), 0);
+        assert_eq!(pair_acro_helper(Duet, "Jfs1B").len(), 0);
+    }
+
     #[test]
     fn test_run_checks() {
         let duet_card = CardBuilder::new()
             .category(Category { ag: AG12U, event: Duet, free: true })
-            .pair_acros(&["W!fr1", "J"])
+            .pair_acros(&["W!s1F", "J"])
             .card;
         let ret = run_acro_checks(&duet_card);
         assert_eq!(ret.errors.len(), 0);
