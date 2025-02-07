@@ -106,7 +106,7 @@ fn parse_elements(
                         .map(std::string::ToString::to_string)
                         .collect::<Vec<_>>()
                         .iter()
-                        .flat_map(|x| x.trim().split(' '))
+                        .flat_map(|x| x.trim().split_whitespace())
                         .map(str::to_owned)
                         .collect::<Vec<_>>();
                     elem.kind = Hybrid(decls, dd);
