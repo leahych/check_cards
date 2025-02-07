@@ -83,8 +83,10 @@ fn check_duplicate_pair_acros(card: &CoachCard) -> CardIssues {
     let mut prev_acros = HashSet::new();
     for (num, acro) in pair_acros!(card.elements) {
         if prev_acros.contains(&acro) {
-            ci.errors
-                .push(format!("Element {num}: cannot repeat acrobatics in {:?}", card.category));
+            ci.errors.push(format!(
+                "Element {num}: cannot repeat acrobatics in {:?}",
+                card.category.event
+            ));
         } else {
             prev_acros.insert(acro);
         }
