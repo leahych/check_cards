@@ -382,8 +382,8 @@ fn check_construction(err_prefix: &str, acro: &TeamAcrobatic) -> CardIssues {
         (
             "St",
             &[
-                "Px1P", "PP", "FPx", "FP", "SiSb", "Bp", "E", "PH/", "AP", "SiS", "FS", "F1S",
-                "Tw", "S+", "1F1P", "1F1F",
+                "1P1P", "Px1P", "PP", "FPx", "FP", "SiSb", "Bp", "E", "PH/", "AP", "SiS", "FS",
+                "F1S", "Tw", "S+", "1F1P", "1F1F",
             ] as &[&str],
         ),
         ("StH", &["1P1F", "FF", "FF/", "PF", "ShF", "LayF", "SiF", "S+", "1F1F"]),
