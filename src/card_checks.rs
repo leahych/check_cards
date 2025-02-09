@@ -717,7 +717,8 @@ fn check_category(card: &CoachCard) -> CardIssues {
 }
 
 fn check_hybrid_common_base_marks(card: &CoachCard) -> CardIssues {
-    const PROBLEM_CODES: &[&str; 2] = &["A5", "F8"]; // F8 catches a&b
+    const PROBLEM_CODES: &[&str] = &["A5", "F8"]; // F8 catches a&b
+    const TECH_DUET_MIRROR_CODES: &[&str] = &["C1a", "C2a", "C4", "C6a", "C6b", "C7"];
     let mut ci = CardIssues::default();
     for (num, hybrid, _) in hybrids!(card.elements) {
         for decl in hybrid {
@@ -729,6 +730,16 @@ fn check_hybrid_common_base_marks(card: &CoachCard) -> CardIssues {
 
             if card.category.event == Trio && decl.starts_with("C4") {
                 ci.warnings.push(format!("Element {num}: the two legs in a line variation of C4, requires C4+ and 4+ athletes"));
+            }
+
+            // Mixed Duet can have mirror action, so only check Duet
+            // Tech Trios aren't an official event so ignore them
+            if card.category.event == Duet
+                && !card.category.free
+                && TECH_DUET_MIRROR_CODES.contains(&decl.as_str())
+            {
+                ci.warnings
+                    .push(format!("Element {num}: {decl} in Tech Duet, is this mirror action?"))
             }
         }
     }
@@ -1408,11 +1419,32 @@ mod tests {
         let ci = check_hybrid_common_base_marks(&card);
         assert_eq!(ci.warnings.len(), 1);
 
-        let card = CardBuilder::new().hybrids(&[&["C4"]]).event_type(Duet).card;
+        let card = CardBuilder::new().hybrids(&[&["C4"]]).event_type(MixedDuet).card;
         let ci = check_hybrid_common_base_marks(&card);
         assert_eq!(ci.warnings.len(), 0);
 
-        let card = CardBuilder::new().hybrids(&[&["C4"]]).event_type(MixedDuet).card;
+        let card = CardBuilder::new().hybrids(&[&["C4"]]).event_type(Duet).card;
+        let ci = check_hybrid_common_base_marks(&card);
+        assert_eq!(ci.warnings.len(), 1);
+
+        let card = CardBuilder::new()
+            .hybrids(&[&["C4"]])
+            .category(Category { ag: JRSR, free: false, event: Duet })
+            .card;
+        let ci = check_hybrid_common_base_marks(&card);
+        assert_eq!(ci.warnings.len(), 1);
+
+        let card = CardBuilder::new()
+            .hybrids(&[&["C4"]])
+            .category(Category { ag: JRSR, free: false, event: MixedDuet })
+            .card;
+        let ci = check_hybrid_common_base_marks(&card);
+        assert_eq!(ci.warnings.len(), 0);
+
+        let card = CardBuilder::new()
+            .hybrids(&[&["C2b"]])
+            .category(Category { ag: JRSR, free: false, event: Duet })
+            .card;
         let ci = check_hybrid_common_base_marks(&card);
         assert_eq!(ci.warnings.len(), 0);
     }
