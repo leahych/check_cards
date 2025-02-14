@@ -292,6 +292,7 @@ fn check_bonuses(err_prefix: &str, acro: &TeamAcrobatic) -> CardIssues {
     let mut ci = CardIssues::default();
 
     let first_pos = acro.positions.first().map_or("", |v| v);
+    let second_pos = acro.positions.get(1).map_or("", |v| v.strip_prefix('2').unwrap_or(v));
     if acro.bonuses.contains(&"Split".into()) && first_pos == "sp" {
         ci.errors.push(format!(
             "{err_prefix}: for Split bonus, sp is considered a take-off and should not be declared first"
@@ -359,11 +360,19 @@ fn check_bonuses(err_prefix: &str, acro: &TeamAcrobatic) -> CardIssues {
 
     if acro.bonuses.contains(&"Jump".into())
         && (!acro.rotations.is_empty()
-            || (acro.positions.len() == 2 && !A_POSITIONS.contains(&acro.positions[1].as_str())))
+            || (acro.positions.len() == 2 && A_POSITIONS.contains(&second_pos)))
     {
         ci.warnings.push(format!(
             "{err_prefix}: Jump should only be used when the featured athlete remains on the construction",
         ));
+    }
+
+    if acro.bonuses.contains(&"SdUp".into())
+        && !B_TORSO_DOWN_POSITIONS.contains(&first_pos)
+        && !B_TORSO_DOWN_POSITIONS.contains(&second_pos)
+    {
+        ci.warnings
+            .push(format!("{err_prefix}: SdUp claimed, but no head/torso down position claimed",));
     }
 
     ci
@@ -426,6 +435,8 @@ const B_SIT_STAND_LAY_POSITONS: &[&str] =
     &["mo", "sh", "spl", "hp", "sc", "co", "fl", "so", "tu", "pi"];
 const B_HEAD_DOWN_POSITIONS: &[&str] = &["bb", "bo", "wi", "ow"];
 const B_EXTREME_FLEX_POSITIONS: &[&str] = &["dr", "qu"];
+
+const B_TORSO_DOWN_POSITIONS: &[&str] = &["bb", "bo", "wi", "ow", "dr", "qu", "sh", "mo", "ne"];
 
 fn check_connection(err_prefix: &str, acro: &TeamAcrobatic) -> CardIssues {
     // not a category but positions that can be done by standing w/two feet
@@ -534,6 +545,30 @@ fn check_positions(err_prefix: &str, acro: &TeamAcrobatic) -> CardIssues {
             ci.errors.push(format!(
                 "{err_prefix}: {position} is not a valid position for {:?} acrobatics",
                 acro.group
+            ));
+        }
+    }
+
+    if (acro.group == Balance || acro.group == Combined) && acro.positions.len() == 2 {
+        let pos2 = acro.positions[1].strip_prefix('2').unwrap_or("");
+        let pos1_head_up =
+            B_ONE_LEG_POSITIONS.contains(&first_pos) || B_TWO_LEG_POSITIONS.contains(&first_pos);
+        let pos1_head_down = B_HEAD_DOWN_POSITIONS.contains(&first_pos);
+        // sit, stand, lay has some things that could be "head down" but
+        // I'm not sure any that could be combined with head up positions
+        // we'll see if anyone complains
+        let pos2_head_up = B_ONE_LEG_POSITIONS.contains(&pos2)
+            || B_TWO_LEG_POSITIONS.contains(&pos2)
+            || B_SIT_STAND_LAY_POSITONS.contains(&pos2);
+        let pos2_head_down = B_HEAD_DOWN_POSITIONS.contains(&pos2);
+        if pos1_head_up && pos2_head_down {
+            ci.warnings.push(format!(
+                "{err_prefix}: {first_pos} is heads-up and {pos2} is heads-down, is this right?"
+            ));
+        }
+        if pos1_head_down && pos2_head_up && !acro.bonuses.contains(&"SdUp".into()) {
+            ci.warnings.push(format!(
+                "{err_prefix}: {first_pos} is heads-down and {pos2} is heads-up, is this right?"
             ));
         }
     }
@@ -811,6 +846,8 @@ mod tests {
         jump_with_2nd_pos_airborne: check_bonuses, "C-Thr>St-Forw-ow/2ln-Jump", 0, 1,
         jump_with_rotation: check_bonuses, "C-Thr>St-Forw-sd-Cd-Jump", 0, 1,
         jump_transit_with_2nd_pos_airborne_ok: check_bonuses, "C-Thr>St-Forw-ow/2ln-Jump>", 0, 0,
+        sdup_with_no_head_down_pos: check_bonuses, "B-St-F1S-he/2sa-SdUp", 0, 1,
+        sdup_with_head_down_pos: check_bonuses, "B-St-F1S-he/2ne-SdUp", 0, 0,
         st_bad_connection: check_construction, "B-St>-FS-sd", 0, 1,
         st_good_connection: check_construction, "B-St>-F1S-he", 0, 0,
         sq_with_dbl: check_construction, "A-Sq-Back-tk-Dbl", 0, 1,
@@ -833,6 +870,10 @@ mod tests {
         fly_above_balance_first: check_positions, "C-Thr^2F-Back-ow/2tk", 0, 0,
         fly_above_with_spl: check_positions, "C-Thr^2F-Back-spl/2tk", 0, 1,
         fly_above_just_balance: check_positions, "C-Thr^2F-Back-ow", 0, 1,
+        head_up_with_head_down: check_positions, "B-St-FS-sd/2bb", 0, 1,
+        head_up_with_head_up: check_positions, "C-Thr>StH-Forw-sd/2he", 0, 0,
+        head_down_with_head_up: check_positions, "C-Thr>StH-Forw-bb/2spl", 0, 1,
+        head_down_with_head_down: check_positions, "C-Thr>StH-Forw-bb/2ow", 0, 0,
     }
 
     #[test]
