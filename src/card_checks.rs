@@ -746,6 +746,25 @@ fn check_hybrid_common_base_marks(card: &CoachCard) -> CardIssues {
     ci
 }
 
+fn check_hybrid_start_end(card: &CoachCard) -> CardIssues {
+    let mut ci = CardIssues::default();
+    for (num, hybrid, _) in hybrids!(card.elements) {
+        for (i, decl) in hybrid.iter().enumerate() {
+            if decl.starts_with("FB") && i != 0 {
+                ci.errors.push(format!("Element {num}: {decl} must be at the start of a hybrid"))
+            }
+            if decl.starts_with("F2a") && i != hybrid.len() - 1 {
+                ci.errors.push(format!("Element {num}: {decl} must be at the end of a hybrid"))
+            }
+            if decl.starts_with("F4a") && i != 0 {
+                ci.warnings
+                    .push(format!("Element {num}: {decl} is not at the start, is this correct?"))
+            }
+        }
+    }
+    ci
+}
+
 pub fn run_checks(card: &CoachCard) -> CardIssues {
     static CHECKS: &[fn(&CoachCard) -> CardIssues] = &[
         check_iss_version,
@@ -765,6 +784,7 @@ pub fn run_checks(card: &CoachCard) -> CardIssues {
         check_dd_limits,
         check_category,
         check_hybrid_common_base_marks,
+        check_hybrid_start_end,
     ];
     let mut ci = CardIssues::default();
     for check in CHECKS {
@@ -861,10 +881,13 @@ mod tests {
     }
 
     fn run_test(name: &str, check_fn: fn(&CoachCard) -> CardIssues, card: &CoachCard) {
-        let expected = if name.ends_with("_ok") { 0 } else { 1 };
+        // FUTURE update tests to use _err
+        let err_expected = if name.ends_with("_ok") || name.ends_with("_warn") { 0 } else { 1 };
+        let warn_expected = if name.ends_with("_warn") { 1 } else { 0 };
         let result = check_fn(card);
         //println!("TEST {:?}", result.errors);
-        assert_eq!(result.errors.len(), expected);
+        assert_eq!(result.errors.len(), err_expected);
+        assert_eq!(result.warnings.len(), warn_expected);
     }
 
     #[test]
@@ -948,6 +971,12 @@ mod tests {
         four_a1s_ok: check_hybrid_declaration_maxes,&[&["A1a", "A1b", "A1c", "A1d"]],
         four_c4s_err: check_hybrid_declaration_maxes,&[&["C4", "C4", "C4", "C4+"]],
         four_factored_c1s_err: check_hybrid_declaration_maxes,&[&["C4", "C4*0.3", "C4*0.3", "C4*0.3", "C4*0.3", "C4*0.3"]],
+        walkout_in_middle_err: check_hybrid_start_end, &[&["F1a", "F2a", "R1"]],
+        walkout_at_end_ok: check_hybrid_start_end, &[&["R1", "F1a", "F2a"]],
+        back_layout_in_middle_err: check_hybrid_start_end, &[&["R1", "FB", "T4e"]],
+        back_layout_at_start_ok: check_hybrid_start_end, &[&["FB", "R1", "T4e"]],
+        front_layout_in_middle_warn: check_hybrid_start_end, &[&["R1", "F4a", "T4e"]],
+        front_layout_at_start_ok: check_hybrid_start_end, &[&["F4a", "R1", "T4e"]],
     }
 
     const TECH_MIXED: Category = Category { ag: JRSR, event: MixedDuet, free: false };
