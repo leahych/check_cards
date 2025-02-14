@@ -230,7 +230,10 @@ fn check_rotations(err_prefix: &str, acro: &TeamAcrobatic) -> CardIssues {
         (Regex::new(r"^r(0.5|1|1.5|2)\+$").unwrap(), &["F1S", "FPx", "FP", "1F1P", "1F1F"]),
         (
             Regex::new(r"^r(0.5|1|1.5|2)!$").unwrap(),
-            &["1P1P", "1P1F", "Px1P", "PP", "PF", "PH/", "FF", "FF/", "ShF", "LayF", "SiF", "S+"],
+            &[
+                "1P1P", "1P1F", "Px1P", "PP", "PF", "PH/", "FF", "FF/", "ShF", "LayF", "SiF", "S+",
+                "1F1F",
+            ],
         ),
         (Regex::new(r"^r(/|0.5|1)L$").unwrap(), &["LiH", "Li"]),
         (Regex::new(r"^Cr(0.5|1|1.5)$").unwrap(), &["Thr>St", "Thr>L"]),
