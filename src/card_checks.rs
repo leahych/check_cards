@@ -1019,18 +1019,12 @@ mod tests {
         free_solo_tre4a_err: check_tres, Category{ag: JRSR, event: Solo, free: true}, &[&["TRE4a"]],
         unknown_ag_err: check_category, Category{ag: AgeGroups::Unknown, event: Solo, free: true}, &[],
         unknown_event_err: check_category, Category{ag: JRSR, event: Events::Unknown, free: true}, &[],
-    }
-
-    #[test]
-    fn test_warn_on_youth_tech() {
-        let ci = check_category(
-            &CardBuilder::new().category(Category { ag: Youth, event: Team, free: false }).card,
-        );
-        assert_eq!(ci.warnings.len(), 1);
+        youth_tech_warn: check_category, Category{ag: Youth, event: Team, free: false}, &[],
     }
 
     #[test]
     fn test_check_factoring_warnings() {
+        // FUTURE turn these into hybrid_cat_tests
         let tech_team_factored_conn = check_factoring(
             &CardBuilder::new()
                 .category(Category { ag: AG12U, event: Team, free: false })
