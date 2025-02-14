@@ -739,7 +739,7 @@ fn check_hybrid_common_base_marks(card: &CoachCard) -> CardIssues {
                 && TECH_DUET_MIRROR_CODES.contains(&decl.as_str())
             {
                 ci.warnings
-                    .push(format!("Element {num}: {decl} in Tech Duet, is this mirror action?"))
+                    .push(format!("Element {num}: {decl} in Tech Duet, is this mirror action?"));
             }
         }
     }
@@ -751,14 +751,14 @@ fn check_hybrid_start_end(card: &CoachCard) -> CardIssues {
     for (num, hybrid, _) in hybrids!(card.elements) {
         for (i, decl) in hybrid.iter().enumerate() {
             if decl.starts_with("FB") && i != 0 {
-                ci.errors.push(format!("Element {num}: {decl} must be at the start of a hybrid"))
+                ci.errors.push(format!("Element {num}: {decl} must be at the start of a hybrid"));
             }
             if decl.starts_with("F2a") && i != hybrid.len() - 1 {
-                ci.errors.push(format!("Element {num}: {decl} must be at the end of a hybrid"))
+                ci.errors.push(format!("Element {num}: {decl} must be at the end of a hybrid"));
             }
             if decl.starts_with("F4a") && i != 0 {
                 ci.warnings
-                    .push(format!("Element {num}: {decl} is not at the start, is this correct?"))
+                    .push(format!("Element {num}: {decl} is not at the start, is this correct?"));
             }
         }
     }
