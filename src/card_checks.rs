@@ -749,11 +749,15 @@ fn check_hybrid_common_base_marks(card: &CoachCard) -> CardIssues {
 fn check_hybrid_start_end(card: &CoachCard) -> CardIssues {
     let mut ci = CardIssues::default();
     for (num, hybrid, _) in hybrids!(card.elements) {
+        // get the last normal decl and ignore PC bonuses
+        let end_pos = hybrid.len() - 1;
+        let end_pos = if hybrid[end_pos].ends_with("PC") { end_pos - 1 } else { end_pos };
+
         for (i, decl) in hybrid.iter().enumerate() {
             if decl.starts_with("FB") && i != 0 {
                 ci.errors.push(format!("Element {num}: {decl} must be at the start of a hybrid"));
             }
-            if decl.starts_with("F2a") && i != hybrid.len() - 1 {
+            if decl.starts_with("F2a") && i != end_pos {
                 ci.errors.push(format!("Element {num}: {decl} must be at the end of a hybrid"));
             }
             if decl.starts_with("F4a") && i != 0 {
@@ -973,6 +977,7 @@ mod tests {
         four_factored_c1s_err: check_hybrid_declaration_maxes,&[&["C4", "C4*0.3", "C4*0.3", "C4*0.3", "C4*0.3", "C4*0.3"]],
         walkout_in_middle_err: check_hybrid_start_end, &[&["F1a", "F2a", "R1"]],
         walkout_at_end_ok: check_hybrid_start_end, &[&["R1", "F1a", "F2a"]],
+        walkout_at_end_with_pc_ok: check_hybrid_start_end, &[&["R1", "F1a", "F2a", "2PC"]],
         back_layout_in_middle_err: check_hybrid_start_end, &[&["R1", "FB", "T4e"]],
         back_layout_at_start_ok: check_hybrid_start_end, &[&["FB", "R1", "T4e"]],
         front_layout_in_middle_warn: check_hybrid_start_end, &[&["R1", "F4a", "T4e"]],
