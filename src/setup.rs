@@ -2,8 +2,6 @@ use crate::CardIssues;
 use crate::card_checks::run_checks;
 use crate::card_checks_acros::run_acro_checks;
 use crate::iss_parser::parse_iss_card;
-use gloo::events::EventListener;
-use gloo::utils::document;
 use std::io::Cursor;
 use std::panic;
 use wasm_bindgen::prelude::*;
@@ -20,7 +18,8 @@ fn is_supported_file(file: &gloo::file::File) -> bool {
     ACCEPT_LIST.into_iter().any(|accept| file.name().ends_with(accept))
 }
 
-fn on_file_input_changed(event: &Event) {
+#[wasm_bindgen]
+pub fn on_file_input_changed(event: &Event) {
     process_files(&event.target().unwrap().dyn_into::<HtmlInputElement>().unwrap());
 }
 
@@ -44,38 +43,14 @@ fn process_files(input_element: &HtmlInputElement) {
     }
 }
 
-fn get_file_input(document: &Document) -> HtmlInputElement {
-    document
-        .get_element_by_id("card-file")
-        .expect("should have #card-file on the page")
-        .dyn_into::<HtmlInputElement>()
-        .expect("#card-file should be an `HtmlElement`")
+#[wasm_bindgen]
+pub fn version_text() -> JsValue {
+    JsValue::from_str(&format!("Last updated on {}", env!("DATE")))
 }
 
 #[wasm_bindgen(start)]
 fn main() {
     panic::set_hook(Box::new(console_error_panic_hook::hook));
-
-    // TODO should these be exported functions that JS calls?
-    // moves knowledge of HTML into HTML, makes this more library-ish
-    let card_file = get_file_input(&document());
-    card_file.set_accept(&ACCEPT_LIST.join(","));
-    let on_change = EventListener::new(&card_file, "change", on_file_input_changed);
-    on_change.forget();
-
-    let card_folder = document()
-        .get_element_by_id("card-folder")
-        .expect("should have #card-folder on the page")
-        .dyn_into::<HtmlInputElement>()
-        .expect("#card-folder should be an `HtmlElement`");
-    let on_change = EventListener::new(&card_folder, "change", on_file_input_changed);
-    on_change.forget();
-
-    let version_footer = document().get_element_by_id("version-info");
-    if let Some(version_footer) = version_footer {
-        let txt = String::from("Last updated on ") + env!("DATE");
-        version_footer.set_text_content(Some(&txt));
-    }
 }
 
 fn add_card_issues(
