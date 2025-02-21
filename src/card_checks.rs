@@ -1,6 +1,6 @@
 use crate::AgeGroups::{AG12U, JRSR, Youth};
 use crate::Events::{Acrobatic, Combo, Duet, MixedDuet, Solo, Team, Trio};
-use crate::{AgeGroups, CardIssues, Category, CoachCard, Element, Events};
+use crate::{AgeGroups, CardIssues, Category, CoachCard, Element, Events, TeamAcrobatic};
 use chrono::NaiveTime;
 use regex_lite::Regex;
 use std::collections::{HashMap, HashSet};
@@ -15,35 +15,7 @@ macro_rules! hybrids {
     };
 }
 
-macro_rules! pair_acros {
-    ($elements:expr) => {
-        $elements.iter().filter_map(|e| match &e.kind {
-            PairAcro(d) => Some((e.number, d)),
-            _ => None,
-        })
-    };
-}
-pub(crate) use pair_acros;
-
-macro_rules! team_acros {
-    ($elements:expr) => {
-        $elements.iter().filter_map(|e| match &e.kind {
-            TeamAcro(d, dd) => Some((e.number, d, dd)),
-            _ => None,
-        })
-    };
-}
 use crate::ElementKind::{ChoHy, Hybrid, PairAcro, SuConn, TRE, TeamAcro};
-pub(crate) use team_acros;
-
-macro_rules! tres {
-    ($elements:expr) => {
-        $elements.iter().filter_map(|e| match &e.kind {
-            TRE(d) => Some((e.number, d)),
-            _ => None,
-        })
-    };
-}
 
 const LATEST_ISS_VERSION: semver::Version = semver::Version::new(3, 0, 3);
 fn check_iss_version(card: &CoachCard) -> CardIssues {
@@ -75,7 +47,7 @@ fn check_max_families<T: AsRef<str>>(decls: &[T], family_regex: &Regex) -> usize
     points.reduce(|total, item| total + item).unwrap_or(0)
 }
 
-fn check_element_declaration_maxes<T: AsRef<str>>(num: usize, decls: &[T]) -> CardIssues {
+fn check_hybrid_declaration_maxes(_: Category, decls: &[String]) -> CardIssues {
     let mut ci = CardIssues::default();
 
     let max_families: &[(&str, &str)] = &[
@@ -90,7 +62,7 @@ fn check_element_declaration_maxes<T: AsRef<str>>(num: usize, decls: &[T]) -> Ca
     for (name, rx_str) in max_families {
         let rx = Regex::new(rx_str).unwrap();
         if check_max_families(decls, &rx) > 50 {
-            ci.errors.push(format!("Element {num}: {name} can only be declared 5 times"));
+            ci.errors.push(format!("{name} can only be declared 5 times"));
         }
     }
 
@@ -105,16 +77,8 @@ fn check_element_declaration_maxes<T: AsRef<str>>(num: usize, decls: &[T]) -> Ca
 
     for (decl, points) in decl_points {
         if points > 30 {
-            ci.errors.push(format!("Element {num}: {decl} is used more than 3 times"));
+            ci.errors.push(format!("{decl} is used more than 3 times"));
         }
-    }
-    ci
-}
-
-fn check_hybrid_declaration_maxes(card: &CoachCard) -> CardIssues {
-    let mut ci = CardIssues::default();
-    for (num, hybrid, _) in hybrids!(card.elements) {
-        ci += check_element_declaration_maxes(num, hybrid);
     }
     ci
 }
@@ -311,57 +275,44 @@ fn check_theme(card: &CoachCard) -> CardIssues {
     ci
 }
 
-fn check_small_bonuses(card: &CoachCard) -> CardIssues {
+fn check_small_bonuses(category: Category, decls: &[String]) -> CardIssues {
     let mut ci = CardIssues::default();
-    match card.category.event {
-        Combo | Team => {}
-        _ => {
-            let re = Regex::new(r"\dPC").unwrap();
-            for (idx, declarations, _) in hybrids!(card.elements) {
-                if declarations.iter().any(|decl| re.is_match(decl)) {
-                    ci.errors.push(format!(
-                        "Element {}: {} cannot have Pattern Change bonuses",
-                        idx + 1,
-                        card.category.event.as_str()
-                    ));
-                }
-            }
+    let is_small = category.event != Combo && category.event != Team;
+    let re = Regex::new(r"\dPC").unwrap();
+    if is_small && decls.iter().any(|decl| re.is_match(decl)) {
+        ci.errors.push(format!("{} cannot have Pattern Change bonuses", category.event.as_str()));
+    }
+    ci
+}
+
+fn check_team_acro(category: Category, _: &TeamAcrobatic, _: &String) -> CardIssues {
+    let mut ci = CardIssues::default();
+    match category.event {
+        Solo => ci.errors.push("Acrobatic elements are not allowed in a solo".into()),
+        Duet | MixedDuet | Trio => {
+            ci.errors.push("Invalid Acrobatic element, must be one of Jump, Lift or Throw".into());
+        }
+        Acrobatic | Combo | Team | Events::Unknown => {}
+    }
+    ci
+}
+
+fn check_pair_acro(category: Category, _: &String) -> CardIssues {
+    let mut ci = CardIssues::default();
+    match category.event {
+        Solo => ci.errors.push("Acrobatic elements are not allowed in a solo".into()),
+        Duet | MixedDuet | Trio | Events::Unknown => {}
+        Acrobatic | Combo | Team => {
+            ci.errors.push(
+                "Invalid Acrobatic element, must be one of Airborne, Balance, Platform or Combined"
+                    .into(),
+            );
         }
     }
     ci
 }
 
-fn check_acros_event(card: &CoachCard) -> CardIssues {
-    let mut ci = CardIssues::default();
-    let pair_acros = pair_acros!(card.elements);
-    let team_acros = team_acros!(card.elements);
-
-    for (num, _, _) in team_acros {
-        match card.category.event {
-            Solo => ci
-                .errors
-                .push(format!("Element {num}: Acrobatic elements are not allowed in a solo")),
-            Duet | MixedDuet | Trio => ci.errors.push(format!(
-                "Element {num}: Invalid Acrobatic element, must be one of Jump, Lift or Throw"
-            )),
-            Acrobatic | Combo | Team | Events::Unknown => {}
-        }
-    }
-    for (num, _) in pair_acros {
-        match card.category.event {
-            Solo => ci
-                .errors
-                .push(format!("Element {num}: Acrobatic elements are not allowed in a solo")),
-            Duet | MixedDuet | Trio | Events::Unknown => {}
-            Acrobatic | Combo | Team => {
-                ci.errors.push(format!("Element {num}: Invalid Acrobatic element, must be one of Airborne, Balance, Platform or Combined"));
-            }
-        }
-    }
-    ci
-}
-
-fn check_valid_hybrid_declarations(card: &CoachCard) -> CardIssues {
+fn check_valid_hybrid_declarations(_: Category, decls: &[String]) -> CardIssues {
     let valid_decl_regex = Regex::new(concat!(
     "^(",
     r"(S([B1-9]|10)|SCD?[B1-6])(\*0.[35])?",
@@ -376,12 +327,9 @@ fn check_valid_hybrid_declarations(card: &CoachCard) -> CardIssues {
         .unwrap();
 
     let mut ci = CardIssues::default();
-    for (num, hybrid, _) in hybrids!(card.elements) {
-        for decl in hybrid {
-            if !valid_decl_regex.is_match(decl) {
-                ci.errors
-                    .push(format!("Element {num}: '{decl}' is not a valid difficulty declaration"));
-            }
+    for decl in decls {
+        if !valid_decl_regex.is_match(decl) {
+            ci.errors.push(format!("'{decl}' is not a valid difficulty declaration"));
         }
     }
     ci
@@ -424,60 +372,57 @@ fn check_mixed_duet_elements(card: &CoachCard) -> CardIssues {
     ci
 }
 
-fn check_factoring(card: &CoachCard) -> CardIssues {
+fn check_factoring(category: Category, decls: &[String]) -> CardIssues {
     let mut ci = CardIssues::default();
-    for (num, hybrid, _) in hybrids!(card.elements) {
-        let mut prev_decl = "";
-        for decl in hybrid {
-            if card.category.event == Solo && decl.contains("*0.") {
-                ci.errors.push(format!("Element {num}: cannot factor in a Solo`"));
-            }
-            if card.category.event == Duet || card.category.event == MixedDuet {
-                if decl.contains("0.3") {
-                    ci.errors.push(format!("Element {num}: cannot factor by 0.3 in a Duet"));
-                } else if Regex::new(r"^C.*0\.").unwrap().is_match(decl) {
-                    ci.errors.push(format!(
-                        "Element {num}: factoring connections in a Duet seems suspicious"
-                    ));
-                }
-            }
-            if !card.category.free && decl.contains("*0.") {
-                ci.warnings.push(format!(
-                    "Element {num}: factoring in a Tech {:?} seems suspicious",
-                    card.category.event
-                ));
-            }
-
-            let conn_factored_rx = Regex::new(r"^C[\dB][A-z]?\*0.5").unwrap();
-            let conn_plus_factored_rx = Regex::new(r"^C[\dB][A-z]?\+\*0.5").unwrap();
-            if (conn_factored_rx.is_match(decl) && conn_plus_factored_rx.is_match(prev_decl))
-                || (conn_plus_factored_rx.is_match(decl) && conn_factored_rx.is_match(prev_decl))
-            {
-                ci.warnings.push(format!("Element {num}: if factoring a connection because 5-7 are swimming, one connection should be factored by 0.3"));
-            }
-            if (prev_decl.starts_with("C4*0.") && decl == "C4+*0.5")
-                || (prev_decl == "C4+*0.5" && decl.starts_with("C4*0."))
-            {
-                ci.warnings.push(format!("Element {num}: if factoring a C4+ because 5-7 are swimming, is the smaller group still doing C4?"));
-            }
-
-            let decl_parts: Vec<&str> = decl.split('*').collect();
-            let prev_decl_parts: Vec<&str> = prev_decl.split('*').collect();
-            if decl_parts.len() == 2
-                && prev_decl_parts.len() == 2
-                && decl_parts[0] == prev_decl_parts[0]
-            {
-                ci.warnings.push(format!("Element {num}: if two groups are doing the same choreography in two groups, do not factor"));
-            }
-
-            let cplus_less_half_rx = Regex::new(r"^C[\dB][A-z]?\+\*0.3").unwrap();
-            if cplus_less_half_rx.is_match(decl) {
-                ci.warnings
-                    .push(format!("Element {num}: factoring C+ by 0.3 requires 9-10 athletes"));
-            }
-
-            prev_decl = decl;
+    let mut prev_decl = "";
+    for decl in decls {
+        if category.event == Solo && decl.contains("*0.") {
+            ci.errors.push("cannot factor in a Solo`".into());
         }
+        if category.event == Duet || category.event == MixedDuet {
+            if decl.contains("0.3") {
+                ci.errors.push(" cannot factor by 0.3 in a Duet".into());
+            } else if Regex::new(r"^C.*0\.").unwrap().is_match(decl) {
+                ci.errors.push("factoring connections in a Duet seems suspicious".into());
+            }
+        }
+        if !category.free && decl.contains("*0.") {
+            ci.warnings.push(format!("factoring in a Tech {:?} seems suspicious", category.event));
+        }
+
+        let conn_factored_rx = Regex::new(r"^C[\dB][A-z]?\*0.5").unwrap();
+        let conn_plus_factored_rx = Regex::new(r"^C[\dB][A-z]?\+\*0.5").unwrap();
+        if (conn_factored_rx.is_match(decl) && conn_plus_factored_rx.is_match(prev_decl))
+            || (conn_plus_factored_rx.is_match(decl) && conn_factored_rx.is_match(prev_decl))
+        {
+            ci.warnings.push("if factoring a connection because 5-7 are swimming, one connection should be factored by 0.3".into());
+        }
+        if (prev_decl.starts_with("C4*0.") && decl == "C4+*0.5")
+            || (prev_decl == "C4+*0.5" && decl.starts_with("C4*0."))
+        {
+            ci.warnings.push(
+                "if factoring a C4+ because 5-7 are swimming, is the smaller group still doing C4?"
+                    .into(),
+            );
+        }
+
+        let decl_parts: Vec<&str> = decl.split('*').collect();
+        let prev_decl_parts: Vec<&str> = prev_decl.split('*').collect();
+        if decl_parts.len() == 2
+            && prev_decl_parts.len() == 2
+            && decl_parts[0] == prev_decl_parts[0]
+        {
+            ci.warnings.push(
+                "if two groups are doing the same choreography in two groups, do not factor".into(),
+            );
+        }
+
+        let cplus_less_half_rx = Regex::new(r"^C[\dB][A-z]?\+\*0.3").unwrap();
+        if cplus_less_half_rx.is_match(decl) {
+            ci.warnings.push("factoring C+ by 0.3 requires 9-10 athletes".into());
+        }
+
+        prev_decl = decl;
     }
     ci
 }
@@ -543,7 +488,7 @@ fn check_routine_times(card: &CoachCard) -> CardIssues {
     ci
 }
 
-fn check_tres(card: &CoachCard) -> CardIssues {
+fn check_tres(category: Category, tre: &String) -> CardIssues {
     static HASHMAP: std::sync::OnceLock<HashMap<Events, HashSet<&str>>> =
         std::sync::OnceLock::new();
     let tre_map = HASHMAP.get_or_init(|| {
@@ -577,40 +522,31 @@ fn check_tres(card: &CoachCard) -> CardIssues {
     });
 
     let mut ci = CardIssues::default();
-    for (num, tre) in tres!(card.elements) {
-        if card.category.free {
-            ci.errors.push(format!("Element {num}: TRE in free routine?"));
-            continue;
-        }
+    if category.free {
+        ci.errors.push("TRE in free routine?".into());
+    } else {
         let empty_set = HashSet::<&str>::new();
-        let valid_tres = tre_map.get(&card.category.event).unwrap_or(&empty_set);
+        let valid_tres = tre_map.get(&category.event).unwrap_or(&empty_set);
         if !valid_tres.contains(tre.as_str()) {
-            ci.errors.push(format!(
-                "Element {num}: {tre} is not a valid TRE for {:?}",
-                card.category.event
-            ));
+            ci.errors.push(format!("{tre} is not a valid TRE for {:?}", category.event));
         }
     }
     ci
 }
 
-fn check_connections_in_non_team(card: &CoachCard) -> CardIssues {
+fn check_connections_in_non_team(category: Category, decls: &[String]) -> CardIssues {
     let mut ci = CardIssues::default();
-    if card.category.event == Combo || card.category.event == Team {
+    if category.event == Combo || category.event == Team {
         return ci;
     }
 
     let c_regex = Regex::new(r"^C[\dB][A-z]?").unwrap();
     let cplus_regex = Regex::new(r"^C[\dB][A-z]?\+").unwrap();
-    for (num, hybrid, _) in hybrids!(card.elements) {
-        for decl in hybrid {
-            if cplus_regex.is_match(decl) {
-                ci.errors.push(format!(
-                    "Element {num}: C+ connections can only be used in team routines"
-                ));
-            } else if card.category.event == Solo && c_regex.is_match(decl) {
-                ci.errors.push(format!("Element {num}: connections can not be used in solos"));
-            }
+    for decl in decls {
+        if cplus_regex.is_match(decl) {
+            ci.errors.push("C+ connections can only be used in team routines".into());
+        } else if category.event == Solo && c_regex.is_match(decl) {
+            ci.errors.push("connections can not be used in solos".into());
         }
     }
     ci
@@ -680,19 +616,14 @@ fn check_overlapping_elements(card: &CoachCard) -> CardIssues {
     ci
 }
 
-fn check_dd_limits(card: &CoachCard) -> CardIssues {
+fn check_dd_limits(category: Category, dd: &str) -> CardIssues {
     let mut ci = CardIssues::default();
-    if card.category.ag != AG12U {
+    if category.ag != AG12U {
         return ci;
     }
 
-    for (num, _, dd) in hybrids!(card.elements) {
-        if dd.parse().unwrap_or(0.0) > 7.0 {
-            ci.errors.push(format!(
-                "Element {}: USAAS 12U routines may not have hybrid with a DD greater than 7",
-                &num
-            ));
-        }
+    if dd.parse().unwrap_or(0.0) > 7.0 {
+        ci.errors.push("USAAS 12U routines may not have hybrid with a DD greater than 7".into());
     }
     ci
 }
@@ -716,55 +647,107 @@ fn check_category(card: &CoachCard) -> CardIssues {
     ci
 }
 
-fn check_hybrid_common_base_marks(card: &CoachCard) -> CardIssues {
+fn check_hybrid_common_base_marks(category: Category, decls: &[String]) -> CardIssues {
     const PROBLEM_CODES: &[&str] = &["A5", "F8"]; // F8 catches a&b
     const TECH_DUET_MIRROR_CODES: &[&str] = &["C1a", "C2a", "C4", "C6a", "C6b", "C7"];
     let mut ci = CardIssues::default();
-    for (num, hybrid, _) in hybrids!(card.elements) {
-        for decl in hybrid {
-            for code in PROBLEM_CODES {
-                if decl.starts_with(code) {
-                    ci.warnings.push(format!("Element {num}: when {decl} is performed quickly, it has a very high risk of base marking"));
-                }
+    for decl in decls {
+        for code in PROBLEM_CODES {
+            if decl.starts_with(code) {
+                ci.warnings.push(format!(
+                    "when {decl} is performed quickly, it has a very high risk of base marking"
+                ));
             }
+        }
 
-            if card.category.event == Trio && decl.starts_with("C4") {
-                ci.warnings.push(format!("Element {num}: the two legs in a line variation of C4, requires C4+ and 4+ athletes"));
-            }
+        if category.event == Trio && decl.starts_with("C4") {
+            ci.warnings.push(
+                "the two legs in a line variation of C4, requires C4+ and 4+ athletes".into(),
+            );
+        }
 
-            // Mixed Duet can have mirror action, so only check Duet
-            // Tech Trios aren't an official event so ignore them
-            if card.category.event == Duet
-                && !card.category.free
-                && TECH_DUET_MIRROR_CODES.contains(&decl.as_str())
-            {
-                ci.warnings
-                    .push(format!("Element {num}: {decl} in Tech Duet, is this mirror action?"));
-            }
+        // Mixed Duet can have mirror action, so only check Duet
+        // Tech Trios aren't an official event so ignore them
+        if category.event == Duet
+            && !category.free
+            && TECH_DUET_MIRROR_CODES.contains(&decl.as_str())
+        {
+            ci.warnings.push(format!("{decl} in Tech Duet, is this mirror action?"));
         }
     }
     ci
 }
 
-fn check_hybrid_start_end(card: &CoachCard) -> CardIssues {
+fn check_hybrid_start_end(_: Category, decls: &[String]) -> CardIssues {
     let mut ci = CardIssues::default();
-    for (num, hybrid, _) in hybrids!(card.elements) {
-        // get the last normal decl and ignore PC bonuses
-        let end_pos = hybrid.len() - 1;
-        let end_pos = if hybrid[end_pos].ends_with("PC") { end_pos - 1 } else { end_pos };
+    // get the last normal decl and ignore PC bonuses
+    let end_pos = decls.len() - 1;
+    let end_pos = if decls[end_pos].ends_with("PC") { end_pos - 1 } else { end_pos };
 
-        for (i, decl) in hybrid.iter().enumerate() {
-            if decl.starts_with("FB") && i != 0 {
-                ci.errors.push(format!("Element {num}: {decl} must be at the start of a hybrid"));
-            }
-            if decl.starts_with("F2a") && i != end_pos {
-                ci.errors.push(format!("Element {num}: {decl} must be at the end of a hybrid"));
-            }
-            if decl.starts_with("F4a") && i != 0 {
-                ci.warnings
-                    .push(format!("Element {num}: {decl} is not at the start, is this correct?"));
-            }
+    for (i, decl) in decls.iter().enumerate() {
+        if decl.starts_with("FB") && i != 0 {
+            ci.errors.push(format!("{decl} must be at the start of a hybrid"));
         }
+        if decl.starts_with("F2a") && i != end_pos {
+            ci.errors.push(format!("{decl} must be at the end of a hybrid"));
+        }
+        if decl.starts_with("F4a") && i != 0 {
+            ci.warnings.push(format!("{decl} is not at the start, is this correct?"));
+        }
+    }
+    ci
+}
+
+fn check_elements(card: &CoachCard) -> CardIssues {
+    static HYBRID_CHECKS: &[fn(Category, &[String]) -> CardIssues] = &[
+        check_hybrid_declaration_maxes,
+        check_small_bonuses,
+        check_valid_hybrid_declarations,
+        check_factoring,
+        check_connections_in_non_team,
+        check_hybrid_common_base_marks,
+        check_hybrid_start_end,
+    ];
+    static PAIR_ACRO_CHECKS: &[fn(Category, &String) -> CardIssues] = &[check_pair_acro];
+    static TEAM_ACRO_CHECKS: &[fn(Category, &TeamAcrobatic, &String) -> CardIssues] =
+        &[check_team_acro];
+    static TRE_CHECKS: &[fn(Category, &String) -> CardIssues] = &[check_tres];
+
+    let mut ci = CardIssues::default();
+    for elem in &card.elements {
+        let mut element_ci = CardIssues::default();
+        match &elem.kind {
+            TeamAcro(ta, dd) => {
+                for check in TEAM_ACRO_CHECKS {
+                    element_ci += check(card.category, ta, dd);
+                }
+            }
+            PairAcro(decl) => {
+                for check in PAIR_ACRO_CHECKS {
+                    element_ci += check(card.category, decl);
+                }
+            }
+            Hybrid(decls, dd) => {
+                for check in HYBRID_CHECKS {
+                    element_ci += check(card.category, decls);
+                }
+                element_ci += check_dd_limits(card.category, dd);
+            }
+            TRE(decl) => {
+                for check in TRE_CHECKS {
+                    element_ci += check(card.category, decl);
+                }
+            }
+            ChoHy | SuConn => {}
+        }
+        let prefix = format!("Element {}: ", elem.number);
+        for err in &mut element_ci.errors {
+            err.insert_str(0, &prefix);
+        }
+        for warn in &mut element_ci.warnings {
+            warn.insert_str(0, &prefix);
+        }
+        ci += element_ci;
     }
     ci
 }
@@ -772,23 +755,14 @@ fn check_hybrid_start_end(card: &CoachCard) -> CardIssues {
 pub fn run_checks(card: &CoachCard) -> CardIssues {
     static CHECKS: &[fn(&CoachCard) -> CardIssues] = &[
         check_iss_version,
-        check_hybrid_declaration_maxes,
         check_routine_element_maxes,
         check_theme,
-        check_small_bonuses,
-        check_acros_event,
         check_mixed_duet_elements,
-        check_valid_hybrid_declarations,
         check_routine_has_all_families,
-        check_connections_in_non_team,
-        check_tres,
         check_routine_times,
-        check_factoring,
         check_overlapping_elements,
-        check_dd_limits,
         check_category,
-        check_hybrid_common_base_marks,
-        check_hybrid_start_end,
+        check_elements,
     ];
     let mut ci = CardIssues::default();
     for check in CHECKS {
@@ -894,6 +868,36 @@ mod tests {
         assert_eq!(result.warnings.len(), warn_expected);
     }
 
+    fn run_hybrid_test(
+        name: &str,
+        check_fn: fn(Category, &[String]) -> CardIssues,
+        cat: Category,
+        hybrid: &[&str],
+    ) {
+        // FUTURE update tests to use _err
+        let err_expected = if name.ends_with("_ok") || name.ends_with("_warn") { 0 } else { 1 };
+        let warn_expected = if name.ends_with("_warn") { 1 } else { 0 };
+        let decls: Vec<String> = hybrid.into_iter().map(|s| s.to_string()).collect();
+        let result = check_fn(cat, &decls);
+        // println!("TEST {:?}", result.errors);
+        assert_eq!(result.errors.len(), err_expected);
+        assert_eq!(result.warnings.len(), warn_expected);
+    }
+
+    fn run_tre_test(
+        name: &str,
+        check_fn: fn(Category, &String) -> CardIssues,
+        cat: Category,
+        tre: &str,
+    ) {
+        let err_expected = if name.ends_with("_err") { 1 } else { 0 };
+        let warn_expected = if name.ends_with("_warn") { 1 } else { 0 };
+        let result = check_fn(cat, &tre.to_string());
+        // println!("TEST {:?}", result.errors);
+        assert_eq!(result.errors.len(), err_expected);
+        assert_eq!(result.warnings.len(), warn_expected);
+    }
+
     #[test]
     fn test_check_iss_version() {
         let not_set = check_iss_version(&CardBuilder::new().card);
@@ -906,18 +910,7 @@ mod tests {
         assert_eq!(current.warnings.len(), 0);
     }
 
-    macro_rules! hybrid_tests {
-        ($($name:ident: $fname:expr, $value:expr,)*) => {
-        $(
-            #[test]
-            fn $name () {
-                run_test(stringify!($name), $fname, &CardBuilder::new().hybrids($value).card);
-            }
-        )*
-        }
-    }
-
-    macro_rules! hybrid_cat_tests {
+    macro_rules! routine_tests {
         ($($name:ident: $fname:expr, $category:expr, $value:expr,)*) => {
         $(
             #[test]
@@ -928,71 +921,135 @@ mod tests {
         }
     }
 
-    hybrid_tests! {
-        nm_err: check_valid_hybrid_declarations, &[&["NM2"]], // yes people are still doing this
-        old_bonus_err: check_valid_hybrid_declarations, &[&["PL"]],
-        old_bonus2_err: check_valid_hybrid_declarations, &[&["TR"]],
-        just_pc_ok: check_valid_hybrid_declarations, &[&["2PC"]],
-        factored_pc_err: check_valid_hybrid_declarations, &[&["2PC*0.3"]],
-        spin_base_ok: check_valid_hybrid_declarations, &[&["SB"]],
-        spin_ten_ok: check_valid_hybrid_declarations, &[&["S10*0.3"]],
-        spin_five_ok: check_valid_hybrid_declarations, &[&["S5*0.5"]],
-        spin_factor_err: check_valid_hybrid_declarations, &[&["S5*0.4"]],
-        combined_spin_level_ok: check_valid_hybrid_declarations, &[&["SC4*0.5"]],
-        combined_spin_invalid_level: check_valid_hybrid_declarations, &[&["SC8"]],
-        two_dir_spin_level_ok: check_valid_hybrid_declarations, &[&["SCD2*0.3"]],
-        two_dir_spin_level_err: check_valid_hybrid_declarations, &[&["SCD7"]],
-        conn_bad_option_err: check_valid_hybrid_declarations, &[&["C4a"]],
-        conn_factored_plus_ok: check_valid_hybrid_declarations, &[&["C2b+*0.5"]],
-        flex_ok: check_valid_hybrid_declarations, &[&["F4e*0.3"]],
-        flex_err: check_valid_hybrid_declarations, &[&["F4k"]],
-        air_ok: check_valid_hybrid_declarations, &[&["A7*0.3"]],
-        air_err: check_valid_hybrid_declarations, &[&["A7a"]],
-        swirl_ok: check_valid_hybrid_declarations, &[&["RB*0.5"]],
-        swirl_err: check_valid_hybrid_declarations, &[&["R5"]],
-        twist_ok: check_valid_hybrid_declarations, &[&["2R10*0.3"]],
-        twist_err: check_valid_hybrid_declarations, &[&["2R11"]],
-        unbal_ok: check_valid_hybrid_declarations, &[&["RU10*0.3"]],
-        unbal_err: check_valid_hybrid_declarations, &[&["RU11"]],
-        open_ok: check_valid_hybrid_declarations, &[&["ROB"]],
-        close_err: check_valid_hybrid_declarations, &[&["RC2"]],
-        one_leg_ok: check_valid_hybrid_declarations, &[&["1R6"]],
-        one_leg_err: check_valid_hybrid_declarations, &[&["1R7"]],
-        six_factored_ok: check_hybrid_declaration_maxes, &[&["TB*0.5", "T1*0.5", "T2a", "T2b", "T3a", "T3b"]],
-        six_factored_thrusts_ok: check_hybrid_declaration_maxes,&[&["TB*0.5", "T1*0.5", "T2a", "T2b", "T3a", "T3b"]],
-        too_many_factored_thrusts_err: check_hybrid_declaration_maxes,&[&["TB*0.3", "T1*0.3", "T2a", "T2b", "T3a", "T3b", "T3c*0.3"]],
-        five_spins_ok: check_hybrid_declaration_maxes,&[&["SC1", "S2", "SCD3", "SC4", "S5"]],
-        six_spins_err: check_hybrid_declaration_maxes,&[&["SCDB", "SC1", "S2", "SCD3", "SC4", "S5"]],
-        five_twists_ok: check_hybrid_declaration_maxes,&[&["RB", "R1", "1R1", "RU1", "RO1"]],
-        six_twists_err: check_hybrid_declaration_maxes,&[&["RB", "R1", "1R1", "RU1", "RO1", "RC1"]],
-        five_flex_ok: check_hybrid_declaration_maxes,&[&["FB", "F1a", "F1b", "F1c", "F2a"]],
-        six_flex_err: check_hybrid_declaration_maxes,&[&["FB", "F1a", "F1b", "F1c", "F2a", "F2b"]],
-        five_connections_ok: check_hybrid_declaration_maxes,&[&["CB*0.5", "C1", "C2", "C3", "C4+", "C6*0.5"]],
-        six_connections_err: check_hybrid_declaration_maxes,&[&["CB", "C1", "C2", "C3", "C4+", "C6"]],
-        five_spin_variations_ok: check_hybrid_declaration_maxes,&[&["SB", "SCB", "SCDB", "S1", "SCD1"]],
-        five_rb_variations_ok: check_hybrid_declaration_maxes,&[&["RB", "1RB", "2RB", "ROB", "RCB"]],
-        five_r1_variations_ok: check_hybrid_declaration_maxes,&[&["R1", "1R1", "2R1", "RO1", "RC1"]],
-        four_a1s_ok: check_hybrid_declaration_maxes,&[&["A1a", "A1b", "A1c", "A1d"]],
-        four_c4s_err: check_hybrid_declaration_maxes,&[&["C4", "C4", "C4", "C4+"]],
-        four_factored_c1s_err: check_hybrid_declaration_maxes,&[&["C4", "C4*0.3", "C4*0.3", "C4*0.3", "C4*0.3", "C4*0.3"]],
-        walkout_in_middle_err: check_hybrid_start_end, &[&["F1a", "F2a", "R1"]],
-        walkout_at_end_ok: check_hybrid_start_end, &[&["R1", "F1a", "F2a"]],
-        walkout_at_end_with_pc_ok: check_hybrid_start_end, &[&["R1", "F1a", "F2a", "2PC"]],
-        back_layout_in_middle_err: check_hybrid_start_end, &[&["R1", "FB", "T4e"]],
-        back_layout_at_start_ok: check_hybrid_start_end, &[&["FB", "R1", "T4e"]],
-        front_layout_in_middle_warn: check_hybrid_start_end, &[&["R1", "F4a", "T4e"]],
-        front_layout_at_start_ok: check_hybrid_start_end, &[&["F4a", "R1", "T4e"]],
+    macro_rules! tre_tests {
+        ($($name:ident: $fname:expr, $category:expr, $value:expr,)*) => {
+        $(
+            #[test]
+            fn $name () {
+                run_tre_test(stringify!($name), $fname, $category, $value);
+            }
+        )*
+        }
+    }
+
+    macro_rules! hybrid_tests {
+        ($($name:ident: $fname:expr, $category:expr, $value:expr,)*) => {
+        $(
+            #[test]
+            fn $name () {
+                run_hybrid_test(stringify!($name), $fname, $category, $value);
+            }
+        )*
+        }
     }
 
     const TECH_MIXED: Category = Category { ag: JRSR, event: MixedDuet, free: false };
 
-    hybrid_cat_tests! {
-        too_many_hybrids: check_routine_element_maxes, Category{ag: AG12U, event: Solo, free: true}, &[&["R1"], &["R1"], &["R1"], &["R1"], &["R1"]],
-        too_few_hybrids: check_routine_element_maxes, Category{ag: JRSR, event: Solo, free: true}, &[&["R1"], &["R1"], &["R1"], &["R1"], &["R1"]],
+    hybrid_tests! {
+        six_factored_ok: check_hybrid_declaration_maxes, TECH_MIXED, &["TB*0.5", "T1*0.5", "T2a", "T2b", "T3a", "T3b"],
+        six_factored_thrusts_ok: check_hybrid_declaration_maxes,TECH_MIXED, &["TB*0.5", "T1*0.5", "T2a", "T2b", "T3a", "T3b"],
+        too_many_factored_thrusts_err: check_hybrid_declaration_maxes,TECH_MIXED, &["TB*0.3", "T1*0.3", "T2a", "T2b", "T3a", "T3b", "T3c*0.3"],
+        five_spins_ok: check_hybrid_declaration_maxes,TECH_MIXED, &["SC1", "S2", "SCD3", "SC4", "S5"],
+        six_spins_err: check_hybrid_declaration_maxes,TECH_MIXED, &["SCDB", "SC1", "S2", "SCD3", "SC4", "S5"],
+        five_twists_ok: check_hybrid_declaration_maxes,TECH_MIXED, &["RB", "R1", "1R1", "RU1", "RO1"],
+        six_twists_err: check_hybrid_declaration_maxes,TECH_MIXED, &["RB", "R1", "1R1", "RU1", "RO1", "RC1"],
+        five_flex_ok: check_hybrid_declaration_maxes,TECH_MIXED, &["FB", "F1a", "F1b", "F1c", "F2a"],
+        six_flex_err: check_hybrid_declaration_maxes,TECH_MIXED, &["FB", "F1a", "F1b", "F1c", "F2a", "F2b"],
+        five_connections_ok: check_hybrid_declaration_maxes,TECH_MIXED, &["CB*0.5", "C1", "C2", "C3", "C4+", "C6*0.5"],
+        six_connections_err: check_hybrid_declaration_maxes,TECH_MIXED, &["CB", "C1", "C2", "C3", "C4+", "C6"],
+        five_spin_variations_ok: check_hybrid_declaration_maxes,TECH_MIXED, &["SB", "SCB", "SCDB", "S1", "SCD1"],
+        five_rb_variations_ok: check_hybrid_declaration_maxes,TECH_MIXED, &["RB", "1RB", "2RB", "ROB", "RCB"],
+        five_r1_variations_ok: check_hybrid_declaration_maxes,TECH_MIXED, &["R1", "1R1", "2R1", "RO1", "RC1"],
+        four_a1s_ok: check_hybrid_declaration_maxes,TECH_MIXED, &["A1a", "A1b", "A1c", "A1d"],
+        four_c4s_err: check_hybrid_declaration_maxes,TECH_MIXED, &["C4", "C4", "C4", "C4+"],
+        four_factored_c1s_err: check_hybrid_declaration_maxes,TECH_MIXED, &["C4", "C4*0.3", "C4*0.3", "C4*0.3", "C4*0.3", "C4*0.3"],
+        nm_err: check_valid_hybrid_declarations, TECH_MIXED, &["NM2"], // yes people are still doing this
+        old_bonus_err: check_valid_hybrid_declarations, TECH_MIXED, &["PL"],
+        old_bonus2_err: check_valid_hybrid_declarations, TECH_MIXED,  &["TR"],
+        just_pc_ok: check_valid_hybrid_declarations,  TECH_MIXED, &["2PC"],
+        factored_pc_err: check_valid_hybrid_declarations,  TECH_MIXED, &["2PC*0.3"],
+        spin_base_ok: check_valid_hybrid_declarations,  TECH_MIXED, &["SB"],
+        spin_ten_ok: check_valid_hybrid_declarations,  TECH_MIXED, &["S10*0.3"],
+        spin_five_ok: check_valid_hybrid_declarations, TECH_MIXED,  &["S5*0.5"],
+        spin_factor_err: check_valid_hybrid_declarations, TECH_MIXED,  &["S5*0.4"],
+        combined_spin_level_ok: check_valid_hybrid_declarations,  TECH_MIXED, &["SC4*0.5"],
+        combined_spin_invalid_level: check_valid_hybrid_declarations, TECH_MIXED,  &["SC8"],
+        two_dir_spin_level_ok: check_valid_hybrid_declarations, TECH_MIXED,  &["SCD2*0.3"],
+        two_dir_spin_level_err: check_valid_hybrid_declarations,  TECH_MIXED, &["SCD7"],
+        conn_bad_option_err: check_valid_hybrid_declarations,  TECH_MIXED, &["C4a"],
+        conn_factored_plus_ok: check_valid_hybrid_declarations, TECH_MIXED,  &["C2b+*0.5"],
+        flex_ok: check_valid_hybrid_declarations,  TECH_MIXED, &["F4e*0.3"],
+        flex_err: check_valid_hybrid_declarations, TECH_MIXED,  &["F4k"],
+        air_ok: check_valid_hybrid_declarations,  TECH_MIXED, &["A7*0.3"],
+        air_err: check_valid_hybrid_declarations, TECH_MIXED,  &["A7a"],
+        swirl_ok: check_valid_hybrid_declarations,  TECH_MIXED, &["RB*0.5"],
+        swirl_err: check_valid_hybrid_declarations,  TECH_MIXED, &["R5"],
+        twist_ok: check_valid_hybrid_declarations,  TECH_MIXED, &["2R10*0.3"],
+        twist_err: check_valid_hybrid_declarations,  TECH_MIXED, &["2R11"],
+        unbal_ok: check_valid_hybrid_declarations,  TECH_MIXED, &["RU10*0.3"],
+        unbal_err: check_valid_hybrid_declarations, TECH_MIXED,  &["RU11"],
+        open_ok: check_valid_hybrid_declarations,  TECH_MIXED, &["ROB"],
+        close_err: check_valid_hybrid_declarations,  TECH_MIXED, &["RC2"],
+        one_leg_ok: check_valid_hybrid_declarations,  TECH_MIXED, &["1R6"],
+        one_leg_err: check_valid_hybrid_declarations,  TECH_MIXED, &["1R7"],
+        duet_with_pc_err: check_small_bonuses, Category{ag: JRSR, event: Duet, free: true}, &["2PC"],
+        team_with_pc_ok: check_small_bonuses, Category{ag: JRSR, event: Team, free: true}, &["2PC"],
+        solo_factored_err: check_factoring, Category{ag: AG12U, event: Solo, free: true}, &["R1*0.5"],
+        duet_factored_too_small_err: check_factoring, Category{ag: AG12U, event: Duet, free: true}, &["R1*0.3"],
+        duet_factored_ok: check_factoring, Category{ag: AG12U, event: Duet, free: true}, &["R1*0.5"],
+        team_factored_ok: check_factoring, Category{ag: AG12U, event: Team, free: true}, &["R1*0.3"],
+        duet_factored_conn_err: check_factoring, Category{ag: AG12U, event: Duet, free: true}, &["C4*0.5"],
+        mix_duet_factored_conn_err: check_factoring, Category{ag: AG12U, event: MixedDuet, free: true}, &["CB*0.5"],
+        team_factored_conn_ok: check_factoring, Category{ag: AG12U, event: Team, free: true}, &["CB*0.5"],
+        tech_team_factored_conn_warn: check_factoring, Category { ag: AG12U, event: Team, free: false }, &["CB*0.5"],
+        tech_duet_factored_decl_warn: check_factoring, Category { ag: AG12U, event: Duet, free: false }, &["R1*0.5"],
+        c_c_plus_warn: check_factoring, Category { ag: AG12U, event: Team, free: true }, &["C3*0.5", "C3+*0.5"],
+        c_c_plus_ok: check_factoring, Category { ag: AG12U, event: Team, free: true }, &["C3*0.3", "C3+*0.5"],
+        c_plus_c_warn: check_factoring, Category { ag: AG12U, event: Team, free: true }, &["C3+*0.5", "C3*0.5"],
+        c_plus_c_ok: check_factoring, Category { ag: AG12U, event: Team, free: true }, &["C3+*0.5", "C3*0.3"],
+        c4_c4plus_warn: check_factoring, Category { ag: AG12U, event: Team, free: true }, &["C4*0.3", "C4+*0.5"],
+        c4_c4plus_ok: check_factoring, Category { ag: AG12U, event: Team, free: true }, &["C2b*0.3", "C4+*0.5"],
+        c4plus_c4_warn: check_factoring, Category { ag: AG12U, event: Team, free: true }, &["C4+*0.5", "C4*0.3"],
+        c4plus_c4_ok: check_factoring, Category { ag: AG12U, event: Team, free: true }, &["C4+*0.5", "C2b*0.3"],
+        c4plus_c4_2_ok: check_factoring, Category { ag: AG12U, event: Team, free: true }, &["C4+*0.5", "C2b*0.3"],
+        repeat_decl_warn: check_factoring, Category { ag: AG12U, event: Team, free: true }, &["2R1*0.5", "2R1*0.3"],
+        non_repeat_decl_ok: check_factoring, Category { ag: AG12U, event: Team, free: true }, &["2R1*0.5", "1R1*0.5"],
+        cplus_less_half_warn: check_factoring, Category { ag: AG12U, event: Team, free: true }, &["C1a+*0.3"],
+        walkout_in_middle_err: check_hybrid_start_end, TECH_MIXED, &["F1a", "F2a", "R1"],
+        walkout_at_end_ok: check_hybrid_start_end, TECH_MIXED, &["R1", "F1a", "F2a"],
+        walkout_at_end_with_pc_ok: check_hybrid_start_end, TECH_MIXED, &["R1", "F1a", "F2a", "2PC"],
+        back_layout_in_middle_err: check_hybrid_start_end, TECH_MIXED, &["R1", "FB", "T4e"],
+        back_layout_at_start_ok: check_hybrid_start_end, TECH_MIXED, &["FB", "R1", "T4e"],
+        front_layout_in_middle_warn: check_hybrid_start_end, TECH_MIXED, &["R1", "F4a", "T4e"],
+        front_layout_at_start_ok: check_hybrid_start_end, TECH_MIXED, &["F4a", "R1", "T4e"],
+        duet_c4plus: check_connections_in_non_team, Category{ag: AG12U, event: Duet, free: true}, &["C4+"],
+        combo_c4plus_ok: check_connections_in_non_team, Category{ag: AG12U, event: Combo, free: true}, &["C4+"],
+        duet_c4_ok: check_connections_in_non_team, Category{ag: AG12U, event: Duet, free: true}, &["C4"],
+        solo_cb: check_connections_in_non_team, Category{ag: AG12U, event: Solo, free: true}, &["CB"],
+        a5_warn: check_hybrid_common_base_marks, TECH_MIXED, &["A5"],
+        f8a_warn: check_hybrid_common_base_marks, TECH_MIXED, &["F8a*0.5"],
+        f8b_warn: check_hybrid_common_base_marks, TECH_MIXED, &["F8b"],
+        other_decls_ok: check_hybrid_common_base_marks, TECH_MIXED, &["A4b", "F6a*0.5", "F6c"],
+        c4_trio_warn: check_hybrid_common_base_marks, Category{ag: AG12U, event: Trio, free: true}, &["C4"],
+        c4_duet_ok: check_hybrid_common_base_marks, Category{ag: AG12U, event: Duet, free: true}, &["C4"],
+        c4_tech_duet_warn: check_hybrid_common_base_marks, Category { ag: JRSR, free: false, event: Duet }, &["C4"],
+        c4_tech_mixed_ok: check_hybrid_common_base_marks, TECH_MIXED, &["C4"],
+        c2b_tech_duet_ok: check_hybrid_common_base_marks, Category{ag: AG12U, event: Duet, free: true}, &["C2b"],
+    }
+
+    tre_tests! {
+        solo_invalid_tre_err: check_tres, Category{ag: JRSR, event: Solo, free: false}, "TRE5m",
+        team_tre4a_err: check_tres, Category{ag: JRSR, event: Team, free: false}, "TRE4a",
+        solo_tre4a_ok: check_tres, Category{ag: JRSR, event: Solo, free: false}, "TRE4a",
+        free_solo_tre4a_err: check_tres, Category{ag: JRSR, event: Solo, free: true}, "TRE4a",
+    }
+
+    routine_tests! {
+        too_many_hybrids_err: check_routine_element_maxes, Category{ag: AG12U, event: Solo, free: true}, &[&["R1"], &["R1"], &["R1"], &["R1"], &["R1"]],
+        too_few_hybrids_err: check_routine_element_maxes, Category{ag: JRSR, event: Solo, free: true}, &[&["R1"], &["R1"], &["R1"], &["R1"], &["R1"]],
         correct_hybrids_ok: check_routine_element_maxes, Category{ag: Youth, event: Solo, free: true}, &[&["R1"], &["R1"], &["R1"], &["R1"], &["R1"]],
-        duet_with_pc: check_small_bonuses, Category{ag: JRSR, event: Duet, free: true}, &[&["2PC"]],
-        team_with_pc_ok: check_small_bonuses, Category{ag: JRSR, event: Team, free: true}, &[&["2PC"]],
-        missing_thrust: check_mixed_duet_elements, TECH_MIXED, &[&["CB", "C4"]],
+        unknown_event_warn: check_routine_element_maxes, Category{ag: AG12U, event: Acrobatic, free: false}, &[],
+        missing_thrust_err: check_mixed_duet_elements, TECH_MIXED, &[&["CB", "C4"]],
         missing_thrust_in_free_ok: check_mixed_duet_elements, Category{ag: JRSR, event: MixedDuet, free: true}, &[&["CB", "C4"]],
         missing_thrust_in_duet_ok: check_mixed_duet_elements, Category{ag: JRSR, event: Duet, free: false}, &[&["CB", "C4"]],
         one_conn_one_thrust: check_mixed_duet_elements, TECH_MIXED, &[&["C4", "T9a"]],
@@ -1007,139 +1064,9 @@ mod tests {
         duet_missing_conn: check_routine_has_all_families, Category{ag: AG12U, event: Duet, free: true}, &[&["TB", "SC1", "2R2"], &["A3b", "F4f"]],
         tech_duet_families_ok: check_routine_has_all_families, Category{ag: AG12U, event: Duet, free: false}, &[&["TB", "SC1", "2R2"], &["A3b", "F4f"]],
         duet_factored_flex: check_routine_has_all_families, Category{ag: AG12U, event: Duet, free: true}, &[&["TB", "SC1", "2R2"], &["A3b", "F4f*0.5", "CB"]],
-        duet_c4plus: check_connections_in_non_team, Category{ag: AG12U, event: Duet, free: true}, &[&["C4+"]],
-        combo_c4plus_ok: check_connections_in_non_team, Category{ag: AG12U, event: Combo, free: true}, &[&["C4+"]],
-        duet_c4_ok: check_connections_in_non_team, Category{ag: AG12U, event: Duet, free: true}, &[&["C4"]],
-        solo_cb: check_connections_in_non_team, Category{ag: AG12U, event: Solo, free: true}, &[&["CB"]],
-        solo_factored: check_factoring, Category{ag: AG12U, event: Solo, free: true}, &[&["R1*0.5"]],
-        duet_factored_too_small: check_factoring, Category{ag: AG12U, event: Duet, free: true}, &[&["R1*0.3"]],
-        duet_factored_ok: check_factoring, Category{ag: AG12U, event: Duet, free: true}, &[&["R1*0.5"]],
-        team_factored_ok: check_factoring, Category{ag: AG12U, event: Team, free: true}, &[&["R1*0.3"]],
-        duet_factored_conn: check_factoring, Category{ag: AG12U, event: Duet, free: true}, &[&["C4*0.5"]],
-        mix_duet_factored_conn: check_factoring, Category{ag: AG12U, event: MixedDuet, free: true}, &[&["CB*0.5"]],
-        team_factored_conn_ok: check_factoring, Category{ag: AG12U, event: Team, free: true}, &[&["CB*0.5"]],
-        solo_invalid_tre: check_tres, Category{ag: JRSR, event: Solo, free: false}, &[&["TRE5m"]],
-        team_tre4a_err: check_tres, Category{ag: JRSR, event: Team, free: false}, &[&["TRE4a"]],
-        solo_tre4a_ok: check_tres, Category{ag: JRSR, event: Solo, free: false}, &[&["TRE4a"]],
-        free_solo_tre4a_err: check_tres, Category{ag: JRSR, event: Solo, free: true}, &[&["TRE4a"]],
         unknown_ag_err: check_category, Category{ag: AgeGroups::Unknown, event: Solo, free: true}, &[],
         unknown_event_err: check_category, Category{ag: JRSR, event: Events::Unknown, free: true}, &[],
         youth_tech_warn: check_category, Category{ag: Youth, event: Team, free: false}, &[],
-    }
-
-    #[test]
-    fn test_check_factoring_warnings() {
-        // FUTURE turn these into hybrid_cat_tests
-        let tech_team_factored_conn = check_factoring(
-            &CardBuilder::new()
-                .category(Category { ag: AG12U, event: Team, free: false })
-                .hybrids(&[&["CB*0.5"]])
-                .card,
-        );
-        assert_eq!(tech_team_factored_conn.warnings.len(), 1);
-        let tech_duet_factored_conn = check_factoring(
-            &CardBuilder::new()
-                .category(Category { ag: AG12U, event: Duet, free: false })
-                .hybrids(&[&["R1*0.5"]])
-                .card,
-        );
-        assert_eq!(tech_duet_factored_conn.warnings.len(), 1);
-
-        let c_c_plus_warn = check_factoring(
-            &CardBuilder::new()
-                .category(Category { ag: AG12U, event: Duet, free: true })
-                .hybrids(&[&["C3*0.5", &"C3+*0.5"]])
-                .card,
-        );
-        assert_eq!(c_c_plus_warn.warnings.len(), 1);
-
-        let c_c_plus_ok1 = check_factoring(
-            &CardBuilder::new()
-                .category(Category { ag: AG12U, event: Duet, free: true })
-                .hybrids(&[&["C3*0.3", &"C3+*0.5"]])
-                .card,
-        );
-        assert_eq!(c_c_plus_ok1.warnings.len(), 0);
-
-        let c_plus_c_warn = check_factoring(
-            &CardBuilder::new()
-                .category(Category { ag: AG12U, event: Duet, free: true })
-                .hybrids(&[&["C3+*0.5", &"C3*0.5"]])
-                .card,
-        );
-        assert_eq!(c_plus_c_warn.warnings.len(), 1);
-
-        let c_plus_c_ok = check_factoring(
-            &CardBuilder::new()
-                .category(Category { ag: AG12U, event: Duet, free: true })
-                .hybrids(&[&["C3+*0.5", &"C3*0.3"]])
-                .card,
-        );
-        assert_eq!(c_plus_c_ok.warnings.len(), 0);
-
-        let c4_c4plus_warn = check_factoring(
-            &CardBuilder::new()
-                .category(Category { ag: AG12U, event: Duet, free: true })
-                .hybrids(&[&["C4*0.3", &"C4+*0.5"]])
-                .card,
-        );
-        assert_eq!(c4_c4plus_warn.warnings.len(), 1);
-
-        let c4_c4plus_ok = check_factoring(
-            &CardBuilder::new()
-                .category(Category { ag: AG12U, event: Duet, free: true })
-                .hybrids(&[&["C2b*0.3", &"C4+*0.5"]])
-                .card,
-        );
-        assert_eq!(c4_c4plus_ok.warnings.len(), 0);
-
-        let c4plus_c4_warn = check_factoring(
-            &CardBuilder::new()
-                .category(Category { ag: AG12U, event: Duet, free: true })
-                .hybrids(&[&["C4+*0.5", &"C4*0.3"]])
-                .card,
-        );
-        assert_eq!(c4plus_c4_warn.warnings.len(), 1);
-
-        let c4plus_c4_ok = check_factoring(
-            &CardBuilder::new()
-                .category(Category { ag: AG12U, event: Duet, free: true })
-                .hybrids(&[&["C4+*0.5", &"C2b*0.3"]])
-                .card,
-        );
-        assert_eq!(c4plus_c4_ok.warnings.len(), 0);
-
-        let c4plus_c4_ok = check_factoring(
-            &CardBuilder::new()
-                .category(Category { ag: AG12U, event: Duet, free: true })
-                .hybrids(&[&["C4+*0.5", &"C2b*0.3"]])
-                .card,
-        );
-        assert_eq!(c4plus_c4_ok.warnings.len(), 0);
-
-        let repeat_decl_warn = check_factoring(
-            &CardBuilder::new()
-                .category(Category { ag: AG12U, event: Duet, free: true })
-                .hybrids(&[&["2R1*0.5", &"2R1*0.3"]])
-                .card,
-        );
-        assert_eq!(repeat_decl_warn.warnings.len(), 1);
-
-        let non_repeat_decl_ok = check_factoring(
-            &CardBuilder::new()
-                .category(Category { ag: AG12U, event: Duet, free: true })
-                .hybrids(&[&["2R1*0.5", &"1R1*0.5"]])
-                .card,
-        );
-        assert_eq!(non_repeat_decl_ok.warnings.len(), 0);
-
-        let cplus_less_half_warn = check_factoring(
-            &CardBuilder::new()
-                .category(Category { ag: AG12U, event: Duet, free: true })
-                .hybrids(&[&["C1a+*0.3"]])
-                .card,
-        );
-        assert_eq!(cplus_less_half_warn.warnings.len(), 1);
     }
 
     #[test]
@@ -1155,13 +1082,6 @@ mod tests {
 
     #[test]
     fn test_check_routine_element_maxes() {
-        let unknown_event = check_routine_element_maxes(
-            &CardBuilder::new()
-                .category(Category { ag: AG12U, event: Acrobatic, free: false })
-                .card,
-        );
-        assert_eq!(unknown_event.warnings.len(), 1);
-
         let too_many_pair_acros = check_routine_element_maxes(
             &CardBuilder::new()
                 .pair_acros(&["Js1B", "L!fr1"])
@@ -1299,29 +1219,32 @@ mod tests {
     #[test]
     fn test_check_acros_event() {
         let pair_acro_in_solo =
-            check_acros_event(&CardBuilder::new().pair_acros(&["Js1B"]).event_type(Solo).card);
+            check_pair_acro(Category { ag: AG12U, event: Solo, free: true }, &"Js1B".into());
         assert_eq!(pair_acro_in_solo.errors.len(), 1);
-        let team_acro_in_solo = check_acros_event(
-            &CardBuilder::new().team_acros(&["A-Shou-Back-tk-s1"]).event_type(Solo).card,
+        let team_acro_in_solo = check_team_acro(
+            Category { ag: AG12U, event: Solo, free: true },
+            &TeamAcrobatic::from("A-Shou-Back-tk-s1").unwrap(),
+            &"".into(),
         );
         assert_eq!(team_acro_in_solo.errors.len(), 1);
-        let duet_acro_in_solo =
-            check_acros_event(&CardBuilder::new().pair_acros(&["Js1B"]).event_type(Solo).card);
-        assert_eq!(duet_acro_in_solo.errors.len(), 1);
 
         let pair_acro_in_duet =
-            check_acros_event(&CardBuilder::new().pair_acros(&["Js1B"]).event_type(Duet).card);
+            check_pair_acro(Category { ag: AG12U, event: Duet, free: true }, &"Js1B".into());
         assert_eq!(pair_acro_in_duet.errors.len(), 0);
-        let team_acro_in_duet = check_acros_event(
-            &CardBuilder::new().team_acros(&["A-Shou-Back-tk-s1"]).event_type(Duet).card,
+        let team_acro_in_duet = check_team_acro(
+            Category { ag: AG12U, event: Duet, free: true },
+            &TeamAcrobatic::from("A-Shou-Back-tk-s1").unwrap(),
+            &"".into(),
         );
         assert_eq!(team_acro_in_duet.errors.len(), 1);
 
         let pair_acro_in_team =
-            check_acros_event(&CardBuilder::new().pair_acros(&["Js1B"]).event_type(Team).card);
+            check_pair_acro(Category { ag: AG12U, event: Team, free: true }, &"Js1B".into());
         assert_eq!(pair_acro_in_team.errors.len(), 1);
-        let team_acro_in_team = check_acros_event(
-            &CardBuilder::new().team_acros(&["A-Shou-Back-tk-s1"]).event_type(Team).card,
+        let team_acro_in_team = check_team_acro(
+            Category { ag: AG12U, event: Team, free: true },
+            &TeamAcrobatic::from("A-Shou-Back-tk-s1").unwrap(),
+            &"".into(),
         );
         assert_eq!(team_acro_in_team.errors.len(), 0);
     }
@@ -1402,78 +1325,16 @@ mod tests {
 
     #[test]
     fn test_check_dd_limits() {
-        let above_limit_hybrid = Element {
-            number: 1,
-            start_time: Default::default(),
-            stop_time: Default::default(),
-            kind: Hybrid(vec!["C4".into()], "7.1".into()),
-        };
-        let below_limit_hybrid = Element {
-            number: 1,
-            start_time: Default::default(),
-            stop_time: Default::default(),
-            kind: Hybrid(vec!["C4".into()], "6.9".into()),
-        };
-        let mut base_card = CardBuilder::new()
-            .category(Category { ag: AG12U, event: Combo, free: true })
-            .hybrids(&[&["C4"]])
-            .card;
-
-        base_card.elements[0] = above_limit_hybrid.clone();
-        let above_limit_err = check_dd_limits(&base_card);
+        let above_limit_err =
+            check_dd_limits(Category { ag: AG12U, event: Combo, free: true }, &"7.1");
         assert_eq!(above_limit_err.errors.len(), 1);
 
-        base_card.elements[0] = below_limit_hybrid;
-        let below_limit_ok = check_dd_limits(&base_card);
+        let below_limit_ok =
+            check_dd_limits(Category { ag: AG12U, event: Combo, free: true }, &"6.9");
         assert_eq!(below_limit_ok.errors.len(), 0);
 
-        base_card.elements[0] = above_limit_hybrid;
-        base_card.category.ag = Youth;
-        let above_limit_youth_ok = check_dd_limits(&base_card);
+        let above_limit_youth_ok =
+            check_dd_limits(Category { ag: Youth, event: Combo, free: true }, &"7.1");
         assert_eq!(above_limit_youth_ok.errors.len(), 0);
-    }
-
-    #[test]
-    fn test_check_hybrid_common_base_marks() {
-        let card = CardBuilder::new().hybrids(&[&["A5", "F8a*0.5", "F8b"]]).card;
-        let ci = check_hybrid_common_base_marks(&card);
-        assert_eq!(ci.warnings.len(), 3);
-
-        let card = CardBuilder::new().hybrids(&[&["A4b", "F6a*0.5", "F6c"]]).card;
-        let ci = check_hybrid_common_base_marks(&card);
-        assert_eq!(ci.warnings.len(), 0);
-
-        let card = CardBuilder::new().hybrids(&[&["C4"]]).event_type(Trio).card;
-        let ci = check_hybrid_common_base_marks(&card);
-        assert_eq!(ci.warnings.len(), 1);
-
-        let card = CardBuilder::new().hybrids(&[&["C4"]]).event_type(MixedDuet).card;
-        let ci = check_hybrid_common_base_marks(&card);
-        assert_eq!(ci.warnings.len(), 0);
-
-        let card = CardBuilder::new().hybrids(&[&["C4"]]).event_type(Duet).card;
-        let ci = check_hybrid_common_base_marks(&card);
-        assert_eq!(ci.warnings.len(), 1);
-
-        let card = CardBuilder::new()
-            .hybrids(&[&["C4"]])
-            .category(Category { ag: JRSR, free: false, event: Duet })
-            .card;
-        let ci = check_hybrid_common_base_marks(&card);
-        assert_eq!(ci.warnings.len(), 1);
-
-        let card = CardBuilder::new()
-            .hybrids(&[&["C4"]])
-            .category(Category { ag: JRSR, free: false, event: MixedDuet })
-            .card;
-        let ci = check_hybrid_common_base_marks(&card);
-        assert_eq!(ci.warnings.len(), 0);
-
-        let card = CardBuilder::new()
-            .hybrids(&[&["C2b"]])
-            .category(Category { ag: JRSR, free: false, event: Duet })
-            .card;
-        let ci = check_hybrid_common_base_marks(&card);
-        assert_eq!(ci.warnings.len(), 0);
     }
 }

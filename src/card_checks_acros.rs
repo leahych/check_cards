@@ -3,12 +3,29 @@ use crate::AcroGroup::{Airborne, Balance, Combined, Platform};
 use crate::AgeGroups::{AG12U, JRSR, Youth};
 use crate::ElementKind::{PairAcro, TeamAcro};
 use crate::Events::{Acrobatic, Combo, Duet, MixedDuet, Solo, Team, Trio};
-use crate::card_checks::{pair_acros, team_acros};
-use crate::{AcroGroup, CardIssues, Category, CoachCard, Events, TeamAcrobatic};
+use crate::{AcroGroup, AgeGroups, CardIssues, Category, CoachCard, Events, TeamAcrobatic};
 use regex_lite::Regex;
 use std::collections::{HashMap, HashSet};
 
-fn check_dd_limits(card: &CoachCard) -> CardIssues {
+macro_rules! pair_acros {
+    ($elements:expr) => {
+        $elements.iter().filter_map(|e| match &e.kind {
+            PairAcro(d) => Some((e.number, d)),
+            _ => None,
+        })
+    };
+}
+
+macro_rules! team_acros {
+    ($elements:expr) => {
+        $elements.iter().filter_map(|e| match &e.kind {
+            TeamAcro(d, dd) => Some((e.number, d, dd)),
+            _ => None,
+        })
+    };
+}
+
+fn check_dd_limits(category: Category, group: AcroGroup, dd: &str) -> CardIssues {
     #[derive(Eq, Hash, PartialEq)]
     struct Cg {
         c: Category,
@@ -38,14 +55,10 @@ fn check_dd_limits(card: &CoachCard) -> CardIssues {
     ]);
 
     let mut ci = CardIssues::default();
-    for (num, acro, dd) in team_acros!(card.elements) {
-        if let Some(max_dd) = map.get(&Cg { c: card.category, g: acro.group }) {
-            if dd.parse().unwrap_or(0.0) > *max_dd {
-                ci.errors.push(format!(
-                    "Element {num}: {} may not have an acrobatic that has a DD > {max_dd}",
-                    card.category
-                ));
-            }
+    if let Some(max_dd) = map.get(&Cg { c: category, g: group }) {
+        if dd.parse().unwrap_or(0.0) > *max_dd {
+            ci.errors
+                .push(format!("{category} may not have an acrobatic that has a DD > {max_dd}"));
         }
     }
     ci
@@ -142,43 +155,41 @@ fn check_team_duplicate_acros(card: &CoachCard) -> CardIssues {
     ci
 }
 
-fn check_num_athletes(err_prefix: &str, acro: &TeamAcrobatic) -> CardIssues {
+fn check_num_athletes(acro: &TeamAcrobatic) -> CardIssues {
     let mut ci = CardIssues::default();
     if acro.bonuses.contains(&"Dbl".to_string()) {
-        ci.warnings.push(format!("{err_prefix}: requires 8 or more athletes"));
+        ci.warnings.push("requires 8 or more athletes".into());
     }
     ci
 }
 
-fn check_team_acro_validity(err_prefix: &str, acro: &TeamAcrobatic) -> CardIssues {
+fn check_team_acro_validity(acro: &TeamAcrobatic) -> CardIssues {
     let mut ci = CardIssues::default();
     if acro.construction.is_empty()
         || (acro.connection_grip.is_empty() && acro.direction.is_none())
         || acro.positions.is_empty()
         || acro.positions.len() > 2
     {
-        ci.errors.push(format!("{err_prefix}: is missing one or more parts"));
+        ci.errors.push("is missing one or more parts".into());
     } else if !acro.positions.is_empty() && acro.positions[0].starts_with('2') {
         ci.errors.push(format!(
-            "{err_prefix}: has second position, {}, but missing first position",
+            "has second position, {}, but missing first position",
             acro.positions[0]
         ));
     } else if acro.positions.len() == 2 {
         if acro.positions[0] == acro.positions[1].strip_prefix('2').unwrap_or(&acro.positions[1]) {
             ci.errors.push(format!(
-                "{err_prefix}: first position, {}, and second position, {} are the same",
+                "first position, {}, and second position, {} are the same",
                 acro.positions[0], acro.positions[1]
             ));
         } else if !acro.positions[1].starts_with('2') {
-            ci.errors.push(format!(
-                "{err_prefix}: second position, {}, does not start with '2'",
-                acro.positions[1]
-            ));
+            ci.errors
+                .push(format!("second position, {}, does not start with '2'", acro.positions[1]));
         }
     }
     if acro.bonuses.contains(&"Pos3".into()) && acro.positions.len() < 2 {
         ci.errors.push(format!(
-            "{err_prefix}: 3rd position bonus declared, but only {} position(s)",
+            "3rd position bonus declared, but only {} position(s)",
             acro.positions.len()
         ));
     }
@@ -186,39 +197,41 @@ fn check_team_acro_validity(err_prefix: &str, acro: &TeamAcrobatic) -> CardIssue
     ci
 }
 
-fn check_direction(err_prefix: &str, acro: &TeamAcrobatic) -> CardIssues {
+fn check_direction(acro: &TeamAcrobatic) -> CardIssues {
     let mut ci = CardIssues::default();
     for rotation in &acro.rotations {
         if rotation.starts_with('c') && acro.direction != Some(Sideways) {
-            ci.errors
-                .push(format!("{err_prefix}: Direction should always be Sideways for cartwheels"));
+            ci.errors.push("Direction should always be Sideways for cartwheels".into());
         }
         if rotation.starts_with('h')
             && (acro.direction != Some(Forwards) && acro.direction != Some(Backwards))
         {
-            ci.errors.push(format!(
-                "{err_prefix}: Direction should always be Forwards or Backwards for handsprings"
-            ));
+            ci.errors
+                .push("Direction should always be Forwards or Backwards for handsprings".into());
         }
     }
     ci
 }
 
-fn check_rotations(err_prefix: &str, acro: &TeamAcrobatic) -> CardIssues {
+fn check_rotations(acro: &TeamAcrobatic) -> CardIssues {
     let mut ci = CardIssues::default();
 
     if acro.rotations.iter().any(|rotation| rotation.contains('o'))
         && !acro.positions.contains(&"2ln".into())
         && !acro.bonuses.contains(&"Pos3".into())
     {
-        ci.warnings.push(format!("{err_prefix}: Somersault with open declared, but 2ln or Pos3 not declared, is this right?"));
+        ci.warnings.push(
+            "Somersault with open declared, but 2ln or Pos3 not declared, is this right?".into(),
+        );
     }
 
     if acro.rotations.iter().any(|rotation| rotation.contains("ss"))
         && !acro.positions.contains(&"ln".into())
         && !acro.positions.contains(&"2ln".into())
     {
-        ci.warnings.push(format!("{err_prefix}: Straight somersault declared, but no line position declared, is this right?"));
+        ci.warnings.push(
+            "Straight somersault declared, but no line position declared, is this right?".into(),
+        );
     }
 
     let rotation_map: &[(Regex, &[&str])] = &[
@@ -261,7 +274,7 @@ fn check_rotations(err_prefix: &str, acro: &TeamAcrobatic) -> CardIssues {
             if rx.is_match(rotation) {
                 if !connections.contains(&construction_or_connection.as_str()) {
                     ci.errors.push(format!(
-                        "{err_prefix}: {rotation} can only be used with {}",
+                        "{rotation} can only be used with {}",
                         connections.join(", ")
                     ));
                 }
@@ -274,34 +287,32 @@ fn check_rotations(err_prefix: &str, acro: &TeamAcrobatic) -> CardIssues {
         if acro.group == Platform {
             if Regex::new(r"^P(0.5|1)h$").unwrap().is_match(rotation) && acro.construction != "Hand"
             {
-                ci.errors.push(format!("{err_prefix}: {rotation} can only be used with Hand"));
+                ci.errors.push(format!("{rotation} can only be used with Hand"));
             }
             if Regex::new(r"^P(r|r0.5|r1)//$").unwrap().is_match(rotation)
                 && acro.construction != "2S"
                 && acro.construction != "Flower"
             {
-                ci.errors
-                    .push(format!("{err_prefix}: {rotation} can only be used with 2S, Flower"));
+                ci.errors.push(format!("{rotation} can only be used with 2S, Flower"));
             }
         }
     }
     ci
 }
 
-fn check_bonuses(err_prefix: &str, acro: &TeamAcrobatic) -> CardIssues {
+fn check_bonuses(acro: &TeamAcrobatic) -> CardIssues {
     let mut ci = CardIssues::default();
 
     let first_pos = acro.positions.first().map_or("", |v| v);
     let second_pos = acro.positions.get(1).map_or("", |v| v.strip_prefix('2').unwrap_or(v));
     if acro.bonuses.contains(&"Split".into()) && first_pos == "sp" {
-        ci.errors.push(format!(
-            "{err_prefix}: for Split bonus, sp is considered a take-off and should not be declared first"
-        ));
+        ci.errors.push(
+            "for Split bonus, sp is considered a take-off and should not be declared first".into(),
+        );
     }
 
     if acro.bonuses.contains(&"Porp".into()) && (first_pos == "Bo" || first_pos == "bo") {
-        ci.errors
-            .push(format!("{err_prefix}: Box cannot be claimed as Position 1 with Porp Bonus"));
+        ci.errors.push("Box cannot be claimed as Position 1 with Porp Bonus".into());
     }
 
     if acro.bonuses.len() < 2 {
@@ -312,19 +323,17 @@ fn check_bonuses(err_prefix: &str, acro: &TeamAcrobatic) -> CardIssues {
                 && !acro.bonuses.contains(&"Grip".into())
                 && !acro.bonuses.contains(&"Catch".into())
             {
-                ci.warnings.push(format!("{err_prefix}: can claim 'Conn' with {rotation}"));
+                ci.warnings.push(format!("can claim 'Conn' with {rotation}"));
             }
         }
     } else if acro.bonuses.len() > 2 {
-        ci.errors.push(format!(
-            "{err_prefix}: {} bonuses declared, but only 2 bonuses allowed",
-            acro.bonuses.len()
-        ));
+        ci.errors
+            .push(format!("{} bonuses declared, but only 2 bonuses allowed", acro.bonuses.len()));
     } else {
         let bonus1 = &acro.bonuses[0];
         let bonus2 = &acro.bonuses[1];
         if bonus1 == bonus2 && bonus1 != "CRoll" {
-            ci.errors.push(format!("{err_prefix}: cannot declare the same bonus twice"));
+            ci.errors.push("cannot declare the same bonus twice".into());
         }
 
         let exclusive_bonuses: &[&[&str]] = &[
@@ -340,58 +349,53 @@ fn check_bonuses(err_prefix: &str, acro: &TeamAcrobatic) -> CardIssues {
         ];
         for exclusive in exclusive_bonuses {
             if exclusive.contains(&bonus1.as_str()) && exclusive.contains(&bonus2.as_str()) {
-                ci.errors.push(format!(
-                    "{err_prefix}: cannot declare {bonus1} and {bonus2} in the same acrobatic"
-                ));
+                ci.errors
+                    .push(format!("cannot declare {bonus1} and {bonus2} in the same acrobatic"));
             }
         }
     }
 
     if acro.bonuses.contains(&"Spider".to_string()) && acro.construction != "2S" {
-        ci.errors.push(format!("{err_prefix}: Spider bonus can only be used with 2S construction"));
+        ci.errors.push("Spider bonus can only be used with 2S construction".into());
     }
 
     if (acro.bonuses.contains(&"Jump".into()) || acro.bonuses.contains(&"Jump>".into()))
         && !acro.construction.starts_with("Thr>")
     {
-        ci.errors
-            .push(format!("{err_prefix}: Jump and Jump> can only be used with Thr> constructions"));
+        ci.errors.push("Jump and Jump> can only be used with Thr> constructions".into());
     }
 
     if acro.bonuses.contains(&"Jump".into())
         && (!acro.rotations.is_empty()
             || (acro.positions.len() == 2 && A_POSITIONS.contains(&second_pos)))
     {
-        ci.warnings.push(format!(
-            "{err_prefix}: Jump should only be used when the featured athlete remains on the construction",
-        ));
+        ci.warnings.push(
+            "Jump should only be used when the featured athlete remains on the construction".into(),
+        );
     }
 
     if acro.bonuses.contains(&"SdUp".into())
         && !B_TORSO_DOWN_POSITIONS.contains(&first_pos)
         && !B_TORSO_DOWN_POSITIONS.contains(&second_pos)
     {
-        ci.warnings
-            .push(format!("{err_prefix}: SdUp claimed, but no head/torso down position claimed",));
+        ci.warnings.push("SdUp claimed, but no head/torso down position claimed".into());
     }
 
     ci
 }
 
-fn check_age_restrictions(card: &CoachCard) -> CardIssues {
+fn check_age_restrictions(ag: AgeGroups, acro: &TeamAcrobatic) -> CardIssues {
     let mut ci = CardIssues::default();
-    for (num, acro, _) in team_acros!(card.elements) {
-        // TODO need to handle JR vs SR
-        // add raw name to card and attempt to parse JR vs SR here?
-        let is_not_sr = card.category.ag == AG12U || card.category.ag == Youth;
-        if acro.bonuses.contains(&"1F>1F".into()) && is_not_sr {
-            ci.errors.push(format!("Element {num}: 1F>1F is only allowed in Senior routines"));
-        }
+    // TODO need to handle JR vs SR
+    // add raw name to card and attempt to parse JR vs SR here?
+    let is_not_sr = ag == AG12U || ag == Youth;
+    if acro.bonuses.contains(&"1F>1F".into()) && is_not_sr {
+        ci.errors.push("1F>1F is only allowed in Senior routines".into());
     }
     ci
 }
 
-fn check_construction(err_prefix: &str, acro: &TeamAcrobatic) -> CardIssues {
+fn check_construction(acro: &TeamAcrobatic) -> CardIssues {
     let allowed_grip_map = HashMap::<&str, &[&str]>::from([
         (
             "St",
@@ -416,14 +420,16 @@ fn check_construction(err_prefix: &str, acro: &TeamAcrobatic) -> CardIssues {
     if let Some(allowed_grips) = allowed_grip_map.get(acro.construction.as_str()) {
         if !allowed_grips.contains(&acro.connection_grip.as_str()) {
             ci.warnings.push(format!(
-                "{err_prefix}: {} cannot be used with {}, must be a connection marked with ∞, such as {}",
-                acro.construction, acro.connection_grip, allowed_grips.join(", ")
+                "{} cannot be used with {}, must be a connection marked with ∞, such as {}",
+                acro.construction,
+                acro.connection_grip,
+                allowed_grips.join(", ")
             ));
         }
     }
 
     if acro.construction == "Sq" && acro.bonuses.contains(&"Dbl".to_string()) {
-        ci.warnings.push(format!("{err_prefix}: Sq with Dbl requires 10 athletes!"));
+        ci.warnings.push("Sq with Dbl requires 10 athletes!".into());
     }
     ci
 }
@@ -438,7 +444,7 @@ const B_EXTREME_FLEX_POSITIONS: &[&str] = &["dr", "qu"];
 
 const B_TORSO_DOWN_POSITIONS: &[&str] = &["bb", "bo", "wi", "ow", "dr", "qu", "sh", "mo", "ne"];
 
-fn check_connection(err_prefix: &str, acro: &TeamAcrobatic) -> CardIssues {
+fn check_connection(acro: &TeamAcrobatic) -> CardIssues {
     // not a category but positions that can be done by standing w/two feet
     const TWO_FOOT_POSITIONS: &[&str] = &["sd", "mo", "sh", "dr"];
     // ShF and E aren't handstand, but have the same sort of movement
@@ -452,15 +458,14 @@ fn check_connection(err_prefix: &str, acro: &TeamAcrobatic) -> CardIssues {
     match acro.connection_grip.as_str() {
         "FS" => {
             if !TWO_FOOT_POSITIONS.contains(&first_pos) {
-                ci.warnings.push(format!(
-                    "{err_prefix}: expected two foot position with FS, but found {first_pos}"
-                ));
+                ci.warnings
+                    .push(format!("expected two foot position with FS, but found {first_pos}"));
             }
         }
         "1P1P" | "1P1F" | "Px1P" | "PP" | "PF" | "Bp" | "ShF" | "E" | "PH/" | "Tw" => {
             if !B_HEAD_DOWN_POSITIONS.contains(&first_pos) {
                 ci.warnings.push(format!(
-                    "{err_prefix}: expected head-down position with {}, but found {first_pos}",
+                    "expected head-down position with {}, but found {first_pos}",
                     acro.connection_grip
                 ));
             }
@@ -468,7 +473,7 @@ fn check_connection(err_prefix: &str, acro: &TeamAcrobatic) -> CardIssues {
         "FPx" | "FP" | "FF" | "FF/" | "F1S" | "SiF" | "1FH+1FP" | "1F1P" | "1F1F" => {
             if !head_up_positions.contains(&first_pos) {
                 ci.warnings.push(format!(
-                    "{err_prefix}: expected head-up position with {}, but found {first_pos}",
+                    "expected head-up position with {}, but found {first_pos}",
                     acro.connection_grip
                 ));
             }
@@ -476,7 +481,7 @@ fn check_connection(err_prefix: &str, acro: &TeamAcrobatic) -> CardIssues {
         "LayF" | "S+" => {
             if !B_SIT_STAND_LAY_POSITONS.contains(&first_pos) {
                 ci.warnings.push(format!(
-                    "{err_prefix}: expected sit, stand, or lay position with {}, but found {first_pos}",
+                    "expected sit, stand, or lay position with {}, but found {first_pos}",
                     acro.connection_grip
                 ));
             }
@@ -485,14 +490,12 @@ fn check_connection(err_prefix: &str, acro: &TeamAcrobatic) -> CardIssues {
     }
 
     if HANDSTAND_CONNECTIONS.contains(&acro.connection_grip.as_str()) && first_pos != "bb" {
-        ci.warnings.push(format!(
-            "{err_prefix}: in handstand positions, the first position should be bb unless the featured swimmer goes directly to Position 1 from underwater"
-        ));
+        ci.warnings.push("in handstand positions, the first position should be bb unless the featured swimmer goes directly to Position 1 from underwater".into());
     }
     ci
 }
 
-fn check_positions(err_prefix: &str, acro: &TeamAcrobatic) -> CardIssues {
+fn check_positions(acro: &TeamAcrobatic) -> CardIssues {
     const ONE_LEG_CONNECTIONS: &[&str] = &[
         "FPx", "F1S", "1F1P", "1F1F", "FAb", "3pA", "1FA", "3pb", "FA+PF", "SP+L", ">F1P", "3pBb",
         "3pB+b", "1Fxs/", "FA+PF",
@@ -502,8 +505,10 @@ fn check_positions(err_prefix: &str, acro: &TeamAcrobatic) -> CardIssues {
     match first_pos {
         "he" | "vs" | "gl" | "ba" | "sa" | "ne" | "ey" | "qu" => {
             if !ONE_LEG_CONNECTIONS.contains(&acro.connection_grip.as_str()) {
-                ci.warnings.push(format!("{err_prefix}: one leg position, {first_pos}, declared, but {} is not a one leg connection",
-                                         acro.connection_grip));
+                ci.warnings.push(format!(
+                    "one leg position, {first_pos}, declared, but {} is not a one leg connection",
+                    acro.connection_grip
+                ));
             }
         }
         _ => {}
@@ -522,16 +527,18 @@ fn check_positions(err_prefix: &str, acro: &TeamAcrobatic) -> CardIssues {
         && acro.construction.contains('^')
         && !all_b_positions.contains(&first_pos)
     {
-        ci.warnings.push(format!("{err_prefix}: In fly-above acrobatics, the first featured swimmer is probably the balance, but position 1 is {first_pos}"));
+        ci.warnings.push(format!("In fly-above acrobatics, the first featured swimmer is probably the balance, but position 1 is {first_pos}"));
     }
     if acro.construction == "Thr^2F" {
         if first_pos == "spl" {
-            ci.warnings.push(format!(
-                "{err_prefix}: split position in fly-above construction, should that be owl position?"
-            ));
+            ci.warnings.push(
+                "split position in fly-above construction, should that be owl position?".into(),
+            );
         }
         if acro.positions.len() == 1 {
-            ci.warnings.push(format!("{err_prefix}: flyover should have a balance position followed by an airborne position"));
+            ci.warnings.push(
+                "flyover should have a balance position followed by an airborne position".into(),
+            );
         }
     }
 
@@ -543,7 +550,7 @@ fn check_positions(err_prefix: &str, acro: &TeamAcrobatic) -> CardIssues {
     for position in &acro.positions {
         if !valid_positions.contains(&position.strip_prefix('2').unwrap_or(position)) {
             ci.errors.push(format!(
-                "{err_prefix}: {position} is not a valid position for {:?} acrobatics",
+                "{position} is not a valid position for {:?} acrobatics",
                 acro.group
             ));
         }
@@ -562,14 +569,12 @@ fn check_positions(err_prefix: &str, acro: &TeamAcrobatic) -> CardIssues {
             || B_SIT_STAND_LAY_POSITONS.contains(&pos2);
         let pos2_head_down = B_HEAD_DOWN_POSITIONS.contains(&pos2);
         if pos1_head_up && pos2_head_down {
-            ci.warnings.push(format!(
-                "{err_prefix}: {first_pos} is heads-up and {pos2} is heads-down, is this right?"
-            ));
+            ci.warnings
+                .push(format!("{first_pos} is heads-up and {pos2} is heads-down, is this right?"));
         }
         if pos1_head_down && pos2_head_up && !acro.bonuses.contains(&"SdUp".into()) {
-            ci.warnings.push(format!(
-                "{err_prefix}: {first_pos} is heads-down and {pos2} is heads-up, is this right?"
-            ));
+            ci.warnings
+                .push(format!("{first_pos} is heads-down and {pos2} is heads-up, is this right?"));
         }
     }
 
@@ -608,12 +613,7 @@ pub fn run_acro_checks(card: &CoachCard) -> CardIssues {
     let checks: &[fn(&CoachCard) -> CardIssues] = match card.category.event {
         Solo | Events::Unknown => &[],
         Duet | MixedDuet | Trio => &[check_duplicate_pair_acros, check_pair_acro_common_base_marks],
-        Acrobatic | Combo | Team => &[
-            check_dd_limits,
-            check_groups_for_acro_routine,
-            check_team_duplicate_acros,
-            check_age_restrictions,
-        ],
+        Acrobatic | Combo | Team => &[check_groups_for_acro_routine, check_team_duplicate_acros],
     };
     for check in checks {
         ci += check(card);
@@ -629,10 +629,21 @@ pub fn run_acro_checks(card: &CoachCard) -> CardIssues {
             check_connection,
             check_positions,
         ];
-        for (num, acro, _) in team_acros!(card.elements) {
+        for (num, acro, dd) in team_acros!(card.elements) {
+            let mut element_ci = CardIssues::default();
             for check in acros_checks {
-                ci += check(format!("Element {num}").as_str(), acro);
+                element_ci += check(acro);
+                element_ci += check_age_restrictions(card.category.ag, acro);
+                element_ci += check_dd_limits(card.category, acro.group, dd);
             }
+            let prefix = format!("Element {num}: ");
+            for err in &mut element_ci.errors {
+                err.insert_str(0, &prefix);
+            }
+            for warn in &mut element_ci.warnings {
+                warn.insert_str(0, &prefix);
+            }
+            ci += element_ci;
         }
     }
     ci
@@ -678,16 +689,6 @@ mod tests {
             self
         }
 
-        fn team_acro_with_dd(mut self, acro: &str, dd: f32) -> Self {
-            self.card.elements.push(Element {
-                number: self.card.elements.len() + 1,
-                start_time: NaiveTime::default(),
-                stop_time: NaiveTime::default(),
-                kind: TeamAcro(TeamAcrobatic::from(acro).unwrap(), dd.to_string()),
-            });
-            self
-        }
-
         fn category(mut self, category: Category) -> Self {
             self.card.category = category;
             self
@@ -707,7 +708,7 @@ mod tests {
             #[test]
             fn $name () {
                 let acro = TeamAcrobatic::from($code).unwrap();
-                let result = $fname("", &acro);
+                let result = $fname(&acro);
                 //println!("TEST {:?}", result.errors);
                 assert_eq!(result.errors.len(), $errs);
                 assert_eq!(result.warnings.len(), $warns);
@@ -759,9 +760,6 @@ mod tests {
         missing_c: check_groups_for_acro_routine, Category{ag: JRSR, event: Acrobatic, free: true}, &["A-Shou-Back-tk-s1", "B-St-FS-ln", "P-P-HA-bb/2wi-Porp/Trav"],
         missing_p: check_groups_for_acro_routine, Category{ag: JRSR, event: Acrobatic, free: true}, &["A-Shou-Back-tk-s1", "B-St-FS-ln", "C-Thr^2F-Forw-bb"],
         too_many_a: check_groups_for_acro_routine, Category{ag: JRSR, event: Acrobatic, free: true}, &["A-Shou-Back-tk-s1", "A-Shou-Back-tk-s1", "A-Shou-Back-tk-s1", "B-St-FS-ln", "C-Thr^2F-Forw-bb", "P-P-HA-bb/2wi-Porp/Trav"],
-        ag12u_1f1f_err: check_age_restrictions, Category{ag: AG12U, event: Team, free: true}, &["C-Thr>StH-Forw-ln-1F>1F"],
-        youth_1f1f_err: check_age_restrictions, Category{ag: Youth, event: Team, free: true}, &["C-Thr>StH-Forw-ln-1F>1F"],
-        sr_1f1f_ok: check_age_restrictions, Category{ag: JRSR, event: Team, free: true}, &["C-Thr>StH-Forw-ln-1F>1F"],
     }
 
     macro_rules! dd_tests {
@@ -769,19 +767,21 @@ mod tests {
         $(
             #[test]
             fn $name () {
-                run_test(stringify!($name), check_dd_limits, &CardBuilder::new().category($category).team_acro_with_dd($acro, $dd).card);
+                let expected = if stringify!($name).ends_with("_ok") { 0 } else { 1 };
+                let result = check_dd_limits($category, TeamAcrobatic::from($acro).unwrap().group, $dd);
+                assert_eq!(result.errors.len(), expected);
             }
         )*
         }
     }
 
     dd_tests! {
-        tech_limit: Category { ag: JRSR, event: Team, free: false }, "A-Shou-Back-tk-s1", 3.05,
-        free_no_limit_ok: Category { ag: JRSR, event: Team, free: true }, "A-Shou-Back-tk-s1", 3.05,
-        ag12u_ok: Category{ag: AG12U, event: Team, free: true}, "P-P-HA-bb/2wi-Porp/Trav", 2.75,
-        too_high_12u: Category{ag: AG12U, event: Team, free: true}, "P-P-HA-bb/2wi-Porp/Trav", 2.85,
-        youth_ok: Category{ag: Youth, event: Team, free: true}, "P-P-HA-bb/2wi-Porp/Trav", 2.85,
-        youth_too_high: Category{ag: Youth, event: Team, free: true}, "P-P-HA-bb/2wi-Porp/Trav", 3.05,
+        tech_limit: Category { ag: JRSR, event: Team, free: false }, "A-Shou-Back-tk-s1", "3.05",
+        free_no_limit_ok: Category { ag: JRSR, event: Team, free: true }, "A-Shou-Back-tk-s1", "3.05",
+        ag12u_ok: Category{ag: AG12U, event: Team, free: true}, "P-P-HA-bb/2wi-Porp/Trav", "2.75",
+        too_high_12u: Category{ag: AG12U, event: Team, free: true}, "P-P-HA-bb/2wi-Porp/Trav", "2.85",
+        youth_ok: Category{ag: Youth, event: Team, free: true}, "P-P-HA-bb/2wi-Porp/Trav", "2.85",
+        youth_too_high: Category{ag: Youth, event: Team, free: true}, "P-P-HA-bb/2wi-Porp/Trav", "3.05",
     }
 
     acro_tests! {
@@ -874,6 +874,14 @@ mod tests {
         head_up_with_head_up: check_positions, "C-Thr>StH-Forw-sd/2he", 0, 0,
         head_down_with_head_up: check_positions, "C-Thr>StH-Forw-bb/2spl", 0, 1,
         head_down_with_head_down: check_positions, "C-Thr>StH-Forw-bb/2ow", 0, 0,
+    }
+
+    #[test]
+    fn test_check_age_restrictions() {
+        let acro = TeamAcrobatic::from("C-Thr>StH-Forw-ln-1F>1F").unwrap();
+        assert_eq!(check_age_restrictions(AG12U, &acro).errors.len(), 1);
+        assert_eq!(check_age_restrictions(Youth, &acro).errors.len(), 1);
+        assert_eq!(check_age_restrictions(JRSR, &acro).errors.len(), 0);
     }
 
     #[test]
