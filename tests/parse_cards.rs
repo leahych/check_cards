@@ -12,7 +12,7 @@ use std::io::BufReader;
 fn test_parse_aqua_team() {
     let f = File::open("./tests/Tech Team test.xlsx").expect("Could not open file");
     let mut file = BufReader::new(f);
-    let card = parse_iss_card(&mut file).expect("Could not parse card");
+    let card = parse_iss_card("", &mut file).expect("Could not parse card");
     assert_eq!(
         CoachCard {
             category: Category { ag: AgeGroups::JRSR, free: false, event: Events::Team },
@@ -66,7 +66,7 @@ macro_rules! vec_of_strings {
 fn test_parse_iss_team() {
     let f = File::open("./tests/SENIOR-Team_Free-PRELIMS-OCC-.xlsx").expect("Could not open file");
     let mut file = BufReader::new(f);
-    let card = parse_iss_card(&mut file).expect("Could not parse card");
+    let card = parse_iss_card("", &mut file).expect("Could not parse card");
     assert_eq!(
         CoachCard {
             category: Category { ag: AgeGroups::JRSR, free: true, event: Events::Team },
@@ -196,7 +196,7 @@ fn test_parse_iss_team() {
 fn test_parse_iss_combo() {
     let f = File::open("./tests/Combo.xlsx").expect("Could not open file");
     let mut file = BufReader::new(f);
-    let card = parse_iss_card(&mut file).expect("Could not parse card");
+    let card = parse_iss_card("", &mut file).expect("Could not parse card");
     assert_eq!(
         CoachCard {
             category: Category { ag: AgeGroups::Youth, free: true, event: Events::Combo },
@@ -218,7 +218,7 @@ fn test_parse_iss_combo() {
 fn test_parse_iss_mixed_duet() {
     let f = File::open("./tests/Mixed Duet.xlsx").expect("Could not open file");
     let mut file = BufReader::new(f);
-    let card = parse_iss_card(&mut file).expect("Could not parse card");
+    let card = parse_iss_card("", &mut file).expect("Could not parse card");
     assert_eq!(
         CoachCard {
             category: Category { ag: AgeGroups::JRSR, free: true, event: Events::MixedDuet },

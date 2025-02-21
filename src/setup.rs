@@ -38,7 +38,7 @@ fn process_files(input_element: &HtmlInputElement) {
         let file = file.clone();
         wasm_bindgen_futures::spawn_local(async move {
             let res = gloo::file::futures::read_as_bytes(&file).await;
-            let ci = blob_to_issues(res);
+            let ci = blob_to_issues(file.name().as_str(), res);
             show_issues(&doc, &file.name(), &ci);
         });
     }
@@ -110,12 +110,12 @@ fn add_card_issues(
     Ok(table)
 }
 
-fn blob_to_issues(file: Result<Vec<u8>, gloo::file::FileReadError>) -> CardIssues {
+fn blob_to_issues(name: &str, file: Result<Vec<u8>, gloo::file::FileReadError>) -> CardIssues {
     let mut issues = CardIssues::default();
     match file {
         Ok(buf) => {
             let mut c = Cursor::new(buf);
-            match parse_iss_card(&mut c) {
+            match parse_iss_card(name, &mut c) {
                 Ok(card) => issues += run_checks(&card) + run_acro_checks(&card),
                 Err(e) => {
                     issues.errors.push(format!("could not parse file: {e}"));
@@ -145,17 +145,17 @@ mod tests {
 
     #[test]
     fn test_blob_to_issues() {
-        let ci = blob_to_issues(Err(gloo::file::FileReadError::NotReadable("".to_owned())));
+        let ci = blob_to_issues("", Err(gloo::file::FileReadError::NotReadable("".to_owned())));
         assert_eq!(ci.errors.len(), 1);
         assert_eq!(ci.warnings.len(), 0);
 
-        let ci = blob_to_issues(Ok(vec![]));
+        let ci = blob_to_issues("", Ok(vec![]));
         assert_eq!(ci.errors.len(), 1);
         assert_eq!(ci.warnings.len(), 0);
 
         let data = std::fs::read("./tests/SENIOR-Team_Free-PRELIMS-OCC-.xlsx")
             .expect("Could not open file");
-        let ci = blob_to_issues(Ok(data));
+        let ci = blob_to_issues("", Ok(data));
         assert_eq!(ci.errors.len(), 0);
         assert_eq!(ci.warnings.len(), 0);
     }

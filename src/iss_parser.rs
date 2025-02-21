@@ -121,7 +121,7 @@ fn parse_elements(
     (elements, end_time)
 }
 
-fn parse_sheet(sheet: &Range<Data>) -> CoachCard {
+fn parse_sheet(name: &str, sheet: &Range<Data>) -> CoachCard {
     let mut aqua_card = true;
 
     let mut card = CoachCard::default();
@@ -156,7 +156,9 @@ fn parse_sheet(sheet: &Range<Data>) -> CoachCard {
                     if parsed_event == Duet
                         && (card.theme.to_uppercase().contains(" TRIO")
                             || card.theme.to_uppercase().contains("TRIO ")
-                            || card.theme.to_uppercase() == "TRIO")
+                            || card.theme.to_uppercase() == "TRIO"
+                            || name.to_uppercase().contains(" TRIO")
+                            || name.to_uppercase().contains("_TRIO"))
                     {
                         // Special case Trio since ISS does not support
                         // Trios. To avoid matching on a theme that
@@ -208,7 +210,7 @@ fn parse_sheet(sheet: &Range<Data>) -> CoachCard {
 }
 
 // TODO how to handle non-fatal, i.e. unknown event?
-pub fn parse_iss_card<R: Read + Seek>(reader: &mut R) -> Result<CoachCard, String> {
+pub fn parse_iss_card<R: Read + Seek>(name: &str, reader: &mut R) -> Result<CoachCard, String> {
     let mut workbook: Xlsx<_> = calamine::open_workbook_from_rs(reader)
         .map_err(|e: XlsxError| format!("Failed to open workbook: {e}"))?;
     let Some((_, sheet)) = workbook
@@ -218,5 +220,5 @@ pub fn parse_iss_card<R: Read + Seek>(reader: &mut R) -> Result<CoachCard, Strin
     else {
         return Err("Could not find worksheet".into());
     };
-    Ok(parse_sheet(&sheet))
+    Ok(parse_sheet(name, &sheet))
 }
