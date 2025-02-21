@@ -1,7 +1,7 @@
+use crate::CardIssues;
 use crate::card_checks::run_checks;
 use crate::card_checks_acros::run_acro_checks;
 use crate::iss_parser::parse_iss_card;
-use crate::CardIssues;
 use gloo::events::EventListener;
 use gloo::utils::document;
 use std::io::Cursor;

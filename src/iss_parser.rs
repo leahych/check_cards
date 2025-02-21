@@ -1,4 +1,4 @@
-use crate::ElementKind::{ChoHy, Hybrid, PairAcro, SuConn, TeamAcro, TRE};
+use crate::ElementKind::{ChoHy, Hybrid, PairAcro, SuConn, TRE, TeamAcro};
 use crate::Events::{Duet, Trio};
 use crate::{AgeGroups, CoachCard, Element, Events, TeamAcrobatic};
 use calamine::{Data, DataType, ExcelDateTime, Range, Reader, Rows, Xlsx, XlsxError};

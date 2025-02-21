@@ -1,4 +1,4 @@
-use crate::AgeGroups::{Youth, AG12U, JRSR};
+use crate::AgeGroups::{AG12U, JRSR, Youth};
 use crate::Events::{Acrobatic, Combo, Duet, MixedDuet, Solo, Team, Trio};
 use crate::{AgeGroups, CardIssues, Category, CoachCard, Element, Events};
 use chrono::NaiveTime;
@@ -33,7 +33,7 @@ macro_rules! team_acros {
         })
     };
 }
-use crate::ElementKind::{ChoHy, Hybrid, PairAcro, SuConn, TeamAcro, TRE};
+use crate::ElementKind::{ChoHy, Hybrid, PairAcro, SuConn, TRE, TeamAcro};
 pub(crate) use team_acros;
 
 macro_rules! tres {

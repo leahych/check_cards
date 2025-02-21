@@ -1,9 +1,9 @@
-use crate::card_checks::{pair_acros, team_acros};
 use crate::AcroDirection::{Backwards, Forwards, Sideways};
 use crate::AcroGroup::{Airborne, Balance, Combined, Platform};
-use crate::AgeGroups::{Youth, AG12U, JRSR};
+use crate::AgeGroups::{AG12U, JRSR, Youth};
 use crate::ElementKind::{PairAcro, TeamAcro};
 use crate::Events::{Acrobatic, Combo, Duet, MixedDuet, Solo, Team, Trio};
+use crate::card_checks::{pair_acros, team_acros};
 use crate::{AcroGroup, CardIssues, Category, CoachCard, Events, TeamAcrobatic};
 use regex_lite::Regex;
 use std::collections::{HashMap, HashSet};

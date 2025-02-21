@@ -1,7 +1,7 @@
 use check_cards::AcroDirection::{Backwards, Forwards};
 use check_cards::AcroGroup::{Airborne, Combined, Platform};
-use check_cards::ElementKind::{ChoHy, Hybrid, PairAcro, SuConn, TeamAcro, TRE};
-use check_cards::{parse_iss_card, AgeGroups, Category, CoachCard, Element, Events, TeamAcrobatic};
+use check_cards::ElementKind::{ChoHy, Hybrid, PairAcro, SuConn, TRE, TeamAcro};
+use check_cards::{AgeGroups, Category, CoachCard, Element, Events, TeamAcrobatic, parse_iss_card};
 use chrono::NaiveTime;
 use pretty_assertions::assert_eq;
 use semver::Version;
