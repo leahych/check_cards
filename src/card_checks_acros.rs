@@ -420,7 +420,7 @@ fn check_construction(acro: &TeamAcrobatic) -> CardIssues {
     if let Some(allowed_grips) = allowed_grip_map.get(acro.construction.as_str()) {
         if !allowed_grips.contains(&acro.connection_grip.as_str()) {
             ci.warnings.push(format!(
-                "{} cannot be used with {}, must be a connection marked with ∞, such as {}",
+                "{} cannot be used with {}, must be a connection such as {}",
                 acro.construction,
                 acro.connection_grip,
                 allowed_grips.join(", ")
