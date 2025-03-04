@@ -830,6 +830,8 @@ mod tests {
         ln_pk_with_open_ok: check_rotations, "A-Sq-Back-pk/2ln-s1.5t0.5o", 0, 0,
         ss_without_ln_warn: check_rotations, "A-Sq-Back-pk-ss1", 0, 1,
         ss_with_ln_ok: check_rotations, "A-Sq-Back-pk/2ln-ss1", 0, 0,
+        bad_c_mutliple_rotations: check_rotations, "C-Thr^2F-Bln-ow/2tk-Cr1!+Cs1-Pos3", 1, 0,
+        good_c_mutliple_rotations: check_rotations, "C-Thr^2F-Bln-ow/2tk-2F1+Cs1-Pos3", 0, 0,
         sp_with_split_err: check_bonuses, "A-2Sup-Up-sp-Split", 1, 0,
         box_with_porp_err: check_bonuses, "P-Knees-4p-Bo-Porp", 1, 0,
         no_conn_with_c: check_bonuses, "A-Thr-Side-ln-c", 0, 1,

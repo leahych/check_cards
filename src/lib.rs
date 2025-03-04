@@ -263,7 +263,13 @@ impl TeamAcrobatic {
         let mut bonuses = vec![];
         for rotation_or_bonuses in parts {
             if is_rotation(group, rotation_or_bonuses).is_some() {
-                rotations.push(rotation_or_bonuses.to_string());
+                // group B has r+, while group C uses + for multiple rotations
+                if rotation_or_bonuses.ends_with('+') {
+                    rotations.push(rotation_or_bonuses.to_owned());
+                } else {
+                    rotations
+                        .extend(rotation_or_bonuses.split('+').map(std::borrow::ToOwned::to_owned));
+                }
             } else {
                 bonuses.extend(split_pos_bonus(rotation_or_bonuses));
             }
