@@ -264,6 +264,10 @@ fn check_rotations(acro: &TeamAcrobatic) -> CardIssues {
         (Regex::new(r"^P(r|r0.5|r1)/$").unwrap(), &["SiA", "SP+K", "SiF+Pb", "L/SiF+P"]),
     ];
 
+    let unlikely_twist_pos =
+        &[vec!["tk".to_string()], vec!["pk".to_string()], vec!["rg".to_string()]];
+    let just_twist_regex = Regex::new(r"^t(0.5|1|1.5|2|2.5|3)$").unwrap();
+
     let construction_or_connection = match acro.group {
         Airborne | Combined => &acro.construction,
         Balance | Platform => &acro.connection_grip,
@@ -295,6 +299,13 @@ fn check_rotations(acro: &TeamAcrobatic) -> CardIssues {
             {
                 ci.errors.push(format!("{rotation} can only be used with 2S, Flower"));
             }
+        }
+
+        if just_twist_regex.is_match(rotation) && unlikely_twist_pos.contains(&acro.positions) {
+            ci.warnings.push(format!(
+                "twist declared, but {} is usually performed as a somersault",
+                acro.positions[0]
+            ));
         }
     }
     ci
@@ -832,6 +843,9 @@ mod tests {
         ss_with_ln_ok: check_rotations, "A-Sq-Back-pk/2ln-ss1", 0, 0,
         bad_c_mutliple_rotations: check_rotations, "C-Thr^2F-Bln-ow/2tk-Cr1!+Cs1-Pos3", 1, 0,
         good_c_mutliple_rotations: check_rotations, "C-Thr^2F-Bln-ow/2tk-2F1+Cs1-Pos3", 0, 0,
+        tuck_just_twist_warn: check_rotations, "A-Sq-Back-tk-t1", 0, 1,
+        tuck_with_jay_twist_ok: check_rotations, "A-Sq-Back-tk/2ja-t1", 0, 0,
+        line_with_twist_ok: check_rotations, "A-Sq-Up-ln-t1", 0, 0,
         sp_with_split_err: check_bonuses, "A-2Sup-Up-sp-Split", 1, 0,
         box_with_porp_err: check_bonuses, "P-Knees-4p-Bo-Porp", 1, 0,
         no_conn_with_c: check_bonuses, "A-Thr-Side-ln-c", 0, 1,
