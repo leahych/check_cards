@@ -1,4 +1,4 @@
-use crate::AcroDirection::{Backwards, Forwards, Sideways};
+use crate::AcroDirection::{Backwards, Forwards, Sideways, Upwards};
 use crate::AcroGroup::{Airborne, Balance, Combined, Platform};
 use crate::AgeGroups::{AG12U, JRSR, Youth};
 use crate::ElementKind::{PairAcro, TeamAcro};
@@ -210,6 +210,13 @@ fn check_direction(acro: &TeamAcrobatic) -> CardIssues {
                 .push("Direction should always be Forwards or Backwards for handsprings".into());
         }
     }
+
+    let somersaults_only = Regex::new(r"^(d|s1|s1.5|s2|s2.5|s3)$").unwrap();
+    if acro.direction == Some(Upwards) && somersaults_only.is_match(&acro.rotations[0]) {
+        ci.warnings
+            .push("Up declared with somersault, should this be Forward or Backwards?".into());
+    }
+
     ci
 }
 
@@ -809,6 +816,8 @@ mod tests {
         side_with_cart_ok: check_direction, "A-Sq-Side-ln-ct0.5", 0, 0,
         side_with_hand_err: check_direction, "A-Sq-Side-ln-hd", 1, 0,
         forw_with_hand_ok: check_direction, "A-Sq-Forw-ln-hd", 0, 0,
+        up_with_dive_warn: check_direction, "A-Sq-Up-ln-d", 0, 1,
+        up_with_dive_twist_ok: check_direction, "A-Sq-Up-ln-dt1", 0, 0,
         airborne_rotation_ok: check_rotations, "A-Sq-Side-ln-ct0.5", 0, 0,
         fs_with_r_err: check_rotations, "B-St-FS-sd-r0.5", 1, 0,
         fpx_with_r_ok: check_rotations, "B-St-FPx-sd-r0.5", 0, 0,
