@@ -9,7 +9,7 @@ use regex_lite::Regex;
 use std::fmt;
 use std::fmt::Formatter;
 
-pub use crate::iss_parser::parse_iss_card;
+pub use crate::iss_parser::parse_excel;
 
 #[derive(Copy, Clone, Debug, Hash, PartialEq, Eq)]
 pub enum AgeGroups {
