@@ -314,17 +314,17 @@ fn check_pair_acro(category: Category, _: &String) -> CardIssues {
 
 fn check_valid_hybrid_declarations(_: Category, decls: &[String]) -> CardIssues {
     let valid_decl_regex = Regex::new(concat!(
-    "^(",
-    r"(S([B1-9]|10)|SCD?[B1-6])(\*0.[35])?",
-    r"|(R[B1-4]|R[CO][B1]|(1R|RD)[B1-6]|(2R|RU)([B1-9]|10))(\*0.[35])?",
-    r"|A(B|1[a-dA-D]|2[abAB]|3[abAB]|4[abAB]|[5-8])(\*0.[35])?",
-    r"|F(B|1[abcABC]|2[abcABC]|3[abc|ABC]|4[a-fA-F]|5[abcABC]|6[a-dA-D]|7|8[abAB]|9|10)(\*0.[35])?",
-    r"|C(B|1[abAB]|2[abcABC]|3|4|5|6[abAB]|7)\+?(\*0.[35])?",
-    r"|T(B|1|2[abAB]|3[a-dA-D]|4[a-eA-E]|5[a-eA-E]|6[abcABC]|7|8|9[abAB])(\*0.[35])?",
-    r"|\dPC",
-    ")$"
+        "^(",
+        r"(S([B1-9]|10)|SCD?[B1-6])(\*0.[35])?",
+        r"|(R[B1-4]|R[CO][B1]|(1R|RD)[B1-6]|(2R|RU)([B1-9]|10))(\*0.[35])?",
+        r"|A(B|1[a-d]|2[ab]|3[ab]|4[ab]|[5-8])(\*0.[35])?",
+        r"|F(B|1[abc]|2[abc]|3[abc]|4[a-f]|5[abc]|6[a-d]|7|8[ab]|9|10)(\*0.[35])?",
+        r"|C(B|1[ab]|2[abc]|3|4|5|6[ab]|7)\+?(\*0.[35])?",
+        r"|T(B|1|2[ab]|3[a-d]|4[a-e]|5[a-e]|6[abc]|7|8|9[ab])(\*0.[35])?",
+        r"|\dPC",
+        ")$"
     ))
-        .unwrap();
+    .unwrap();
 
     let mut ci = CardIssues::default();
     for decl in decls {
@@ -992,6 +992,7 @@ mod tests {
         close_err: check_valid_hybrid_declarations,  TECH_MIXED, &["RC2"],
         one_leg_ok: check_valid_hybrid_declarations,  TECH_MIXED, &["1R6"],
         one_leg_err: check_valid_hybrid_declarations,  TECH_MIXED, &["1R7"],
+        capital_letter_err: check_valid_hybrid_declarations,  TECH_MIXED, &["A3B"],
         duet_with_pc_err: check_small_bonuses, Category{ag: JRSR, event: Duet, free: true}, &["2PC"],
         team_with_pc_ok: check_small_bonuses, Category{ag: JRSR, event: Team, free: true}, &["2PC"],
         solo_factored_err: check_factoring, Category{ag: AG12U, event: Solo, free: true}, &["R1*0.5"],
