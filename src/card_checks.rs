@@ -698,6 +698,24 @@ fn check_hybrid_start_end(_: Category, decls: &[String]) -> CardIssues {
     ci
 }
 
+fn check_ascent_connection(_: Category, decls: &[String]) -> CardIssues {
+    let mut ci = CardIssues::default();
+    let mut prev_decl = "";
+    for decl in decls {
+        // A1c/C4 is for duet lift back-to-back
+        // A3a is for from open pike to VP
+        // A3b is for vert rise while connected
+        if (prev_decl == "A1c" && decl == "C4")
+            || (prev_decl == "A3a" && ["C3", "C3+", "C4+"].contains(&decl.as_str()))
+            || (prev_decl == "A3b" && ["C3", "C3+", "C4", "C4+"].contains(&decl.as_str()))
+        {
+            ci.warnings.push(format!("Ascents and Lifts cannot be declared simultaneously with a connection. If legs are connected during the {prev_decl}, there must be a disconnect or another action before the {decl}"));
+        }
+        prev_decl = decl;
+    }
+    ci
+}
+
 fn check_elements(card: &CoachCard) -> CardIssues {
     static HYBRID_CHECKS: &[fn(Category, &[String]) -> CardIssues] = &[
         check_hybrid_declaration_maxes,
@@ -707,6 +725,7 @@ fn check_elements(card: &CoachCard) -> CardIssues {
         check_connections_in_non_team,
         check_hybrid_common_base_marks,
         check_hybrid_start_end,
+        check_ascent_connection,
     ];
     static PAIR_ACRO_CHECKS: &[fn(Category, &String) -> CardIssues] = &[check_pair_acro];
     static TEAM_ACRO_CHECKS: &[fn(Category, &TeamAcrobatic, &String) -> CardIssues] =
@@ -1036,6 +1055,12 @@ mod tests {
         c4_tech_duet_warn: check_hybrid_common_base_marks, Category { ag: JRSR, free: false, event: Duet }, &["C4"],
         c4_tech_mixed_ok: check_hybrid_common_base_marks, TECH_MIXED, &["C4"],
         c2b_tech_duet_ok: check_hybrid_common_base_marks, Category{ag: AG12U, event: Duet, free: true}, &["C2b"],
+        a1c_c4_warn: check_ascent_connection, TECH_MIXED, &["A1c", "C4"],
+        a1c_c4_plus_ok: check_ascent_connection, TECH_MIXED, &["A1c", "C4+"],
+        pike_to_side_conn_warn: check_ascent_connection, TECH_MIXED, &["A3a", "C3"],
+        pike_to_back_conn_ok: check_ascent_connection, TECH_MIXED, &["A3a", "C4"],
+        rise_to_conn_warn: check_ascent_connection, TECH_MIXED, &["A3b", "C4+"],
+        rise_to_rotate_conn_ok: check_ascent_connection, TECH_MIXED, &["A3b", "C5"],
     }
 
     tre_tests! {
