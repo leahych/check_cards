@@ -212,7 +212,9 @@ fn check_direction(acro: &TeamAcrobatic) -> CardIssues {
     }
 
     let somersaults_only = Regex::new(r"^(d|s1|s1.5|s2|s2.5|s3)$").unwrap();
-    if acro.direction == Some(Upwards) && somersaults_only.is_match(&acro.rotations[0]) {
+    if acro.direction == Some(Upwards)
+        && somersaults_only.is_match(&acro.rotations.get(0).unwrap_or(&String::new()))
+    {
         ci.warnings
             .push("Up declared with somersault, should this be Forward or Backwards?".into());
     }
