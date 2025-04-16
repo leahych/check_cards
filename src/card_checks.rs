@@ -386,7 +386,9 @@ fn check_factoring(category: Category, decls: &[String]) -> CardIssues {
                 ci.errors.push("factoring connections in a Duet seems suspicious".into());
             }
         }
-        if !category.free && decl.contains("*0.") {
+        // don't warn about C4+*0.5 C2*0.3 since that is valid for a
+        // 7-person tech team doing a line of 4 and a line of 3.
+        if !category.free && decl.contains("*0.") && decl != "C4+*0.5" && decl != "C2b*0.3" {
             ci.warnings.push(format!("factoring in a Tech {:?} seems suspicious", category.event));
         }
 
@@ -1021,7 +1023,8 @@ mod tests {
         team_factored_ok: check_factoring, Category{ag: AG12U, event: Team, free: true}, &["R1*0.3"],
         duet_factored_conn_err: check_factoring, Category{ag: AG12U, event: Duet, free: true}, &["C4*0.5"],
         mix_duet_factored_conn_err: check_factoring, Category{ag: AG12U, event: MixedDuet, free: true}, &["CB*0.5"],
-        team_factored_conn_ok: check_factoring, Category{ag: AG12U, event: Team, free: true}, &["CB*0.5"],
+        free_team_factored_conn_ok: check_factoring, Category{ag: AG12U, event: Team, free: true}, &["CB*0.5"],
+        tech_team_factored_conn_ok: check_factoring, Category{ag: JRSR, event: Team, free: false}, &["C4+*0.5", "C2b*0.3"],
         tech_team_factored_conn_warn: check_factoring, Category { ag: AG12U, event: Team, free: false }, &["CB*0.5"],
         tech_duet_factored_decl_warn: check_factoring, Category { ag: AG12U, event: Duet, free: false }, &["R1*0.5"],
         c_c_plus_warn: check_factoring, Category { ag: AG12U, event: Team, free: true }, &["C3*0.5", "C3+*0.5"],
