@@ -5,6 +5,7 @@ use crate::ElementKind::{PairAcro, TeamAcro};
 use crate::Events::{Acrobatic, Combo, Duet, MixedDuet, Solo, Team, Trio};
 use crate::{AcroGroup, AgeGroups, CardIssues, Category, CoachCard, Events, TeamAcrobatic};
 use regex_lite::Regex;
+use std::cmp::Ordering;
 use std::collections::{HashMap, HashSet};
 
 macro_rules! pair_acros {
@@ -213,7 +214,7 @@ fn check_direction(acro: &TeamAcrobatic) -> CardIssues {
 
     let somersaults_only = Regex::new(r"^(d|s1|s1.5|s2|s2.5|s3)$").unwrap();
     if acro.direction == Some(Upwards)
-        && somersaults_only.is_match(&acro.rotations.get(0).unwrap_or(&String::new()))
+        && somersaults_only.is_match(acro.rotations.first().unwrap_or(&String::new()))
     {
         ci.warnings
             .push("Up declared with somersault, should this be Forward or Backwards?".into());
@@ -335,43 +336,50 @@ fn check_bonuses(acro: &TeamAcrobatic) -> CardIssues {
         ci.errors.push("Box cannot be claimed as Position 1 with Porp Bonus".into());
     }
 
-    if acro.bonuses.len() < 2 {
-        for rotation in &acro.rotations {
-            // in here assuming that if they have 2 they don't want to claim Conn
-            if (rotation.starts_with('c') || rotation.starts_with('h'))
-                && !acro.bonuses.contains(&"Conn".into())
-                && !acro.bonuses.contains(&"Grip".into())
-                && !acro.bonuses.contains(&"Catch".into())
-            {
-                ci.warnings.push(format!("can claim 'Conn' with {rotation}"));
+    match acro.bonuses.len().cmp(&2) {
+        Ordering::Less => {
+            for rotation in &acro.rotations {
+                // in here assuming that if they have 2 they don't want to claim Conn
+                if (rotation.starts_with('c') || rotation.starts_with('h'))
+                    && !acro.bonuses.contains(&"Conn".into())
+                    && !acro.bonuses.contains(&"Grip".into())
+                    && !acro.bonuses.contains(&"Catch".into())
+                {
+                    ci.warnings.push(format!("can claim 'Conn' with {rotation}"));
+                }
             }
         }
-    } else if acro.bonuses.len() > 2 {
-        ci.errors
-            .push(format!("{} bonuses declared, but only 2 bonuses allowed", acro.bonuses.len()));
-    } else {
-        let bonus1 = &acro.bonuses[0];
-        let bonus2 = &acro.bonuses[1];
-        if bonus1 == bonus2 && bonus1 != "CRoll" {
-            ci.errors.push("cannot declare the same bonus twice".into());
-        }
+        Ordering::Equal => {
+            let bonus1 = &acro.bonuses[0];
+            let bonus2 = &acro.bonuses[1];
+            if bonus1 == bonus2 && bonus1 != "CRoll" {
+                ci.errors.push("cannot declare the same bonus twice".into());
+            }
 
-        let exclusive_bonuses: &[&[&str]] = &[
-            &["Grip", "Conn", "Catch"],
-            &["Hula", "RetSq", "RetPa"],
-            &["Twirl", "RotF"],
-            &["Jump", "Jump>", "On1Foot", "1F>1F"],
-            &["Run", "BRun"],
-            &["Porp", "Spich"],
-            &["Dive", "Ps1", "Ps1t0.5", "Ps1op", "Ps1t0,5o", "Ps1t1", "CH+"],
-            &["Spider", "Climb"],
-            &["Fall", "FTurn"],
-        ];
-        for exclusive in exclusive_bonuses {
-            if exclusive.contains(&bonus1.as_str()) && exclusive.contains(&bonus2.as_str()) {
-                ci.errors
-                    .push(format!("cannot declare {bonus1} and {bonus2} in the same acrobatic"));
+            let exclusive_bonuses: &[&[&str]] = &[
+                &["Grip", "Conn", "Catch"],
+                &["Hula", "RetSq", "RetPa"],
+                &["Twirl", "RotF"],
+                &["Jump", "Jump>", "On1Foot", "1F>1F"],
+                &["Run", "BRun"],
+                &["Porp", "Spich"],
+                &["Dive", "Ps1", "Ps1t0.5", "Ps1op", "Ps1t0,5o", "Ps1t1", "CH+"],
+                &["Spider", "Climb"],
+                &["Fall", "FTurn"],
+            ];
+            for exclusive in exclusive_bonuses {
+                if exclusive.contains(&bonus1.as_str()) && exclusive.contains(&bonus2.as_str()) {
+                    ci.errors.push(format!(
+                        "cannot declare {bonus1} and {bonus2} in the same acrobatic"
+                    ));
+                }
             }
+        }
+        Ordering::Greater => {
+            ci.errors.push(format!(
+                "{} bonuses declared, but only 2 bonuses allowed",
+                acro.bonuses.len()
+            ));
         }
     }
 
