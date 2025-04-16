@@ -169,7 +169,9 @@ fn parse_report(sheet: &Range<Data>) -> Vec<(String, CoachCard)> {
                 (i - 1, 10u32)
             };
             let element_range = sheet.range(elements_start, elements_end);
-            let mut card = CoachCard { category, ..Default::default() };
+            // make up a theme since this report don't include them so
+            // we don't warn about that for every single acro/combo
+            let mut card = CoachCard { category, theme: String::from("foo"), ..Default::default() };
             (card.elements, card.end_time) =
                 parse_elements(element_range.rows(), false, card.category.event.is_team_event());
             //println!("TEST {:?}", card);
