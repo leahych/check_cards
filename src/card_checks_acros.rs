@@ -244,18 +244,22 @@ fn check_rotations(acro: &TeamAcrobatic) -> CardIssues {
         );
     }
 
+    let two_sup_constructions: &[&str] = &["2SupU", "2SupD", "2SupM", "2SupD2F"];
+    let reg_r_rotations = Regex::new(r"^r(0.5|1|1.5)$").unwrap();
     let rotation_map: &[(Regex, &[&str])] = &[
         (
-            Regex::new(r"^r(0.5|1|1.5)$").unwrap(),
+            reg_r_rotations.clone(),
             &["FPx", "FP", "SiSb", "Bp", "E", "AP", "SiS", "F1S", "Tw", "S+", "1F1P", "1F1F"],
         ),
         (Regex::new(r"^r(0.5|1|1.5)/$").unwrap(), &["FS"]),
         (Regex::new(r"^r(0.5|1|1.5|2)\+$").unwrap(), &["F1S", "FPx", "FP", "1F1P", "1F1F"]),
         (
+            // E isn't listed, but meets the requirements in on page
+            //451, who knows if that is intended or not
             Regex::new(r"^r(0.5|1|1.5|2)!$").unwrap(),
             &[
                 "1P1P", "1P1F", "Px1P", "PP", "PF", "PH/", "FF", "FF/", "ShF", "LayF", "SiF", "S+",
-                "1F1F",
+                "1F1F", "E",
             ],
         ),
         (Regex::new(r"^r(/|0.5|1)L$").unwrap(), &["LiH", "Li"]),
@@ -285,6 +289,19 @@ fn check_rotations(acro: &TeamAcrobatic) -> CardIssues {
 
     for rotation in &acro.rotations {
         for (rx, connections) in rotation_map {
+            // page 450 mentions 2Sup constructions can be used with
+            // r rotations just to add an exception about group b
+            // rotations only needing to match against connections
+            // so we have to special case this check
+            //
+            // I don't have a good way to compare regex objects so
+            // we'll just run the match again
+            if reg_r_rotations.is_match(rotation)
+                && two_sup_constructions.contains(&acro.construction.as_str())
+            {
+                continue;
+            }
+
             if rx.is_match(rotation) {
                 if !connections.contains(&construction_or_connection.as_str()) {
                     ci.errors.push(format!(
@@ -524,9 +541,12 @@ fn check_connection(acro: &TeamAcrobatic) -> CardIssues {
 }
 
 fn check_positions(acro: &TeamAcrobatic) -> CardIssues {
+    // FP isn't listed, but nothing says your hands can't be close
+    // together for FP, and the DD is the same, so while they probably
+    // should use FPx, they probably aren't required to
     const ONE_LEG_CONNECTIONS: &[&str] = &[
         "FPx", "F1S", "1F1P", "1F1F", "FAb", "3pA", "1FA", "3pb", "FA+PF", "SP+L", ">F1P", "3pBb",
-        "3pB+b", "1Fxs/", "FA+PF",
+        "3pB+b", "1Fxs/", "FA+PF", "FP",
     ];
     let mut ci = CardIssues::default();
     let first_pos = acro.positions.first().map_or("", |v| v.as_str());
@@ -865,6 +885,9 @@ mod tests {
         tuck_just_twist_warn: check_rotations, "A-Sq-Back-tk-t1", 0, 1,
         tuck_with_jay_twist_ok: check_rotations, "A-Sq-Back-tk/2ja-t1", 0, 0,
         line_with_twist_ok: check_rotations, "A-Sq-Up-ln-t1", 0, 0,
+        st_trans_e_r_bang_ok: check_rotations, "B-St>-E-bo/2ow-r0.5!-Pos3", 0, 0,
+        supu_le_r_ok: check_rotations, "B-2SupU-Le-bb/2ow-r0.5", 0, 0,
+        fp_one_leg_r_ok: check_rotations, "B-St-FP-he/2ba-r0.5", 0, 0,
         sp_with_split_err: check_bonuses, "A-2Sup-Up-sp-Split", 1, 0,
         box_with_porp_err: check_bonuses, "P-Knees-4p-Bo-Porp", 1, 0,
         no_conn_with_c: check_bonuses, "A-Thr-Side-ln-c", 0, 1,
