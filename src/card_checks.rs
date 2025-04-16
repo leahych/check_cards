@@ -648,7 +648,8 @@ fn check_category(card: &CoachCard) -> CardIssues {
 }
 
 fn check_hybrid_common_base_marks(category: Category, decls: &[String]) -> CardIssues {
-    const PROBLEM_CODES: &[&str] = &["A5", "F8"]; // F8 catches a&b
+    // A4b might need to go in, A5 seems to be ok right now
+    const PROBLEM_CODES: &[&str] = &["F8"]; // F8 catches a&b
     const TECH_DUET_MIRROR_CODES: &[&str] = &["C1a", "C2a", "C4", "C6a", "C6b", "C7"];
     let mut ci = CardIssues::default();
     for decl in decls {
@@ -1046,7 +1047,7 @@ mod tests {
         combo_c4plus_ok: check_connections_in_non_team, Category{ag: AG12U, event: Combo, free: true}, &["C4+"],
         duet_c4_ok: check_connections_in_non_team, Category{ag: AG12U, event: Duet, free: true}, &["C4"],
         solo_cb: check_connections_in_non_team, Category{ag: AG12U, event: Solo, free: true}, &["CB"],
-        a5_warn: check_hybrid_common_base_marks, TECH_MIXED, &["A5"],
+        // a5_warn: check_hybrid_common_base_marks, TECH_MIXED, &["A5"],
         f8a_warn: check_hybrid_common_base_marks, TECH_MIXED, &["F8a*0.5"],
         f8b_warn: check_hybrid_common_base_marks, TECH_MIXED, &["F8b"],
         other_decls_ok: check_hybrid_common_base_marks, TECH_MIXED, &["A4b", "F6a*0.5", "F6c"],
