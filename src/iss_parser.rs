@@ -81,7 +81,7 @@ fn parse_elements(
             "CHOHY" => elem.kind = ChoHy,
             "TRE" => {
                 let code = row1_cols.next().unwrap_or(&Data::String(String::new())).to_string();
-                let code = code.split('-').last().unwrap_or("").to_owned();
+                let code = code.split('-').next_back().unwrap_or("").to_owned();
                 elem.kind = TRE(code);
             }
             "ACRO" | "ACROBATIC" | "ACRO-A" | "ACRO-B" | "ACRO-C" | "ACRO-P" => {
@@ -93,7 +93,7 @@ fn parse_elements(
                     let code = code.strip_prefix('-').unwrap_or(code.as_str());
 
                     // turn DD into a string because it makes implementing Eq easier
-                    let dd_col = row2_cols.last().unwrap_or(&Data::Float(0.0));
+                    let dd_col = row2_cols.next_back().unwrap_or(&Data::Float(0.0));
                     let dd = if dd_col.is_float() { dd_col.to_string() } else { String::new() };
                     if let Ok(acro) = TeamAcrobatic::from(code) {
                         elem.kind = TeamAcro(acro, dd.to_string());
@@ -116,7 +116,7 @@ fn parse_elements(
                 {
                     //row1_cols.next(); // base mark
                     // turn DD into a string because it makes implementing Eq easier
-                    let dd_col = row2_cols.last().unwrap_or(&Data::Float(0.0));
+                    let dd_col = row2_cols.next_back().unwrap_or(&Data::Float(0.0));
                     let dd = if dd_col.is_float() { dd_col.to_string() } else { String::new() };
                     let decls = row1_cols
                         .filter(|x| x.is_string() && *x != "Hybrid")
@@ -132,7 +132,7 @@ fn parse_elements(
                     continue;
                 }
             }
-        };
+        }
         elements.push(elem);
     }
     (elements, end_time)

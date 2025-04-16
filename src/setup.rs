@@ -115,7 +115,7 @@ fn blob_to_issues(
             ci.errors.push(format!("could not read file: {e}"));
             issues.push((name.to_string(), ci));
         }
-    };
+    }
     issues
 }
 
