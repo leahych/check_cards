@@ -337,7 +337,7 @@ fn test_parse_iss_report() {
                         ),
                     },
                 ],
-                theme: "".to_string(),
+                theme: "foo".to_string(),
                 end_time: NaiveTime::from_hms_opt(0, 3, 34).unwrap(),
                 iss_ver: None,
             }
@@ -427,7 +427,7 @@ fn test_parse_iss_report() {
                         kind: ChoHy,
                     }
                 ],
-                theme: "".to_string(),
+                theme: "foo".to_string(),
                 end_time: NaiveTime::from_hms_opt(0, 3, 22).unwrap(),
                 iss_ver: None,
             }
