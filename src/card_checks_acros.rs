@@ -549,10 +549,13 @@ fn check_positions(acro: &TeamAcrobatic) -> CardIssues {
         "3pB+b", "1Fxs/", "FA+PF", "FP",
     ];
     let mut ci = CardIssues::default();
+
     let first_pos = acro.positions.first().map_or("", |v| v.as_str());
     match first_pos {
         "he" | "vs" | "gl" | "ba" | "sa" | "ne" | "ey" | "qu" => {
-            if !ONE_LEG_CONNECTIONS.contains(&acro.connection_grip.as_str()) {
+            if !acro.connection_grip.is_empty()
+                && !ONE_LEG_CONNECTIONS.contains(&acro.connection_grip.as_str())
+            {
                 ci.warnings.push(format!(
                     "one leg position, {first_pos}, declared, but {} is not a one leg connection",
                     acro.connection_grip
@@ -932,6 +935,7 @@ mod tests {
         head_up_with_head_up: check_positions, "C-Thr>StH-Forw-sd/2he", 0, 0,
         head_down_with_head_up: check_positions, "C-Thr>StH-Forw-bb/2spl", 0, 1,
         head_down_with_head_down: check_positions, "C-Thr>StH-Forw-bb/2ow", 0, 0,
+        c_does_not_warn: check_positions, "C-Thr>StH-Forw-vs/2gl-1F>1F", 0, 0,
     }
 
     #[test]
