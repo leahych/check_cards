@@ -658,6 +658,27 @@ fn check_pair_acro_common_base_marks(card: &CoachCard) -> CardIssues {
     ci
 }
 
+pub fn check_one_acro(category: Category, acro: &TeamAcrobatic, dd: &str) -> CardIssues {
+    let acros_checks = &[
+        check_num_athletes,
+        check_team_acro_validity,
+        check_direction,
+        check_rotations,
+        check_bonuses,
+        check_construction,
+        check_connection,
+        check_positions,
+    ];
+
+    let mut element_ci = CardIssues::default();
+    element_ci += check_age_restrictions(category.ag, acro);
+    element_ci += check_dd_limits(category, acro.group, dd);
+    for check in acros_checks {
+        element_ci += check(acro);
+    }
+    element_ci
+}
+
 pub fn run_acro_checks(card: &CoachCard) -> CardIssues {
     let mut ci = CardIssues::default();
 
@@ -670,23 +691,8 @@ pub fn run_acro_checks(card: &CoachCard) -> CardIssues {
         ci += check(card);
     }
     if card.category.event.is_team_event() {
-        let acros_checks = &[
-            check_num_athletes,
-            check_team_acro_validity,
-            check_direction,
-            check_rotations,
-            check_bonuses,
-            check_construction,
-            check_connection,
-            check_positions,
-        ];
         for (num, acro, dd) in team_acros!(card.elements) {
-            let mut element_ci = CardIssues::default();
-            for check in acros_checks {
-                element_ci += check(acro);
-                element_ci += check_age_restrictions(card.category.ag, acro);
-                element_ci += check_dd_limits(card.category, acro.group, dd);
-            }
+            let mut element_ci = check_one_acro(card.category, acro, dd);
             let prefix = format!("Element {num}: ");
             for err in &mut element_ci.errors {
                 err.insert_str(0, &prefix);

@@ -2,14 +2,17 @@ mod card_checks;
 mod card_checks_acros;
 mod iss_parser;
 mod setup;
+mod text_parser;
 
+use crate::AgeGroups::{AG12U, JRSR, Youth};
+use crate::Events::{Acrobatic, Combo, Duet, MixedDuet, Solo, Team, Trio};
+pub use crate::iss_parser::parse_excel;
 use chrono::NaiveTime;
 use core::ops;
 use regex_lite::Regex;
+use std::collections::HashMap;
 use std::fmt;
 use std::fmt::Formatter;
-
-pub use crate::iss_parser::parse_excel;
 
 #[derive(Copy, Clone, Debug, Hash, PartialEq, Eq)]
 pub enum AgeGroups {
@@ -321,7 +324,7 @@ pub struct CoachCard {
     pub iss_ver: Option<semver::Version>,
 }
 
-#[derive(Clone, Default, PartialEq, Eq)]
+#[derive(Clone, Default, PartialEq, Eq, Debug)]
 pub struct CardIssues {
     errors: Vec<String>,
     warnings: Vec<String>,
@@ -385,4 +388,48 @@ mod tests {
         assert_eq!(Events::from_str("trio"), Events::Trio);
         assert_eq!(Events::from_str(""), Events::Unknown);
     }
+}
+
+const fn routine_time(min: u32, secs: u32) -> NaiveTime {
+    NaiveTime::from_hms_opt(0, min, secs).unwrap()
+}
+
+pub fn get_expected_routine_time(category: &Category) -> Option<&NaiveTime> {
+    static HM: std::sync::OnceLock<HashMap<Category, NaiveTime>> = std::sync::OnceLock::new();
+    let map = HM.get_or_init(|| {
+        HashMap::from([
+            // 12-U
+            (Category { ag: AG12U, event: Solo, free: true }, routine_time(2, 0)),
+            (Category { ag: AG12U, event: Duet, free: true }, routine_time(2, 30)),
+            (Category { ag: AG12U, event: MixedDuet, free: true }, routine_time(2, 30)),
+            (Category { ag: AG12U, event: Team, free: true }, routine_time(3, 0)),
+            (Category { ag: AG12U, event: Combo, free: true }, routine_time(3, 0)),
+            // Youth free
+            (Category { ag: Youth, event: Solo, free: true }, routine_time(2, 0)),
+            (Category { ag: Youth, event: Duet, free: true }, routine_time(2, 30)),
+            (Category { ag: Youth, event: MixedDuet, free: true }, routine_time(2, 30)),
+            (Category { ag: Youth, event: Team, free: true }, routine_time(3, 0)),
+            (Category { ag: Youth, event: Combo, free: true }, routine_time(3, 0)),
+            // Youth tech - USAAS experimental
+            (Category { ag: Youth, event: Solo, free: false }, routine_time(2, 0)),
+            (Category { ag: Youth, event: Duet, free: false }, routine_time(2, 20)),
+            (Category { ag: Youth, event: MixedDuet, free: false }, routine_time(2, 20)),
+            (Category { ag: Youth, event: Team, free: false }, routine_time(2, 50)),
+            // JR/SR free
+            (Category { ag: JRSR, event: Solo, free: true }, routine_time(2, 15)),
+            (Category { ag: JRSR, event: Duet, free: true }, routine_time(2, 45)),
+            (Category { ag: JRSR, event: MixedDuet, free: true }, routine_time(2, 45)),
+            (Category { ag: JRSR, event: Trio, free: true }, routine_time(2, 45)),
+            (Category { ag: JRSR, event: Team, free: true }, routine_time(3, 30)),
+            (Category { ag: JRSR, event: Acrobatic, free: true }, routine_time(3, 0)),
+            (Category { ag: JRSR, event: Combo, free: true }, routine_time(3, 30)),
+            // JR/SR tech
+            (Category { ag: JRSR, event: Solo, free: false }, routine_time(2, 0)),
+            (Category { ag: JRSR, event: Duet, free: false }, routine_time(2, 20)),
+            (Category { ag: JRSR, event: MixedDuet, free: false }, routine_time(2, 20)),
+            (Category { ag: JRSR, event: Team, free: false }, routine_time(2, 50)),
+        ])
+    });
+
+    map.get(category)
 }

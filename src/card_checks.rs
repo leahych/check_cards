@@ -1,7 +1,9 @@
 use crate::AgeGroups::{AG12U, JRSR, Youth};
 use crate::Events::{Acrobatic, Combo, Duet, MixedDuet, Solo, Team, Trio};
-use crate::{AgeGroups, CardIssues, Category, CoachCard, Element, Events, TeamAcrobatic};
-use chrono::NaiveTime;
+use crate::{
+    AgeGroups, CardIssues, Category, CoachCard, Element, ElementKind, Events, TeamAcrobatic,
+    get_expected_routine_time,
+};
 use regex_lite::Regex;
 use std::collections::{HashMap, HashSet};
 use std::time::Duration;
@@ -429,49 +431,9 @@ fn check_factoring(category: Category, decls: &[String]) -> CardIssues {
     ci
 }
 
-const fn routine_time(min: u32, secs: u32) -> NaiveTime {
-    NaiveTime::from_hms_opt(0, min, secs).unwrap()
-}
-
 fn check_routine_times(card: &CoachCard) -> CardIssues {
-    static HM: std::sync::OnceLock<HashMap<Category, NaiveTime>> = std::sync::OnceLock::new();
-    let map = HM.get_or_init(|| {
-        HashMap::from([
-            // 12-U
-            (Category { ag: AG12U, event: Solo, free: true }, routine_time(2, 0)),
-            (Category { ag: AG12U, event: Duet, free: true }, routine_time(2, 30)),
-            (Category { ag: AG12U, event: MixedDuet, free: true }, routine_time(2, 30)),
-            (Category { ag: AG12U, event: Team, free: true }, routine_time(3, 0)),
-            (Category { ag: AG12U, event: Combo, free: true }, routine_time(3, 0)),
-            // Youth free
-            (Category { ag: Youth, event: Solo, free: true }, routine_time(2, 0)),
-            (Category { ag: Youth, event: Duet, free: true }, routine_time(2, 30)),
-            (Category { ag: Youth, event: MixedDuet, free: true }, routine_time(2, 30)),
-            (Category { ag: Youth, event: Team, free: true }, routine_time(3, 0)),
-            (Category { ag: Youth, event: Combo, free: true }, routine_time(3, 0)),
-            // Youth tech - USAAS experimental
-            (Category { ag: Youth, event: Solo, free: false }, routine_time(2, 0)),
-            (Category { ag: Youth, event: Duet, free: false }, routine_time(2, 20)),
-            (Category { ag: Youth, event: MixedDuet, free: false }, routine_time(2, 20)),
-            (Category { ag: Youth, event: Team, free: false }, routine_time(2, 50)),
-            // JR/SR free
-            (Category { ag: JRSR, event: Solo, free: true }, routine_time(2, 15)),
-            (Category { ag: JRSR, event: Duet, free: true }, routine_time(2, 45)),
-            (Category { ag: JRSR, event: MixedDuet, free: true }, routine_time(2, 45)),
-            (Category { ag: JRSR, event: Trio, free: true }, routine_time(2, 45)),
-            (Category { ag: JRSR, event: Team, free: true }, routine_time(3, 30)),
-            (Category { ag: JRSR, event: Acrobatic, free: true }, routine_time(3, 0)),
-            (Category { ag: JRSR, event: Combo, free: true }, routine_time(3, 30)),
-            // JR/SR tech
-            (Category { ag: JRSR, event: Solo, free: false }, routine_time(2, 0)),
-            (Category { ag: JRSR, event: Duet, free: false }, routine_time(2, 20)),
-            (Category { ag: JRSR, event: MixedDuet, free: false }, routine_time(2, 20)),
-            (Category { ag: JRSR, event: Team, free: false }, routine_time(2, 50)),
-        ])
-    });
-
     let mut ci = CardIssues::default();
-    let expected_time = map.get(&card.category);
+    let expected_time = get_expected_routine_time(&card.category);
     if let Some(expected_time) = expected_time {
         let min_time = *expected_time - Duration::new(5, 0);
         let max_time = *expected_time + Duration::new(5, 0);
@@ -719,7 +681,7 @@ fn check_ascent_connection(_: Category, decls: &[String]) -> CardIssues {
     ci
 }
 
-fn check_elements(card: &CoachCard) -> CardIssues {
+pub fn check_one_element(category: Category, element: &ElementKind) -> CardIssues {
     static HYBRID_CHECKS: &[fn(Category, &[String]) -> CardIssues] = &[
         check_hybrid_declaration_maxes,
         check_small_bonuses,
@@ -736,32 +698,37 @@ fn check_elements(card: &CoachCard) -> CardIssues {
     static TRE_CHECKS: &[fn(Category, &String) -> CardIssues] = &[check_tres];
 
     let mut ci = CardIssues::default();
-    for elem in &card.elements {
-        let mut element_ci = CardIssues::default();
-        match &elem.kind {
-            TeamAcro(ta, dd) => {
-                for check in TEAM_ACRO_CHECKS {
-                    element_ci += check(card.category, ta, dd);
-                }
+    match &element {
+        TeamAcro(ta, dd) => {
+            for check in TEAM_ACRO_CHECKS {
+                ci += check(category, ta, dd);
             }
-            PairAcro(decl) => {
-                for check in PAIR_ACRO_CHECKS {
-                    element_ci += check(card.category, decl);
-                }
-            }
-            Hybrid(decls, dd) => {
-                for check in HYBRID_CHECKS {
-                    element_ci += check(card.category, decls);
-                }
-                element_ci += check_dd_limits(card.category, dd);
-            }
-            TRE(decl) => {
-                for check in TRE_CHECKS {
-                    element_ci += check(card.category, decl);
-                }
-            }
-            ChoHy | SuConn => {}
         }
+        PairAcro(decl) => {
+            for check in PAIR_ACRO_CHECKS {
+                ci += check(category, decl);
+            }
+        }
+        Hybrid(decls, dd) => {
+            for check in HYBRID_CHECKS {
+                ci += check(category, decls);
+            }
+            ci += check_dd_limits(category, dd);
+        }
+        TRE(decl) => {
+            for check in TRE_CHECKS {
+                ci += check(category, decl);
+            }
+        }
+        ChoHy | SuConn => {}
+    }
+    ci
+}
+
+fn check_elements(card: &CoachCard) -> CardIssues {
+    let mut ci = CardIssues::default();
+    for elem in &card.elements {
+        let mut element_ci = check_one_element(card.category, &elem.kind);
         let prefix = format!("Element {}: ", elem.number);
         for err in &mut element_ci.errors {
             err.insert_str(0, &prefix);

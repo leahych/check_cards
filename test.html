@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Check Coach Cards for errors</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-k6d4wzSIapyDyv1kpU366/PK5hCdSbCRGRCMv+eplOQJWyd1fbcAu9OCUj5zNLiq"
+            crossorigin="anonymous"></script>
+    <script type="module">
+        import init, {on_text_input_changed, version_text} from './check_cards.js'
+
+        async function run() {
+            await init();
+
+            const ags = document.querySelector("#ag-select");
+            const es = document.querySelector("#event-select");
+            const fts = document.querySelector("#ft-select");
+            const rt = document.querySelector("#routine-textarea");
+            console.log(ags)
+            console.log(es)
+            console.log(fts)
+            console.log(rt)
+            const update_handler = (_) => {
+                on_text_input_changed(ags.value, es.value, fts.value === "Free", rt.value);
+            };
+            ags.addEventListener('change', update_handler);
+            es.addEventListener('change', update_handler);
+            fts.addEventListener('change', update_handler);
+            rt.addEventListener('input', update_handler);
+            document.querySelector("#version-info").textContent = version_text();
+        }
+
+        run();
+    </script>
+</head>
+<body>
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-7 text-left text-wrap">
+            <p>
+                This is a tool for checking for issues with Coach Card declarations.
+                There may be issues and this will <strong>not</strong> find all errors.
+                If you have questions about this tool, please contact Chris Leahy.
+            </p>
+            <p>
+                This version does <strong>NOT</strong> catch all issues that are caught
+                using the regular checker with a full ISS Coach Card.
+            </p>
+        </div>
+    </div>
+    <div class="row row-cols-auto">
+        <div class="col pe-1">
+            <label class="form-label">Event</label>
+        </div>
+        <div class="col p-0">
+            <select class="form-select" id="ag-select" size="3">
+                <option>12-U</option>
+                <option>Youth</option>
+                <option selected>JR/SR</option>
+            </select>
+        </div>
+        <div class="col p-0">
+            <select class="form-select" id="event-select" size="7">
+                <option>Solo</option>
+                <option>Duet</option>
+                <option>Mixed Duet</option>
+                <option>Trio</option>
+                <option selected>Team</option>
+                <option>Acrobatic</option>
+                <option>Combination</option>
+            </select>
+        </div>
+        <div class="col p-0">
+            <select class="form-select" id="ft-select" size="2">
+                <option selected>Free</option>
+                <option>Tech</option>
+            </select>
+        </div>
+    </div>
+    <div class="row mb-3">
+        <div class="col-md-auto">
+            <label class="form-label" for="routine-textarea">Declaration(s)</label>
+        </div>
+        <div class="col">
+            <!-- TODO can I run onChange? or something like that? Needs to be for all inputs -->
+            <!-- Do nothing if no text  -->
+            <textarea class="form-text" id="routine-textarea" rows="15" cols="120" autocomplete="off"
+                      autocorrect="off" autocapitalize="off" autofocus spellcheck="false" wrap="off"></textarea>
+        </div>
+    </div>
+    <div class="row text-left text-wrap">
+        <div class="col">
+            Did this tool prevent a base mark?<br>
+            Does it help you sleep at night?<br>
+            Consider donating to the <a
+                href="https://crm.bloomerang.co/HostedDonation?ApiKey=pub_75841164-7116-11e6-9d49-0a1b37ae639f&WidgetId=510050304">USA
+            Artistic Swimming Foundation!</a>
+        </div>
+    </div>
+    <div class="row justify-content-center">
+        <div class="col" id="results">
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <footer class="small text-muted navbar navbar-fixed-bottom" id="version-info"></footer>
+        </div>
+    </div>
+</div>
+</body>
+</html>

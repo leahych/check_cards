@@ -1,7 +1,10 @@
 use crate::CardIssues;
-use crate::card_checks::run_checks;
-use crate::card_checks_acros::run_acro_checks;
+use crate::ElementKind::TeamAcro;
+use crate::card_checks::{check_one_element, run_checks};
+use crate::card_checks_acros::{check_one_acro, run_acro_checks};
 use crate::iss_parser::parse_excel;
+use crate::text_parser::{ParseResult, parse_text};
+use gloo::utils::document;
 use std::io::Cursor;
 use std::panic;
 use wasm_bindgen::prelude::*;
@@ -42,6 +45,21 @@ fn process_files(input_element: &HtmlInputElement) {
         wasm_bindgen_futures::spawn_local(async move {
             let res = gloo::file::futures::read_as_bytes(&file).await;
             let ci = blob_to_issues(file.name().as_str(), res);
+            show_issues(&doc, ci);
+        });
+    }
+}
+
+#[wasm_bindgen]
+pub fn on_text_input_changed(ag: String, event: String, free: bool, input: String) {
+    let doc = document();
+    clear_issues(&doc);
+
+    // note: I think this means if we don't finish processing
+    // before input changes again we'll get interleaved results
+    if !input.trim().is_empty() {
+        wasm_bindgen_futures::spawn_local(async move {
+            let ci = text_to_issues(ag.as_str(), free, event.as_str(), input.as_str());
             show_issues(&doc, ci);
         });
     }
@@ -119,6 +137,43 @@ fn blob_to_issues(
     issues
 }
 
+fn text_to_issues(ag: &str, free: bool, event: &str, input: &str) -> Vec<(String, CardIssues)> {
+    let mut issues = Vec::new();
+
+    let result = parse_text(ag, free, event, input);
+    match result {
+        ParseResult::Element(category, element) => issues.push((
+            String::new(),
+            match element {
+                TeamAcro(acro, dd) => check_one_acro(category, &acro, dd.as_str()),
+                _ => check_one_element(category, &element),
+            },
+        )),
+        ParseResult::Card(card) => {
+            issues.push((String::new(), run_checks(&card) + run_acro_checks(&card)));
+        }
+        ParseResult::Err(e) => {
+            let mut ci = CardIssues::default();
+            ci.errors.push(format!("could not parse input: {e}"));
+            issues.push((String::new(), ci));
+        }
+    }
+
+    issues
+}
+
+fn clear_issues(document: &Document) {
+    let results = document.get_element_by_id("results");
+    if let Some(results) = results {
+        let children = results.children();
+        for i in 0..children.length() {
+            if let Some(child) = children.get_with_index(i) {
+                child.remove();
+            }
+        }
+    }
+}
+
 fn show_issues(document: &Document, issues: Vec<(String, CardIssues)>) {
     let results = document.get_element_by_id("results");
     if let Some(results) = results {
@@ -154,5 +209,20 @@ mod tests {
         let ci = &issues[0].1;
         assert_eq!(ci.errors.len(), 0);
         assert_eq!(ci.warnings.len(), 0);
+    }
+
+    #[test]
+    fn test_text_to_issues() {
+        let res = text_to_issues("12-U", true, "Solo", "A4a 2R1 S1");
+        assert_eq!(res.len(), 1);
+        assert_eq!(res[0].1, CardIssues::default());
+
+        let res = text_to_issues("12-U", true, "Team", "B-St-FS-sd");
+        assert_eq!(res.len(), 1);
+        assert_eq!(res[0].1, CardIssues::default());
+
+        let res = text_to_issues("12-U", true, "Solo", "A4a 2R1 S1\nF1a F2a\nT6a\nF1b F6a");
+        assert_eq!(res.len(), 1);
+        assert_eq!(res[0].1, CardIssues::default());
     }
 }
