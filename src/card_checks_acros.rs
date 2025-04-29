@@ -508,7 +508,8 @@ fn check_connection(acro: &TeamAcrobatic) -> CardIssues {
             }
         }
         "1P1P" | "1P1F" | "Px1P" | "PP" | "PF" | "Bp" | "ShF" | "E" | "PH/" | "Tw" => {
-            if !B_HEAD_DOWN_POSITIONS.contains(&first_pos) {
+            // monkey is a free position so it can be head down
+            if !B_HEAD_DOWN_POSITIONS.contains(&first_pos) && first_pos != "mo" {
                 ci.warnings.push(format!(
                     "expected head-down position with {}, but found {first_pos}",
                     acro.connection_grip
@@ -524,7 +525,10 @@ fn check_connection(acro: &TeamAcrobatic) -> CardIssues {
             }
         }
         "LayF" | "S+" => {
-            if !B_SIT_STAND_LAY_POSITONS.contains(&first_pos) {
+            // it is ambiguous if owl should be used or split should be
+            // used if the athlete is in splits head down, so allow it
+            // end though LayF is Sit/Stand/Lay
+            if !B_SIT_STAND_LAY_POSITONS.contains(&first_pos) && first_pos != "ow" {
                 ci.warnings.push(format!(
                     "expected sit, stand, or lay position with {}, but found {first_pos}",
                     acro.connection_grip
