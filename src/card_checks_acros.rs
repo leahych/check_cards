@@ -431,11 +431,9 @@ fn check_bonuses(acro: &TeamAcrobatic) -> CardIssues {
 
 fn check_age_restrictions(ag: AgeGroups, acro: &TeamAcrobatic) -> CardIssues {
     let mut ci = CardIssues::default();
-    // TODO need to handle JR vs SR
-    // add raw name to card and attempt to parse JR vs SR here?
-    let is_not_sr = ag == AG12U || ag == Youth;
-    if acro.bonuses.contains(&"1F>1F".into()) && is_not_sr {
-        ci.errors.push("1F>1F is only allowed in Senior routines".into());
+    if acro.bonuses.contains(&"1F>1F".into()) {
+        let v = if ag == JRSR { &mut ci.warnings } else { &mut ci.errors };
+        v.push("1F>1F is only allowed in Senior routines".into());
     }
     ci
 }
@@ -952,8 +950,11 @@ mod tests {
     fn test_check_age_restrictions() {
         let acro = TeamAcrobatic::from("C-Thr>StH-Forw-ln-1F>1F").unwrap();
         assert_eq!(check_age_restrictions(AG12U, &acro).errors.len(), 1);
+        assert_eq!(check_age_restrictions(AG12U, &acro).warnings.len(), 0);
         assert_eq!(check_age_restrictions(Youth, &acro).errors.len(), 1);
+        assert_eq!(check_age_restrictions(Youth, &acro).warnings.len(), 0);
         assert_eq!(check_age_restrictions(JRSR, &acro).errors.len(), 0);
+        assert_eq!(check_age_restrictions(JRSR, &acro).warnings.len(), 1);
     }
 
     #[test]
