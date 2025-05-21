@@ -609,8 +609,9 @@ fn check_positions(acro: &TeamAcrobatic) -> CardIssues {
         }
     }
 
+    let pos2 = acro.positions.get(1).map_or("", |s| s.strip_prefix('2').unwrap_or(""));
+
     if (acro.group == Balance || acro.group == Combined) && acro.positions.len() == 2 {
-        let pos2 = acro.positions[1].strip_prefix('2').unwrap_or("");
         let pos1_head_up =
             B_ONE_LEG_POSITIONS.contains(&first_pos) || B_TWO_LEG_POSITIONS.contains(&first_pos);
         let pos1_head_down = B_HEAD_DOWN_POSITIONS.contains(&first_pos);
@@ -628,6 +629,31 @@ fn check_positions(acro: &TeamAcrobatic) -> CardIssues {
         if pos1_head_down && pos2_head_up && !acro.bonuses.contains(&"SdUp".into()) {
             ci.warnings
                 .push(format!("{first_pos} is heads-down and {pos2} is heads-up, is this right?"));
+        }
+    }
+
+    if acro.construction.starts_with("Thr>") {
+        if (acro.bonuses.contains(&"Jump".into()) || acro.bonuses.contains(&"Jump>".into()))
+            && !A_POSITIONS.contains(&first_pos)
+        {
+            ci.errors.push(format!(
+                "Jump declared, but first position {first_pos} is not an airborne position"
+            ));
+        }
+        if (!acro.bonuses.contains(&"Jump".into()) && !acro.bonuses.contains(&"Jump>".into()))
+            && A_POSITIONS.contains(&first_pos)
+        {
+            ci.warnings.push(format!("First position {first_pos} is an airborne position, but Jump/Jump> bonus not declared. If not starting with a jump, a balance position should be first"));
+        }
+
+        if acro.bonuses.contains(&"Jump".into()) && A_POSITIONS.contains(&first_pos) {
+            if acro.positions.len() == 1 {
+                ci.warnings.push("Jump declared, but no balance position declared".into());
+            } else if !all_b_positions.contains(&pos2) {
+                ci.warnings.push(format!(
+                    "Jump declared, but 2nd position {pos2} is not a balance position"
+                ));
+            }
         }
     }
 
@@ -982,6 +1008,7 @@ mod tests {
             .card;
         check_pair_acro_common_base_marks(&card).warnings
     }
+
     #[test]
     fn test_check_pair_acro_common_base_marks() {
         assert_eq!(pair_acro_helper(Duet, "Jr0.5").len(), 1);
@@ -1012,5 +1039,31 @@ mod tests {
         let ret = run_acro_checks(&solo_card);
         assert_eq!(ret.errors.len(), 0);
         assert_eq!(ret.warnings.len(), 0);
+    }
+
+    #[test]
+    fn test_combined_positions() {
+        let acros = [
+            ("C-Thr>St-Forw-co", 0, 0),
+            ("C-Thr>St-Forw-ln-Jump>", 0, 0),
+            ("C-Thr>St-Forw-ln/2co-Jump>", 0, 0),
+            ("C-Thr>St-Forw-ln/2co-Jump", 0, 0),
+            ("C-Thr>StH-Forw-ln/2bb-Jump", 0, 0),
+            ("C-Thr>St-Forw-co-Jump>", 1, 0),
+            ("C-Thr>St-Forw-co-Jump", 1, 0),
+            ("C-Thr>StH-Forw-bb-Jump>", 1, 0),
+            ("C-Thr>StH-Forw-bb-Jump", 1, 0),
+            ("C-Thr>St-Forw-ln", 0, 1),
+            ("C-Thr>StH-Forw-ln", 0, 1),
+            ("C-Thr>St-Forw-ln-Jump", 0, 1),
+            ("C-Thr>St-Forw-ln/2ja-Jump", 0, 2),
+            ("C-Thr>St-Forw-ln/2ja-Jump>", 0, 0),
+        ];
+        let cat = Category::default();
+        for (s, errs, warns) in acros.into_iter() {
+            let ci = check_one_acro(cat, &TeamAcrobatic::from(s).unwrap(), "1.0");
+            assert_eq!(errs, ci.errors.len(), "acro {}: {:?}", s, ci.errors);
+            assert_eq!(warns, ci.warnings.len(), "acro {}: {:?}", s, ci.warnings);
+        }
     }
 }
