@@ -1,4 +1,5 @@
 /.firebase
 /.idea
+/pkg
 /target
 /tarpaulin-report.html
