@@ -158,7 +158,19 @@ fn check_team_duplicate_acros(card: &CoachCard) -> CardIssues {
 
 fn check_num_athletes(acro: &TeamAcrobatic) -> CardIssues {
     let mut ci = CardIssues::default();
-    if acro.bonuses.contains(&"Dbl".to_string()) {
+    if !acro.bonuses.contains(&"Dbl".to_string()) {
+        return ci;
+    }
+
+    // LH probably needs/usually is done with 5+, and 6+ for Lh2F, but not required
+    // it isn't clear that 2Sup/2SupH requires 5
+    let req5 = ["Sq", "2SupU", "2SupD", "2SupM", "St>", "2S", "Flower", "Thr>Pair", "Thr^LH"];
+    let req6 = ["2SuD2F", "2Sup+", "Thr>St2"];
+    if req6.contains(&acro.construction.as_str()) {
+        ci.errors.push(format!("{} with Dbl requires 12 athletes!", acro.construction));
+    } else if req5.contains(&acro.construction.as_str()) {
+        ci.warnings.push(format!("{} with Dbl requires 10 athletes!", acro.construction));
+    } else {
         ci.warnings.push("requires 8 or more athletes".into());
     }
     ci
@@ -471,9 +483,6 @@ fn check_construction(acro: &TeamAcrobatic) -> CardIssues {
         }
     }
 
-    if acro.construction == "Sq" && acro.bonuses.contains(&"Dbl".to_string()) {
-        ci.warnings.push("Sq with Dbl requires 10 athletes!".into());
-    }
     ci
 }
 
@@ -870,6 +879,7 @@ mod tests {
     }
 
     acro_tests! {
+        reqs_6_dbl_err: check_num_athletes, "B-2SuD2F-Le-co-Dbl", 1, 0,
         dbl_warns: check_num_athletes, "A-Sq-Back-pk/2rg-s1-Dbl", 0, 1,
         no_dbl_ok: check_num_athletes, "A-Sq-Back-pk/2rg-s1", 0, 0,
         //missing_direction: check_team_acro_validity, "A-Sq", 1, 0,
@@ -945,8 +955,6 @@ mod tests {
         sdup_with_head_down_pos: check_bonuses, "B-St-F1S-he/2ne-SdUp", 0, 0,
         st_bad_connection: check_construction, "B-St>-FS-sd", 0, 1,
         st_good_connection: check_construction, "B-St>-F1S-he", 0, 0,
-        sq_with_dbl: check_construction, "A-Sq-Back-tk-Dbl", 0, 1,
-        thr_with_dbl_ok: check_construction, "A-Thr-Back-tk-Dbl", 0, 0,
         non_st_bad_connection: check_construction, "B-St-FS-sd", 0, 0,
         one_leg_conn_2_leg_pos: check_connection, "B-St-FS-he", 0, 1,
         two_leg_conn_2_leg_pos: check_connection, "B-St-FS-sd", 0, 0,
