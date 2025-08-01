@@ -14,6 +14,7 @@ development server, build and package the code by running:
 `wasm-pack build --target web;cp index.html pkg/`
 
 and then run a webserver that serves `pkg/` directory. For example:
+
 `python -m http.server 8080 --directory pkg`
 
 or
