@@ -2,8 +2,12 @@
 name = "check_cards"
 version = "1.2.0"
 edition = "2024"
-publish = false
 rust-version = "1.85.0"
+description = "A tool for checking for issues in Artistic Swimming Coach Cards"
+homepage = "https://check-cards.web.app"
+keywords = ["artistic", "swimming", "artistic-swimming", "synchro"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/leahych/check_cards"
 
 [lib]
 crate-type = ["cdylib", "lib"]
