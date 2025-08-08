@@ -615,7 +615,9 @@ fn check_hybrid_common_base_marks(category: Category, decls: &[String]) -> CardI
     // A4b might need to go in, A5 seems to be ok right now
     const PROBLEM_CODES: &[&str] = &["F8"]; // F8 catches a&b
     const TECH_DUET_MIRROR_CODES: &[&str] = &["C1a", "C2a", "C4", "C6a", "C6b", "C7"];
+    const KNIGHT_CODES: &[&str] = &["F3c", "F5a", "F5c", "F6b", "F6c", "F8a"];
     let mut ci = CardIssues::default();
+    let mut prev_decl = "";
     for decl in decls {
         for code in PROBLEM_CODES {
             if decl.starts_with(code) {
@@ -639,6 +641,21 @@ fn check_hybrid_common_base_marks(category: Category, decls: &[String]) -> CardI
         {
             ci.warnings.push(format!("{decl} in Tech Duet, is this mirror action?"));
         }
+
+        // these next two checks aren't "common" errors, but this was a
+        // convenient place to check for something that is probably a
+        // mistake if we see the two decls back-to-back
+        if decl.starts_with("A6") && prev_decl.starts_with("A1d") {
+            ci.warnings.push("A1d before A6, should this be A1a or A1c?".into());
+        }
+
+        for code in KNIGHT_CODES {
+            if decl.starts_with(code) && prev_decl.starts_with("F1a") {
+                ci.warnings.push(format!("F1a before {decl}, should this be F1b?"));
+            }
+        }
+
+        prev_decl = decl;
     }
     ci
 }
@@ -1026,6 +1043,8 @@ mod tests {
         c4_tech_duet_warn: check_hybrid_common_base_marks, Category { ag: JRSR, free: false, event: Duet }, &["C4"],
         c4_tech_mixed_ok: check_hybrid_common_base_marks, TECH_MIXED, &["C4"],
         c2b_tech_duet_ok: check_hybrid_common_base_marks, Category{ag: AG12U, event: Duet, free: true}, &["C2b"],
+        join_before_a6_warn: check_hybrid_common_base_marks, TECH_MIXED, &["A1d*0.3", "A6*0.5"],
+        split_before_knight_warn: check_hybrid_common_base_marks, TECH_MIXED, &["F1a*0.5", "F6c*0.3"],
         a1c_c4_warn: check_ascent_connection, TECH_MIXED, &["A1c", "C4"],
         a1c_c4_plus_ok: check_ascent_connection, TECH_MIXED, &["A1c", "C4+"],
         pike_to_side_conn_warn: check_ascent_connection, TECH_MIXED, &["A3a", "C3"],
