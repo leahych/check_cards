@@ -548,6 +548,14 @@ fn check_connection(acro: &TeamAcrobatic) -> CardIssues {
     if HANDSTAND_CONNECTIONS.contains(&acro.connection_grip.as_str()) && first_pos != "bb" {
         ci.warnings.push("in handstand positions, the first position should be bb unless the featured swimmer goes directly to Position 1 from underwater".into());
     }
+
+    const TWO_SUP_UP_CONSTRUCTIONS: &[&str] = &["2SupU", "2SupM"];
+    if acro.connection_grip == "Le"
+        && !TWO_SUP_UP_CONSTRUCTIONS.contains(&acro.construction.as_str())
+    {
+        ci.warnings.push(format!("Lemur connections require 2 support athletes with at least 1 head-up. A construction of 2SupU or 2SupM should be used instead of {}", acro.construction));
+    }
+
     ci
 }
 
@@ -966,6 +974,9 @@ mod tests {
         sit_conn_head_sit_pos: check_connection, "B-St-S+-mo", 0, 0,
         handstand_conn_without_bb: check_connection, "B-St-PP-ow", 0, 1,
         handstand_conn_with_bb: check_connection, "B-St-PP-bb/2ow", 0, 0,
+        le_with_ff_warn: check_connection, "B-FF-Le-so", 0, 1,
+        le_with_2sup_d_warn: check_connection, "B-2SupD-Le-so", 0, 1,
+        le_with_2sup_u_ok: check_connection, "B-2SupU-Le-so", 0, 0,
         invalid_airborne_position: check_positions, "A-Sq-Forw-ar", 1, 0,
         one_leg_pos_two_leg_conn: check_positions, "B-St-FS-he", 0, 1,
         one_leg_pos_one_leg_conn: check_positions, "B-St-F1S-he", 0, 0,
