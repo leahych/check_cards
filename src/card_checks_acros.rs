@@ -501,6 +501,7 @@ fn check_connection(acro: &TeamAcrobatic) -> CardIssues {
     const TWO_FOOT_POSITIONS: &[&str] = &["sd", "mo", "sh", "dr"];
     // ShF and E aren't handstand, but have the same sort of movement
     const HANDSTAND_CONNECTIONS: &[&str] = &["1P1P", "1P1F", "Px1P", "PP", "PF", "PH/", "ShF", "E"];
+    const TWO_SUP_UP_CONSTRUCTIONS: &[&str] = &["2SupU", "2SupM"];
 
     // similar, anything that could be considered head up
     let head_up_positions = [B_ONE_LEG_POSITIONS, B_SIT_STAND_LAY_POSITONS, &["sd", "dr"]].concat();
@@ -549,7 +550,6 @@ fn check_connection(acro: &TeamAcrobatic) -> CardIssues {
         ci.warnings.push("in handstand positions, the first position should be bb unless the featured swimmer goes directly to Position 1 from underwater".into());
     }
 
-    const TWO_SUP_UP_CONSTRUCTIONS: &[&str] = &["2SupU", "2SupM"];
     if acro.connection_grip == "Le"
         && !TWO_SUP_UP_CONSTRUCTIONS.contains(&acro.construction.as_str())
     {
