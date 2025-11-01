@@ -49,7 +49,7 @@ fn check_max_families<T: AsRef<str>>(decls: &[T], family_regex: &Regex) -> usize
     points.reduce(|total, item| total + item).unwrap_or(0)
 }
 
-fn check_hybrid_declaration_maxes(_: Category, decls: &[String]) -> CardIssues {
+fn check_hybrid_declaration_maxes(category: Category, decls: &[String]) -> CardIssues {
     let mut ci = CardIssues::default();
 
     let max_families: &[(&str, &str)] = &[
@@ -80,6 +80,11 @@ fn check_hybrid_declaration_maxes(_: Category, decls: &[String]) -> CardIssues {
     for (decl, points) in decl_points {
         if points > 30 {
             ci.errors.push(format!("{decl} is used more than 3 times"));
+        } else if points > 20
+            && decl.starts_with("C")
+            && (category.event == Duet || category.event == MixedDuet)
+        {
+            ci.errors.push(format!("Cannot have more than 2 connections ({decl}) with the same technique in Duet/Mixed Duet"));
         }
     }
     ci
@@ -980,6 +985,8 @@ mod tests {
         four_a1s_ok: check_hybrid_declaration_maxes,TECH_MIXED, &["A1a", "A1b", "A1c", "A1d"],
         four_c4s_err: check_hybrid_declaration_maxes,TECH_MIXED, &["C4", "C4", "C4", "C4+"],
         four_factored_c1s_err: check_hybrid_declaration_maxes,TECH_MIXED, &["C4", "C4*0.3", "C4*0.3", "C4*0.3", "C4*0.3", "C4*0.3"],
+        three_c4s_duet_err: check_hybrid_declaration_maxes,TECH_MIXED, &["C4", "C4", "C4"],
+        three_c4s_team_ok: check_hybrid_declaration_maxes, Category{ag: JRSR, event: Team, free: true}, &["C4", "C4", "C4"],
         nm_err: check_valid_hybrid_declarations, TECH_MIXED, &["NM2"], // yes people are still doing this
         old_bonus_err: check_valid_hybrid_declarations, TECH_MIXED, &["PL"],
         old_bonus2_err: check_valid_hybrid_declarations, TECH_MIXED,  &["TR"],
