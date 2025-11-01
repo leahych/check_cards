@@ -328,7 +328,7 @@ fn check_valid_hybrid_declarations(_: Category, decls: &[String]) -> CardIssues 
         r"|F(B|1[abc]|2[abc]|3[abc]|4[a-f]|5[abc]|6[a-d]|7|8[ab]|9|10)(\*0.[35])?",
         r"|C(B|1[ab]|2[abc]|3|4|5|6[ab]|7)\+?(\*0.[35])?",
         r"|T(B|1|2[ab]|3[a-d]|4[a-e]|5[a-e]|6[abc]|7|8|9[ab])(\*0.[35])?",
-        r"|\dPC",
+        r"|[1-6]PC",
         ")$"
     ))
     .unwrap();
@@ -992,6 +992,7 @@ mod tests {
         old_bonus2_err: check_valid_hybrid_declarations, TECH_MIXED,  &["TR"],
         just_pc_ok: check_valid_hybrid_declarations,  TECH_MIXED, &["2PC"],
         factored_pc_err: check_valid_hybrid_declarations,  TECH_MIXED, &["2PC*0.3"],
+        too_many_pc_err: check_valid_hybrid_declarations,  TECH_MIXED, &["7PC"],
         spin_base_ok: check_valid_hybrid_declarations,  TECH_MIXED, &["SB"],
         spin_ten_ok: check_valid_hybrid_declarations,  TECH_MIXED, &["S10*0.3"],
         spin_five_ok: check_valid_hybrid_declarations, TECH_MIXED,  &["S5*0.5"],
