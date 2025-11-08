@@ -639,9 +639,10 @@ fn check_hybrid_common_base_marks(category: Category, decls: &[String]) -> CardI
 
         // Mixed Duet can have mirror action, so only check Duet
         // Tech Trios aren't an official event so ignore them
-        if category.event == Duet
+        if (category.event == Duet || category.event == Team)
             && !category.free
             && TECH_DUET_MIRROR_CODES.contains(&decl.as_str())
+            && !decl.contains('+')
         {
             ci.warnings.push(format!("{decl} in Tech Duet, is this mirror action?"));
         }
@@ -1081,6 +1082,8 @@ mod tests {
         c4_duet_ok: check_hybrid_common_base_marks, Category{ag: AG12U, event: Duet, free: true}, &["C4"],
         c4_tech_duet_warn: check_hybrid_common_base_marks, Category { ag: JRSR, free: false, event: Duet }, &["C4"],
         c4_tech_mixed_ok: check_hybrid_common_base_marks, TECH_MIXED, &["C4"],
+        c4_tech_team_warn: check_hybrid_common_base_marks, Category { ag: JRSR, free: false, event: Team }, &["C4"],
+        c4_plus_tech_team_ok: check_hybrid_common_base_marks, Category { ag: JRSR, free: false, event: Team }, &["C4+"],
         c2b_tech_duet_ok: check_hybrid_common_base_marks, Category{ag: AG12U, event: Duet, free: true}, &["C2b"],
         join_before_a6_warn: check_hybrid_common_base_marks, TECH_MIXED, &["A1d*0.3", "A6*0.5"],
         split_before_knight_warn: check_hybrid_common_base_marks, TECH_MIXED, &["F1a*0.5", "F6c*0.3"],
