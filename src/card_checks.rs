@@ -713,6 +713,26 @@ fn check_hybrid_sketchy_declarations(_: Category, decls: &[String]) -> CardIssue
     ci
 }
 
+fn check_flexibility_combinations(_: Category, decls: &[String]) -> CardIssues {
+    let mut ci = CardIssues::default();
+    let mut prev_decl = "";
+    for decl in decls {
+        if (decl.starts_with("F2c") && prev_decl.starts_with("F1a"))
+            || (decl.starts_with("F3c") && prev_decl.starts_with("F1b"))
+            || (decl.starts_with("F1a") && prev_decl.starts_with("RO"))
+        {
+            ci.warnings.push(format!("An additional action (of any sort) must be performed between {prev_decl} and {decl}"));
+        }
+        if decl.starts_with("F3a") && prev_decl.starts_with("F3a") {
+            ci.warnings.push(
+                "Claiming F3a F3a requires athletes to show at least 5 split positions".into(),
+            )
+        }
+        prev_decl = decl;
+    }
+    ci
+}
+
 pub fn check_one_element(category: Category, element: &ElementKind) -> CardIssues {
     static HYBRID_CHECKS: &[fn(Category, &[String]) -> CardIssues] = &[
         check_hybrid_declaration_maxes,
@@ -724,6 +744,7 @@ pub fn check_one_element(category: Category, element: &ElementKind) -> CardIssue
         check_hybrid_start_end,
         check_ascent_connection,
         check_hybrid_sketchy_declarations,
+        check_flexibility_combinations,
     ];
     static PAIR_ACRO_CHECKS: &[fn(Category, &String) -> CardIssues] = &[check_pair_acro];
     static TEAM_ACRO_CHECKS: &[fn(Category, &TeamAcrobatic, &String) -> CardIssues] =
@@ -1372,5 +1393,25 @@ mod tests {
         let above_limit_youth_ok =
             check_dd_limits(Category { ag: Youth, event: Combo, free: true }, &"7.1");
         assert_eq!(above_limit_youth_ok.errors.len(), 0);
+    }
+
+    #[test]
+    fn test_check_flexibility_combinations() {
+        let hybrids = [
+            (&["F1a".to_string(), "F2a".to_string()], 0),
+            (&["F1a".to_string(), "F2b".to_string()], 0),
+            (&["F1a".to_string(), "F3a".to_string()], 0),
+            (&["F1a".to_string(), "F3b".to_string()], 0),
+            (&["F1a".to_string(), "F6d".to_string()], 0),
+            (&["F1a".to_string(), "F2c".to_string()], 1),
+            (&["F1b".to_string(), "F3c".to_string()], 1),
+            (&["ROB".to_string(), "F1a".to_string()], 1),
+            (&["RO1".to_string(), "F1a".to_string()], 1),
+            (&["F3a".to_string(), "F3a".to_string()], 1),
+        ];
+        for (decls, warns) in hybrids {
+            let ci = check_flexibility_combinations(TECH_MIXED, decls);
+            assert_eq!(warns, ci.warnings.len(), "hybrid {:?}: {:?}", decls, ci.warnings);
+        }
     }
 }
