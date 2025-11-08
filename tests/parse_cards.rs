@@ -153,7 +153,7 @@ fn test_parse_iss_team() {
                     start_time: NaiveTime::from_hms_opt(0, 2, 30).unwrap(),
                     stop_time: NaiveTime::from_hms_opt(0, 2, 45).unwrap(),
                     kind: Hybrid(
-                        vec_of_strings("CB+ A4b 1RB A6 CB+ CB+ A1c 2RB 1PC"),
+                        vec_of_strings("CB+ A5 1RB A6 CB+ CB+ A1c 2RB 1PC"),
                         "3.35".into()
                     ),
                 },
