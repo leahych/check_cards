@@ -626,7 +626,7 @@ fn check_hybrid_common_base_marks(category: Category, decls: &[String]) -> CardI
         for code in PROBLEM_CODES {
             if decl.starts_with(code) {
                 ci.warnings.push(format!(
-                    "when {decl} is performed quickly, it has a very high risk of base marking"
+                    "{decl} has a very high risk of base marking, athletes must not be vertical at ¾ point"
                 ));
             }
         }
