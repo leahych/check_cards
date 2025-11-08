@@ -96,7 +96,7 @@ fn parse_elements(
                     let dd_col = row2_cols.next_back().unwrap_or(&Data::Float(0.0));
                     let dd = if dd_col.is_float() { dd_col.to_string() } else { String::new() };
                     if let Ok(acro) = TeamAcrobatic::from(code) {
-                        elem.kind = TeamAcro(acro, dd.to_string());
+                        elem.kind = TeamAcro(acro, dd.clone());
                     } else {
                         // TODO log
                     }
@@ -193,7 +193,7 @@ fn parse_iss_card(name: &str, sheet: &Range<Data>) -> Vec<(String, CoachCard)> {
         cur_positon = i;
         let mut cols = row.iter().filter(|x| !x.is_empty());
         let row_name = match cols.next() {
-            Some(Data::String(s)) => s.to_string(),
+            Some(Data::String(s)) => s.clone(),
             Some(Data::DateTime(dt)) => dt.as_datetime().unwrap().format("%H:%M").to_string(),
             _ => continue,
         };

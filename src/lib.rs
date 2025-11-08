@@ -14,11 +14,12 @@ use std::collections::HashMap;
 use std::fmt;
 use std::fmt::Formatter;
 
-#[derive(Copy, Clone, Debug, Hash, PartialEq, Eq)]
+#[derive(Copy, Clone, Debug, Default, Hash, PartialEq, Eq)]
 pub enum AgeGroups {
     AG12U,
     Youth,
     JRSR,
+    #[default]
     Unknown,
 }
 
@@ -91,13 +92,7 @@ impl AgeGroups {
     }
 }
 
-impl Default for AgeGroups {
-    fn default() -> Self {
-        Self::Unknown
-    }
-}
-
-#[derive(Copy, Clone, Debug, Hash, PartialEq, Eq)]
+#[derive(Copy, Clone, Debug, Default, Hash, PartialEq, Eq)]
 pub enum Events {
     Solo,
     Duet,
@@ -106,6 +101,7 @@ pub enum Events {
     Team,
     Acrobatic,
     Combo,
+    #[default]
     Unknown,
 }
 
@@ -150,12 +146,6 @@ impl Events {
         if input.contains("SOLO") {
             return Self::Solo;
         }
-        Self::Unknown
-    }
-}
-
-impl Default for Events {
-    fn default() -> Self {
         Self::Unknown
     }
 }

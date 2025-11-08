@@ -81,7 +81,7 @@ fn check_hybrid_declaration_maxes(category: Category, decls: &[String]) -> CardI
         if points > 30 {
             ci.errors.push(format!("{decl} is used more than 3 times"));
         } else if points > 20
-            && decl.starts_with("C")
+            && decl.starts_with('C')
             && (category.event == Duet || category.event == MixedDuet)
         {
             ci.errors.push(format!("Cannot have more than 2 connections ({decl}) with the same technique in Duet/Mixed Duet"));
@@ -726,7 +726,7 @@ fn check_flexibility_combinations(_: Category, decls: &[String]) -> CardIssues {
         if decl.starts_with("F3a") && prev_decl.starts_with("F3a") {
             ci.warnings.push(
                 "Claiming F3a F3a requires athletes to show at least 5 split positions".into(),
-            )
+            );
         }
         prev_decl = decl;
     }
