@@ -145,6 +145,7 @@ fn check_team_duplicate_acros(card: &CoachCard) -> CardIssues {
     };
     let constructions = |acro: &TeamAcrobatic| vec![acro.construction.clone()];
     let connections = |acro: &TeamAcrobatic| vec![acro.connection_grip.clone()];
+    let bonuses = |acro: &TeamAcrobatic| acro.bonuses.clone();
 
     let mut ci = check_duplicate_elements(group_a.iter(), positions);
     ci += check_duplicate_elements(group_b.iter(), constructions);
@@ -153,6 +154,7 @@ fn check_team_duplicate_acros(card: &CoachCard) -> CardIssues {
     ci += check_duplicate_elements(group_p.iter(), constructions);
     ci += check_duplicate_elements(group_p.iter(), connections);
     ci += check_duplicate_elements(group_p.iter(), positions);
+    ci += check_duplicate_elements(group_p.iter(), bonuses);
     ci
 }
 
@@ -852,7 +854,8 @@ mod tests {
         repeat_construction_group_p: check_team_duplicate_acros, &["P-Knees-SP+K-bb/2ow", "P-Knees-3pA-ne"],
         repeat_connection_group_p: check_team_duplicate_acros, &["P-Knees-SP+K-bb/2ow", "P-2S-SP+K-ne/2ey"],
         repeat_pos_group_p: check_team_duplicate_acros, &["P-Knees-SP+K-bb/2ow", "P-2S-FA+PF-ow/2ey"],
-        group_p_no_dups_ok: check_team_duplicate_acros, &["P-Knees-SP+K-bb/2ow", "P-2S-FA+PF-ne/2ey"],
+        repeat_bonus_group_p: check_team_duplicate_acros, &["P-Knees-SP+K-bb/2ow-Pos3", "P-2S-FA+PF-ne/2ey-Pos3"],
+        group_p_no_dups_ok: check_team_duplicate_acros, &["P-Knees-SP+K-bb/2ow-Pos3", "P-2S-FA+PF-ne/2ey-Trav"],
     }
     card_acro_cat_tests! {
         all_groups_ok: check_groups_for_acro_routine, Category{ag: JRSR, event: Acrobatic, free: true}, &["A-Shou-Back-tk-s1", "B-St-FS-ln", "C-Thr^2F-Forw-bb", "P-P-HA-bb/2wi-Porp/Trav"],
