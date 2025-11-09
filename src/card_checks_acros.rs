@@ -391,15 +391,23 @@ fn check_bonuses(acro: &TeamAcrobatic) -> CardIssues {
                 &["Grip", "Conn", "Catch"],
                 &["Hula", "RetSq", "RetPa"],
                 &["Twirl", "RotF"],
+                &["Moon", "Mov", "Hold"],
                 &["Jump", "Jump>", "On1Foot", "1F>1F"],
-                &["Run", "BRun"],
                 &["Porp", "Spich"],
-                &["Dive", "Ps1", "Ps1t0.5", "Ps1op", "Ps1t0,5o", "Ps1t1", "CH+"],
+                &["Stand", "Diva"],
                 &["Spider", "Climb"],
-                &["Fall", "FTurn"],
+                &[
+                    "Dive", "CH", "Ps1", "Ps1t0.5", "Ps1op", "Ps1t0,5o", "Ps1t1", "Pf1", "Pf1o",
+                    "Mov", "Mov1", "Mov1+t", "Fall", "FTurn",
+                ],
+                &["Ju", "1P>H", "H>1P", "Jump", "Jump>", "On1Foot", "1F>1F", "1F>1F+", "2F>2F"],
             ];
             for exclusive in exclusive_bonuses {
-                if exclusive.contains(&bonus1.as_str()) && exclusive.contains(&bonus2.as_str()) {
+                if exclusive.contains(&bonus1.as_str())
+                    && exclusive.contains(&bonus2.as_str())
+                    // there is different check for same bonus in one acro
+                    && bonus1 != bonus2
+                {
                     ci.errors.push(format!(
                         "cannot declare {bonus1} and {bonus2} in the same acrobatic"
                     ));
