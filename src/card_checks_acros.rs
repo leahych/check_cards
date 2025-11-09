@@ -444,10 +444,15 @@ fn check_bonuses(acro: &TeamAcrobatic) -> CardIssues {
 }
 
 fn check_age_restrictions(ag: AgeGroups, acro: &TeamAcrobatic) -> CardIssues {
+    const JRSR_ONLY_BONUSES: &[&str] = &["RetSq", "RetPa", "1F>1F", "1F>1F+", "1P>H", "H>1P"];
     let mut ci = CardIssues::default();
-    if acro.bonuses.contains(&"1F>1F".into()) {
-        let v = if ag == JRSR { &mut ci.warnings } else { &mut ci.errors };
-        v.push("1F>1F is only allowed in Senior routines".into());
+    if ag == JRSR {
+        return ci;
+    }
+    for bonus in &acro.bonuses {
+        if JRSR_ONLY_BONUSES.contains(&bonus.as_str()) {
+            ci.errors.push(format!("{bonus} is only allowed in Senior routines"));
+        }
     }
     ci
 }
@@ -998,11 +1003,8 @@ mod tests {
     fn test_check_age_restrictions() {
         let acro = TeamAcrobatic::from("C-Thr>StH-Forw-ln-1F>1F").unwrap();
         assert_eq!(check_age_restrictions(AG12U, &acro).errors.len(), 1);
-        assert_eq!(check_age_restrictions(AG12U, &acro).warnings.len(), 0);
         assert_eq!(check_age_restrictions(Youth, &acro).errors.len(), 1);
-        assert_eq!(check_age_restrictions(Youth, &acro).warnings.len(), 0);
         assert_eq!(check_age_restrictions(JRSR, &acro).errors.len(), 0);
-        assert_eq!(check_age_restrictions(JRSR, &acro).warnings.len(), 1);
     }
 
     #[test]
