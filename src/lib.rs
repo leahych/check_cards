@@ -193,7 +193,8 @@ fn is_rotation(group: AcroGroup, rotation: &str) -> Option<String> {
         AcroGroup::Airborne => "^[cdfhst]",
         AcroGroup::Balance => "^r",
         AcroGroup::Combined => "^(C[cdfhrstP]|2F)",
-        AcroGroup::Platform => "^P[01r]",
+        // consistency is the hobgoblin of little minds
+        AcroGroup::Platform => "^P[r|2S|DB|h|0.5h|1h|1.5h|2h]",
     })
     .unwrap();
     if r.is_match(rotation) {

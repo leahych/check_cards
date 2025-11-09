@@ -240,6 +240,19 @@ fn check_direction(acro: &TeamAcrobatic) -> CardIssues {
 fn check_rotations(acro: &TeamAcrobatic) -> CardIssues {
     let mut ci = CardIssues::default();
 
+    match acro.rotations.len().cmp(&2) {
+        Ordering::Less => {}
+        Ordering::Equal => {
+            if acro.group != Combined {
+                ci.errors.push("Only one rotation allowed, but two declared".into());
+            }
+        }
+        Ordering::Greater => ci.errors.push(format!(
+            "{} rotations declared, but only two rotations allowed",
+            acro.rotations.len()
+        )),
+    }
+
     if acro.rotations.iter().any(|rotation| rotation.contains('o'))
         && !acro.positions.contains(&"2ln".into())
         && !acro.bonuses.contains(&"Pos3".into())
@@ -282,14 +295,13 @@ fn check_rotations(acro: &TeamAcrobatic) -> CardIssues {
         (Regex::new(r"^Cr0.5L$").unwrap(), &["Thr^Lh"]),
         (Regex::new(r"^CP0.5$").unwrap(), &["Thr>FF", "Thr>F"]),
         (Regex::new(r"^2F(0.5|1)$").unwrap(), &["Thr^2F"]),
-        (
-            Regex::new(r"^P(r|r0.5|r1)$").unwrap(),
-            &[
-                "F2A", "FAb", "3pA", "1FA", "HA", "3pK", "3pb", "FA+PF", "SP+L", "ShF+P", "4p",
-                "2pA", "4pAb", "Bb", "2pK", ">F1P", "3pBb", "3pB+b", ">1P1P/", "1Fxs/",
-            ],
-        ),
-        (Regex::new(r"^P(r|r0.5|r1)/$").unwrap(), &["SiA", "SP+K", "SiF+Pb", "L/SiF+P"]),
+        // Note: this isn't strictly true, since Platforms can change
+        // constructions, but if you do that, you are outside what we
+        // can catch
+        (Regex::new(r"^Pr(0.5|1|1.5)?$").unwrap(), &["P", "Box", "Knees", "B", "Chariot"]),
+        (Regex::new(r"^P(0.5|1|1.5|2)?h$").unwrap(), &["Hand"]),
+        (Regex::new(r"^P2S(r0.5|r1)?$").unwrap(), &["2S", "Flower"]),
+        (Regex::new(r"^PDB(0.5|1)?$").unwrap(), &["DB"]),
     ];
 
     let unlikely_twist_pos =
@@ -297,12 +309,16 @@ fn check_rotations(acro: &TeamAcrobatic) -> CardIssues {
     let just_twist_regex = Regex::new(r"^t(0.5|1|1.5|2|2.5|3)$").unwrap();
 
     let construction_or_connection = match acro.group {
-        Airborne | Combined => &acro.construction,
-        Balance | Platform => &acro.connection_grip,
+        Airborne | Combined | Platform => &acro.construction,
+        Balance => &acro.connection_grip,
     };
 
+    // TODO reverse this, for the various constructions or
+    // connections, one of the rotations must match the regex, if there
+    // is no regex, that connection/construction does not allow rotations
+
     for rotation in &acro.rotations {
-        for (rx, connections) in rotation_map {
+        for (rx, allowed) in rotation_map {
             // page 450 mentions 2Sup constructions can be used with
             // r rotations just to add an exception about group b
             // rotations only needing to match against connections
@@ -317,28 +333,11 @@ fn check_rotations(acro: &TeamAcrobatic) -> CardIssues {
             }
 
             if rx.is_match(rotation) {
-                if !connections.contains(&construction_or_connection.as_str()) {
-                    ci.errors.push(format!(
-                        "{rotation} can only be used with {}",
-                        connections.join(", ")
-                    ));
+                if !allowed.contains(&construction_or_connection.as_str()) {
+                    ci.errors
+                        .push(format!("{rotation} can only be used with {}", allowed.join(", ")));
                 }
                 break;
-            }
-        }
-
-        // let's be consistent about what is allowed for different rotations
-        // except for Platform!!
-        if acro.group == Platform {
-            if Regex::new(r"^P(0.5|1)h$").unwrap().is_match(rotation) && acro.construction != "Hand"
-            {
-                ci.errors.push(format!("{rotation} can only be used with Hand"));
-            }
-            if Regex::new(r"^P(r|r0.5|r1)//$").unwrap().is_match(rotation)
-                && acro.construction != "2S"
-                && acro.construction != "Flower"
-            {
-                ci.errors.push(format!("{rotation} can only be used with 2S, Flower"));
             }
         }
 
@@ -352,19 +351,72 @@ fn check_rotations(acro: &TeamAcrobatic) -> CardIssues {
     ci
 }
 
+fn are_bonuses_exclusive(bonus1: &str, bonus2: &str) -> bool {
+    let exclusive_bonuses: &[&[&str]] = &[
+        &["Grip", "Conn", "Catch"],
+        &["Hula", "RetSq", "RetPa"],
+        &["Twirl", "RotF"],
+        &["Moon", "Mov", "Hold"],
+        &["Jump", "Jump>", "On1Foot", "1F>1F"],
+        &["Porp", "Spich"],
+        &["Stand", "Diva"],
+        &["Spider", "Climb"],
+        &[
+            "Dive", "CH", "Ps1", "Ps1t0.5", "Ps1op", "Ps1t0,5o", "Ps1t1", "Pf1", "Pf1o", "Mov",
+            "Mov1", "Mov1+t", "Fall", "FTurn",
+        ],
+        &["Ju", "1P>H", "H>1P", "Jump", "Jump>", "On1Foot", "1F>1F", "1F>1F+", "2F>2F"],
+    ];
+    for exclusive in exclusive_bonuses {
+        if exclusive.contains(&bonus1) && exclusive.contains(&bonus2) {
+            return true;
+        }
+    }
+    false
+}
+
 fn check_bonuses(acro: &TeamAcrobatic) -> CardIssues {
     let mut ci = CardIssues::default();
 
     let first_pos = acro.positions.first().map_or("", |v| v);
     let second_pos = acro.positions.get(1).map_or("", |v| v.strip_prefix('2').unwrap_or(v));
     if acro.bonuses.contains(&"Split".into()) && first_pos == "sp" {
-        ci.errors.push(
-            "for Split bonus, sp is considered a take-off and should not be declared first".into(),
-        );
+        ci.errors.push("for Split bonus, sp is a take-off and should not be declared first".into());
     }
 
-    if acro.bonuses.contains(&"Porp".into()) && (first_pos == "Bo" || first_pos == "bo") {
-        ci.errors.push("Box cannot be claimed as Position 1 with Porp Bonus".into());
+    if acro.bonuses.contains(&"Porp".into()) && first_pos != "bb" {
+        ci.errors.push("For Porp bonus, Position 1 must be bamboo".into());
+    }
+
+    if acro.bonuses.contains(&"Spich".into())
+        && !((first_pos == "bb" && second_pos == "sh") || (first_pos == "sh" && second_pos == "bb"))
+    {
+        // warn because technically you could do something before Spich
+        // and then you'd start with that position, but that's unlikely
+        ci.warnings.push("Spich requires going from bamboo to shrimp or shrimp to bamboo".into());
+    }
+
+    if acro.bonuses.contains(&"RetPa".into()) || acro.bonuses.contains(&"RetSq".into()) {
+        if acro.bonuses.contains(&"RetPa".into()) && acro.construction != "Shou" {
+            ci.errors.push("RetPa probably needs to use Shou construction".into());
+        }
+
+        if acro.bonuses.contains(&"RetSq".into()) && acro.construction != "Sq" {
+            ci.errors.push("RetSq must use Sq construction".into());
+        }
+
+        // this isn't in the wording, but doing anything else seems fishy
+        if acro.direction != Some(Upwards) {
+            ci.warnings.push("RetPa and RetSq should probably have Up as the direction".into());
+        }
+
+        // they don't say Cartwheel/Handspring, but I think that's not
+        // going to be a winning argument, so let's ban them as well.
+        // That leaves twists as the only option, and since it's group A
+        //  there is only one rotation to check
+        if !acro.rotations.is_empty() && !acro.rotations[0].starts_with('t') {
+            ci.errors.push("Somersaults cannot be used with RetPa or RetSq".into());
+        }
     }
 
     match acro.bonuses.len().cmp(&2) {
@@ -385,45 +437,26 @@ fn check_bonuses(acro: &TeamAcrobatic) -> CardIssues {
             let bonus2 = &acro.bonuses[1];
             if bonus1 == bonus2 && bonus1 != "CRoll" {
                 ci.errors.push("cannot declare the same bonus twice".into());
-            }
-
-            let exclusive_bonuses: &[&[&str]] = &[
-                &["Grip", "Conn", "Catch"],
-                &["Hula", "RetSq", "RetPa"],
-                &["Twirl", "RotF"],
-                &["Moon", "Mov", "Hold"],
-                &["Jump", "Jump>", "On1Foot", "1F>1F"],
-                &["Porp", "Spich"],
-                &["Stand", "Diva"],
-                &["Spider", "Climb"],
-                &[
-                    "Dive", "CH", "Ps1", "Ps1t0.5", "Ps1op", "Ps1t0,5o", "Ps1t1", "Pf1", "Pf1o",
-                    "Mov", "Mov1", "Mov1+t", "Fall", "FTurn",
-                ],
-                &["Ju", "1P>H", "H>1P", "Jump", "Jump>", "On1Foot", "1F>1F", "1F>1F+", "2F>2F"],
-            ];
-            for exclusive in exclusive_bonuses {
-                if exclusive.contains(&bonus1.as_str())
-                    && exclusive.contains(&bonus2.as_str())
-                    // there is different check for same bonus in one acro
-                    && bonus1 != bonus2
-                {
-                    ci.errors.push(format!(
-                        "cannot declare {bonus1} and {bonus2} in the same acrobatic"
-                    ));
-                }
+            } else if are_bonuses_exclusive(bonus1, bonus2) {
+                ci.errors
+                    .push(format!("cannot declare {bonus1} and {bonus2} in the same acrobatic"));
             }
         }
         Ordering::Greater => {
-            ci.errors.push(format!(
-                "{} bonuses declared, but only 2 bonuses allowed",
-                acro.bonuses.len()
-            ));
+            ci.errors.push(format!("only 2 bonuses allowed but {} declared", acro.bonuses.len()));
         }
     }
 
-    if acro.bonuses.contains(&"Spider".to_string()) && acro.construction != "2S" {
-        ci.errors.push("Spider bonus can only be used with 2S construction".into());
+    let p_construction_bonuses = &["Spider", "Climb", "Fall", "FTurn"];
+    for bonus in p_construction_bonuses {
+        const ALLOWED: &[&str] = &["2S", "Flower", "Hand"];
+        if acro.bonuses.contains(&(*bonus).into()) && !ALLOWED.contains(&acro.construction.as_str())
+        {
+            ci.errors.push(format!(
+                "{bonus} bonus can only be used with {} constructions",
+                ALLOWED.join(", ")
+            ));
+        }
     }
 
     if (acro.bonuses.contains(&"Jump".into()) || acro.bonuses.contains(&"Jump>".into()))
@@ -504,22 +537,29 @@ fn check_construction(acro: &TeamAcrobatic) -> CardIssues {
 const A_POSITIONS: &[&str] = &["tk", "pk", "kt", "ln", "sp", "ja", "rg"];
 const B_ONE_LEG_POSITIONS: &[&str] = &["he", "vs", "gl", "ba", "sa", "ne", "ey"];
 const B_TWO_LEG_POSITIONS: &[&str] = &["sd"];
-const B_SIT_STAND_LAY_POSITONS: &[&str] =
-    &["mo", "sh", "spl", "hp", "sc", "co", "fl", "so", "tu", "pi"];
-const B_HEAD_DOWN_POSITIONS: &[&str] = &["bb", "bo", "wi", "ow"];
-const B_EXTREME_FLEX_POSITIONS: &[&str] = &["dr", "qu"];
+// TODO will ISS use PP or pp or should I check for both?
+const B_FREE_POSITIONS: &[&str] = &["mo", "PP", "ct", "sh", "hp", "fl", "tu"];
+const B_HORIZONTAL_POSITIONS: &[&str] = &["co", "spl", "so", "pi"];
+const B_HEAD_DOWN_POSITIONS: &[&str] = &["bb", "bo", "ff", "wi", "br", "ow", "ma"];
+const B_EXTREME_FLEX_POSITIONS: &[&str] = &["dr", "qu", "sn"];
 
+// TODO re-examine this
 const B_TORSO_DOWN_POSITIONS: &[&str] = &["bb", "bo", "wi", "ow", "dr", "qu", "sh", "mo", "ne"];
 
 fn check_connection(acro: &TeamAcrobatic) -> CardIssues {
     // not a category but positions that can be done by standing w/two feet
+    // TODO check if there are more now
     const TWO_FOOT_POSITIONS: &[&str] = &["sd", "mo", "sh", "dr"];
     // ShF and E aren't handstand, but have the same sort of movement
     const HANDSTAND_CONNECTIONS: &[&str] = &["1P1P", "1P1F", "1PPx", "PP", "PF", "PH/", "ShF", "E"];
     const TWO_SUP_UP_CONSTRUCTIONS: &[&str] = &["2SupU", "2SupM"];
 
     // similar, anything that could be considered head up
-    let head_up_positions = [B_ONE_LEG_POSITIONS, B_SIT_STAND_LAY_POSITONS, &["sd", "dr"]].concat();
+    // TODO figure out if any horizontal positions could count
+    let head_up_positions = [B_ONE_LEG_POSITIONS, B_TWO_LEG_POSITIONS, B_FREE_POSITIONS].concat();
+
+    // TODO check if this is correct
+    let laying_positions = [B_FREE_POSITIONS, B_HORIZONTAL_POSITIONS].concat();
 
     let mut ci = CardIssues::default();
     let first_pos = acro.positions.first().map_or("", |v| v.as_str());
@@ -551,7 +591,7 @@ fn check_connection(acro: &TeamAcrobatic) -> CardIssues {
             // it is ambiguous if owl should be used or split should be
             // used if the athlete is in splits head down, so allow it
             // end though LayF is Sit/Stand/Lay
-            if !B_SIT_STAND_LAY_POSITONS.contains(&first_pos) && first_pos != "ow" {
+            if !laying_positions.contains(&first_pos) && first_pos != "ow" {
                 ci.warnings.push(format!(
                     "expected sit, stand, or lay position with {}, but found {first_pos}",
                     acro.connection_grip
@@ -583,6 +623,7 @@ fn check_positions(acro: &TeamAcrobatic) -> CardIssues {
 
     let first_pos = acro.positions.first().map_or("", |v| v.as_str());
     match first_pos {
+        // TODO update this to use B_ONE_LEG_CONNECTIONS plus "qu" and "sn"
         "he" | "vs" | "gl" | "ba" | "sa" | "ne" | "ey" | "qu" => {
             if !acro.connection_grip.is_empty()
                 && !ONE_LEG_CONNECTIONS.contains(&acro.connection_grip.as_str())
@@ -599,29 +640,25 @@ fn check_positions(acro: &TeamAcrobatic) -> CardIssues {
     let all_b_positions = [
         B_ONE_LEG_POSITIONS,
         B_TWO_LEG_POSITIONS,
-        B_SIT_STAND_LAY_POSITONS,
+        B_FREE_POSITIONS,
+        B_HORIZONTAL_POSITIONS,
         B_HEAD_DOWN_POSITIONS,
         B_EXTREME_FLEX_POSITIONS,
     ]
     .concat();
 
-    if acro.group == Combined
-        && acro.construction.contains('^')
-        && !all_b_positions.contains(&first_pos)
+    let pos2 = acro.positions.get(1).map_or("", |s| s.strip_prefix('2').unwrap_or(""));
+
+    if acro.construction.contains('^')
+        && (!all_b_positions.contains(&first_pos) || !A_POSITIONS.contains(&pos2))
     {
-        ci.warnings.push(format!("In fly-above acrobatics, the first featured swimmer is probably the balance, but position 1 is {first_pos}"));
+        ci.warnings
+            .push("fly-above must have a balance position followed by an airborne position".into());
     }
-    if acro.construction == "Thr^2F" {
-        if first_pos == "spl" {
-            ci.warnings.push(
-                "split position in fly-above construction, should that be owl position?".into(),
-            );
-        }
-        if acro.positions.len() == 1 {
-            ci.warnings.push(
-                "flyover should have a balance position followed by an airborne position".into(),
-            );
-        }
+
+    if acro.construction == "Thr^2F" && first_pos == "spl" {
+        ci.warnings
+            .push("split position in fly-above construction, should that be owl position?".into());
     }
 
     let valid_positions = match acro.group {
@@ -638,8 +675,6 @@ fn check_positions(acro: &TeamAcrobatic) -> CardIssues {
         }
     }
 
-    let pos2 = acro.positions.get(1).map_or("", |s| s.strip_prefix('2').unwrap_or(""));
-
     if (acro.group == Balance || acro.group == Combined) && acro.positions.len() == 2 {
         let pos1_head_up =
             B_ONE_LEG_POSITIONS.contains(&first_pos) || B_TWO_LEG_POSITIONS.contains(&first_pos);
@@ -647,9 +682,11 @@ fn check_positions(acro: &TeamAcrobatic) -> CardIssues {
         // sit, stand, lay has some things that could be "head down" but
         // I'm not sure any that could be combined with head up positions
         // we'll see if anyone complains
+        // TODO see if this check is still correct
         let pos2_head_up = B_ONE_LEG_POSITIONS.contains(&pos2)
             || B_TWO_LEG_POSITIONS.contains(&pos2)
-            || B_SIT_STAND_LAY_POSITONS.contains(&pos2);
+            || B_FREE_POSITIONS.contains(&pos2)
+            || B_HORIZONTAL_POSITIONS.contains(&pos2);
         let pos2_head_down = B_HEAD_DOWN_POSITIONS.contains(&pos2);
         if pos1_head_up && pos2_head_down {
             ci.warnings
@@ -916,7 +953,10 @@ mod tests {
         forw_with_hand_ok: check_direction, "A-Sq-Forw-ln-hd", 0, 0,
         up_with_dive_warn: check_direction, "A-Sq-Up-ln-d", 0, 1,
         up_with_dive_twist_ok: check_direction, "A-Sq-Up-ln-dt1", 0, 0,
+        airborne_two_rotations_err: check_rotations, "A-Sq-Side-ln-ct0.5+s1", 1, 0,
         airborne_rotation_ok: check_rotations, "A-Sq-Side-ln-ct0.5", 0, 0,
+        combined_three_rotations_err: check_rotations, "C-Thr^2F-Back-ow/2tk-2F0.5+Cs1+Ct1", 1, 0,
+        combined_two_rotations_ok: check_rotations, "C-Thr^2F-Back-ow/2tk-2F0.5+Cs1", 0, 0,
         fs_with_r_err: check_rotations, "B-St-FS-sd-r0.5", 1, 0,
         fp_with_r_ok: check_rotations, "B-St-FP-sd-r0.5", 0, 0,
         fp_with_r_slash_err: check_rotations, "B-St-FP-sd-r0.5/", 1, 0,
@@ -930,20 +970,20 @@ mod tests {
         st_with_cr_ok: check_rotations, "C-Thr>St-Forw-ln-Cr0.5", 0, 0,
         st_with_cr_bang_err: check_rotations, "C-Thr>St-Forw-ln-Cr0.5!", 1, 0,
         sth_with_cr_bang_ok: check_rotations, "C-Thr>StH-Forw-ln-Cr0.5!", 0, 0,
-        two_f_with_crl_err: check_rotations, "C-Thr^2F-Back-tk-Cr0.5L-Cs1", 1, 0,
-        lh_with_crl_ok: check_rotations, "C-Thr^Lh-Back-tk-Cr0.5L-Cs1", 0, 0,
+        two_f_with_crl_err: check_rotations, "C-Thr^2F-Back-tk-Cr0.5L+Cs1", 1, 0,
+        lh_with_crl_ok: check_rotations, "C-Thr^Lh-Back-tk-Cr0.5L+Cs1", 0, 0,
         pair_with_cp_err: check_rotations, "C-Thr>Pair>-Forw-ln-CP0.5", 1, 0,
         ff_with_cp_ok: check_rotations, "C-Thr>FF-Forw-ln-CP0.5", 0, 0,
-        lh_with_2f_err: check_rotations, "C-Thr^Lh-Back-tk-2F0.5-Cs1", 1, 0,
-        two_f_with_2f_ok: check_rotations, "C-Thr^2F-Back-tk-2F0.5-Cs1", 0, 0,
-        sia_with_pr_err: check_rotations, "P-P-SiA-mo-Pr0.5", 1, 0,
-        f2a_with_pr_ok: check_rotations, "P-P-F2A-ln-Pr", 0, 0,
-        f2a_with_pr_slash_err: check_rotations,"P-P-F2A-ln-Pr0.5/", 1, 0,
-        sia_with_pr_slash_ok: check_rotations, "P-P-SiA-mo-Pr0.5/", 0, 0,
+        lh_with_2f_err: check_rotations, "C-Thr^Lh-Back-tk-2F0.5+Cs1", 1, 0,
+        two_f_with_2f_ok: check_rotations, "C-Thr^2F-Back-tk-2F0.5+Cs1", 0, 0,
         p_with_ph_err: check_rotations, "P-P-F2A-ln-P0.5h", 1, 0,
+        p_with_pr_ok: check_rotations, "P-P-F2A-ln-Pr", 0, 0,
+        hand_with_pr_err: check_rotations, "P-Hand-F2A-ln-Pr0.5", 1, 0,
         hand_with_ph_ok: check_rotations, "P-Hand-F2A-ln-P0.5h", 0, 0,
-        p_with_pr_slash_slash_err: check_rotations, "P-P-SiA-mo-Pr//", 1, 0,
-        flower_with_pr_slash_slash_ok: check_rotations, "P-Flower-SiA-mo-Pr//", 0, 0,
+        p_with_p2s_err: check_rotations, "P-P-SiA-mo-P2S", 1, 0,
+        flower_with_p2s_ok: check_rotations, "P-Flower-SiA-mo-P2S", 0, 0,
+        b_with_db_err: check_rotations, "P-B-F2A-ln-PDB1", 1, 0,
+        db_with_db_ok: check_rotations, "P-DB-F2A-ln-PDB1", 0, 0,
         only_ln_with_open_warn: check_rotations, "A-Sq-Back-ln-s1.5t0.5o", 0, 1,
         ln_pk_with_open_ok: check_rotations, "A-Sq-Back-pk/2ln-s1.5t0.5o", 0, 0,
         ss_without_ln_warn: check_rotations, "A-Sq-Back-pk-ss1", 0, 1,
@@ -966,7 +1006,7 @@ mod tests {
         dup_bonuses_ok: check_bonuses, "C-Thr>FF-Forw-ln-CRoll/CRoll", 0, 0,
         mut_excl_bonuses: check_bonuses, "P-2S-3pA-ne-Spider/Climb", 1, 0,
         non_mut_excl_bonuses_ok: check_bonuses, "P-Hand-3pA-ne-Climb/Fall", 0, 0,
-        spider_with_flower_err: check_bonuses, "P-Flower-4pAb-ne-Spider", 1, 0,
+        spider_with_p_err: check_bonuses, "P-P-4pAb-ne-Spider", 1, 0,
         spider_with_2s_ok: check_bonuses, "P-2S-4pAb-ne-Spider", 0, 0,
         flyover_with_jump_transit_err: check_bonuses, "C-Thr^St-Forw-ow/2ln-Jump>", 1, 0,
         jump_with_2nd_pos_airborne: check_bonuses, "C-Thr>St-Forw-ow/2ln-Jump", 0, 1,
@@ -974,6 +1014,14 @@ mod tests {
         jump_transit_with_2nd_pos_airborne_ok: check_bonuses, "C-Thr>St-Forw-ow/2ln-Jump>", 0, 0,
         sdup_with_no_head_down_pos: check_bonuses, "B-St-F1S-he/2sa-SdUp", 0, 1,
         sdup_with_head_down_pos: check_bonuses, "B-St-F1S-he/2ne-SdUp", 0, 0,
+        feet_with_retpa_err: check_bonuses, "A-Feet-Up-sp-RetPa", 1, 0,
+        somersault_with_retpa_err: check_bonuses, "A-Shou-Up-tk-s1-RetPa", 1, 0,
+        back_with_retpa_warn: check_bonuses, "A-Shou-Back-ln-RetPa", 0, 1,
+        twist_with_retpa_ok: check_bonuses, "A-Shou-Up-ln-t1-RetPa", 0, 0,
+        thr_with_retsq_err: check_bonuses, "A-Thr-Up-sp-RetSq", 1, 0,
+        somersault_with_retsq_err: check_bonuses, "A-Sq-Up-tk-s1-RetSq", 1, 0,
+        back_with_retsq_warn: check_bonuses, "A-Sq-Back-sp-RetSq", 0, 1,
+        twist_with_retsq_ok: check_bonuses, "A-Sq-Up-sp-t1-RetSq", 0, 0,
         st_bad_connection: check_construction, "B-St>-FS-sd", 0, 1,
         st_good_connection: check_construction, "B-St>-F1S-he", 0, 0,
         non_st_bad_connection: check_construction, "B-St-FS-sd", 0, 0,
