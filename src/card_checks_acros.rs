@@ -166,7 +166,7 @@ fn check_num_athletes(acro: &TeamAcrobatic) -> CardIssues {
 
     // LH probably needs/usually is done with 5+, and 6+ for Lh2F, but not required
     // it isn't clear that 2Sup/2SupH requires 5
-    let req5 = ["Sq", "2SupU", "2SupD", "2SupM", "St>", "2S", "Flower", "Thr>Pair", "Thr^LH"];
+    let req5 = ["Sq", "2SupU", "2SupD", "2SupM", "St>", "2S", "Flower", "Thr>Pair>", "Thr^LH"];
     let req6 = ["2SuD2F", "2Sup+", "Thr>St2"];
     if req6.contains(&acro.construction.as_str()) {
         ci.errors.push(format!("{} with Dbl requires 12 athletes!", acro.construction));
@@ -263,22 +263,22 @@ fn check_rotations(acro: &TeamAcrobatic) -> CardIssues {
     let rotation_map: &[(Regex, &[&str])] = &[
         (
             reg_r_rotations.clone(),
-            &["FPx", "FP", "SiSb", "Bp", "E", "AP", "SiS", "F1S", "Tw", "S+", "1F1P", "1F1F"],
+            &["FP", "SiSb", "Bp", "E", "AP", "SiS", "F1S", "Tw", "S+", "1F1P", "1F1F"],
         ),
         (Regex::new(r"^r(0.5|1|1.5)/$").unwrap(), &["FS"]),
-        (Regex::new(r"^r(0.5|1|1.5|2)\+$").unwrap(), &["F1S", "FPx", "FP", "1F1P", "1F1F"]),
+        (Regex::new(r"^r(0.5|1|1.5|2)\+$").unwrap(), &["F1S", "FP", "1F1P", "1F1F"]),
         (
             // E isn't listed, but meets the requirements in on page
             //451, who knows if that is intended or not
             Regex::new(r"^r(0.5|1|1.5|2)!$").unwrap(),
             &[
-                "1P1P", "1P1F", "Px1P", "PP", "PF", "PH/", "FF", "FF/", "ShF", "LayF", "SiF", "S+",
+                "1P1P", "1P1F", "1PPx", "PP", "PF", "PH/", "FF", "FF/", "ShF", "LayF", "SiF", "S+",
                 "1F1F", "E",
             ],
         ),
         (Regex::new(r"^r(/|0.5|1)L$").unwrap(), &["LiH", "Li"]),
-        (Regex::new(r"^Cr(0.5|1|1.5)$").unwrap(), &["Thr>St", "Thr>L"]),
-        (Regex::new(r"^Cr(0.5|1|1.5)!$").unwrap(), &["Thr>StH", "Thr>L"]),
+        (Regex::new(r"^Cr(0.5|1|1.5)$").unwrap(), &["Thr>St"]),
+        (Regex::new(r"^Cr(0.5|1|1.5)!$").unwrap(), &["Thr>StH"]),
         (Regex::new(r"^Cr0.5L$").unwrap(), &["Thr^Lh"]),
         (Regex::new(r"^CP0.5$").unwrap(), &["Thr>FF", "Thr>F"]),
         (Regex::new(r"^2F(0.5|1)$").unwrap(), &["Thr^2F"]),
@@ -470,8 +470,8 @@ fn check_construction(acro: &TeamAcrobatic) -> CardIssues {
         (
             "St",
             &[
-                "1P1P", "Px1P", "PP", "FPx", "FP", "SiSb", "Bp", "E", "PH/", "AP", "SiS", "FS",
-                "F1S", "Tw", "S+", "1F1P", "1F1F",
+                "1P1P", "1PPx", "PP", "FP", "SiSb", "Bp", "E", "PH/", "AP", "SiS", "FS", "F1S",
+                "Tw", "S+", "1F1P", "1F1F",
             ] as &[&str],
         ),
         ("StH", &["1P1F", "FF", "FF/", "PF", "ShF", "LayF", "SiF", "S+", "1F1F"]),
@@ -515,7 +515,7 @@ fn check_connection(acro: &TeamAcrobatic) -> CardIssues {
     // not a category but positions that can be done by standing w/two feet
     const TWO_FOOT_POSITIONS: &[&str] = &["sd", "mo", "sh", "dr"];
     // ShF and E aren't handstand, but have the same sort of movement
-    const HANDSTAND_CONNECTIONS: &[&str] = &["1P1P", "1P1F", "Px1P", "PP", "PF", "PH/", "ShF", "E"];
+    const HANDSTAND_CONNECTIONS: &[&str] = &["1P1P", "1P1F", "1PPx", "PP", "PF", "PH/", "ShF", "E"];
     const TWO_SUP_UP_CONSTRUCTIONS: &[&str] = &["2SupU", "2SupM"];
 
     // similar, anything that could be considered head up
@@ -530,7 +530,7 @@ fn check_connection(acro: &TeamAcrobatic) -> CardIssues {
                     .push(format!("expected two foot position with FS, but found {first_pos}"));
             }
         }
-        "1P1P" | "1P1F" | "Px1P" | "PP" | "PF" | "Bp" | "ShF" | "E" | "PH/" | "Tw" => {
+        "1P1P" | "1P1F" | "1PPx" | "PP" | "PF" | "Bp" | "ShF" | "E" | "PH/" | "Tw" => {
             // monkey is a free position so it can be head down
             if !B_HEAD_DOWN_POSITIONS.contains(&first_pos) && first_pos != "mo" {
                 ci.warnings.push(format!(
@@ -539,7 +539,7 @@ fn check_connection(acro: &TeamAcrobatic) -> CardIssues {
                 ));
             }
         }
-        "FPx" | "FP" | "FF" | "FF/" | "F1S" | "SiF" | "1FH+1FP" | "1F1P" | "1F1F" => {
+        "FP" | "FF" | "FF/" | "F1S" | "SiF" | "1FH+1FP" | "1F1P" | "1F1F" => {
             if !head_up_positions.contains(&first_pos) {
                 ci.warnings.push(format!(
                     "expected head-up position with {}, but found {first_pos}",
@@ -575,11 +575,8 @@ fn check_connection(acro: &TeamAcrobatic) -> CardIssues {
 }
 
 fn check_positions(acro: &TeamAcrobatic) -> CardIssues {
-    // FP isn't listed, but nothing says your hands can't be close
-    // together for FP, and the DD is the same, so while they probably
-    // should use FPx, they probably aren't required to
     const ONE_LEG_CONNECTIONS: &[&str] = &[
-        "FPx", "F1S", "1F1P", "1F1F", "FAb", "3pA", "1FA", "3pb", "FA+PF", "SP+L", ">F1P", "3pBb",
+        "F1S", "1F1P", "1F1F", "FAb", "3pA", "1FA", "3pb", "FA+PF", "SP+L", ">F1P", "3pBb",
         "3pB+b", "1Fxs/", "FA+PF", "FP",
     ];
     let mut ci = CardIssues::default();
@@ -921,13 +918,13 @@ mod tests {
         up_with_dive_twist_ok: check_direction, "A-Sq-Up-ln-dt1", 0, 0,
         airborne_rotation_ok: check_rotations, "A-Sq-Side-ln-ct0.5", 0, 0,
         fs_with_r_err: check_rotations, "B-St-FS-sd-r0.5", 1, 0,
-        fpx_with_r_ok: check_rotations, "B-St-FPx-sd-r0.5", 0, 0,
-        fpx_with_r_slash_err: check_rotations, "B-St-FPx-sd-r0.5/", 1, 0,
+        fp_with_r_ok: check_rotations, "B-St-FP-sd-r0.5", 0, 0,
+        fp_with_r_slash_err: check_rotations, "B-St-FP-sd-r0.5/", 1, 0,
         fs_with_r_slash_ok: check_rotations, "B-St-FS-sd-r0.5/", 0, 0,
         fs_with_r_plus_err: check_rotations, "B-St-FS-sd-r0.5+", 1, 0,
-        fpx_with_r_plus_ok: check_rotations, "B-St-FPx-sd-r0.5+", 0, 0,
-        fpx_with_rl_err: check_rotations, "B-St-FPx-sd-r0.5L", 1, 0,
-        fpx_with_rl_err2: check_rotations, "B-St-FPx-sd-r/L", 1, 0,
+        fp_with_r_plus_ok: check_rotations, "B-St-FP-sd-r0.5+", 0, 0,
+        fp_with_rl_err: check_rotations, "B-St-FP-sd-r0.5L", 1, 0,
+        fp_with_rl_err2: check_rotations, "B-St-FP-sd-r/L", 1, 0,
         lih_with_rl_ok: check_rotations, "B-St-LiH-sd-r/L", 0, 0,
         sth_with_cr_err: check_rotations, "C-Thr>StH-Forw-ln-Cr0.5", 1, 0,
         st_with_cr_ok: check_rotations, "C-Thr>St-Forw-ln-Cr0.5", 0, 0,
@@ -935,7 +932,7 @@ mod tests {
         sth_with_cr_bang_ok: check_rotations, "C-Thr>StH-Forw-ln-Cr0.5!", 0, 0,
         two_f_with_crl_err: check_rotations, "C-Thr^2F-Back-tk-Cr0.5L-Cs1", 1, 0,
         lh_with_crl_ok: check_rotations, "C-Thr^Lh-Back-tk-Cr0.5L-Cs1", 0, 0,
-        pair_with_cp_err: check_rotations, "C-Thr>Pair-Forw-ln-CP0.5", 1, 0,
+        pair_with_cp_err: check_rotations, "C-Thr>Pair>-Forw-ln-CP0.5", 1, 0,
         ff_with_cp_ok: check_rotations, "C-Thr>FF-Forw-ln-CP0.5", 0, 0,
         lh_with_2f_err: check_rotations, "C-Thr^Lh-Back-tk-2F0.5-Cs1", 1, 0,
         two_f_with_2f_ok: check_rotations, "C-Thr^2F-Back-tk-2F0.5-Cs1", 0, 0,
