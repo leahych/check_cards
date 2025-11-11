@@ -226,6 +226,15 @@ fn check_direction(acro: &TeamAcrobatic) -> CardIssues {
         }
     }
 
+    if acro.direction != Some(Upwards) {
+        if acro.construction == "2Sup+" {
+            ci.errors.push("Direction should be Up for 2Sup+".into());
+        }
+        if acro.bonuses.contains(&"Turn".into()) {
+            ci.errors.push("Direction should be Up for Turn".into());
+        }
+    }
+
     let somersaults_only = Regex::new(r"^(d|s1|s1.5|s2|s2.5|s3)$").unwrap();
     if acro.direction == Some(Upwards)
         && somersaults_only.is_match(acro.rotations.first().unwrap_or(&String::new()))
@@ -382,6 +391,7 @@ fn check_bonuses_allowed_constructions(construction: &str, bonuses: &Vec<String>
     let mut ci = CardIssues::default();
     let map = HM.get_or_init(|| {
         HashMap::from([
+            ("Turn", vec!["2Sup+"].into_iter().collect()),
             ("Run", vec!["Thr>FF", "Thr>F"].into_iter().collect()),
             ("Ju", vec!["Thr>FF", "Thr>F", "Thr>hand", "Thr>Sq"].into_iter().collect()),
             ("Jump", vec!["Thr>St", "Thr>StH", "Thr>St2"].into_iter().collect()),
@@ -641,6 +651,80 @@ fn check_connection(acro: &TeamAcrobatic) -> CardIssues {
     ci
 }
 
+fn check_group_c_positions(acro: &TeamAcrobatic) -> CardIssues {
+    let mut ci = CardIssues::default();
+
+    let first_pos = acro.positions.first().map_or("", |v| v.as_str());
+    let pos2 = acro.positions.get(1).map_or("", |s| s.strip_prefix('2').unwrap_or(""));
+
+    let all_b_positions = [
+        B_ONE_LEG_POSITIONS,
+        B_TWO_LEG_POSITIONS,
+        B_FREE_POSITIONS,
+        B_HORIZONTAL_POSITIONS,
+        B_HEAD_DOWN_POSITIONS,
+        B_EXTREME_FLEX_POSITIONS,
+    ]
+    .concat();
+
+    if acro.construction.contains('^')
+        && (!all_b_positions.contains(&first_pos) || !A_POSITIONS.contains(&pos2))
+    {
+        ci.errors
+            .push("fly-above must have a balance position followed by an airborne position".into());
+    }
+
+    if acro.construction == "Thr^Lh" && !(first_pos == "br" || first_pos == "ct") {
+        ci.errors.push("For Thr^Lh balance position must be Bridge or Cat".into());
+    }
+
+    if acro.construction == "Thr^2F" && first_pos == "spl" {
+        ci.warnings
+            .push("split position in fly-above construction, should that be owl position?".into());
+    }
+
+    for position in &acro.positions {
+        const AIRBORNE_CONSTRUCTIONS: &[&str] = &["2Sup+", "Thr+Thr", "Sn"];
+        const AIRBORNE_BONUSES: &[&str] = &["Jump>", "Turn"];
+        const BALANCE_CONSTRUCTIONS: &[&str] = &["Thr>FF", "Thr>F"];
+        const BALANCE_BONUSES: &[&str] = &["Ju", "Jump", "1F>1F", "1F>1F+", "2F>2F"];
+        if (AIRBORNE_CONSTRUCTIONS.contains(&acro.construction.as_str())
+            || acro.construction.ends_with('>'))
+            && all_b_positions.contains(&position.as_str())
+        {
+            ci.errors.push(format!(
+                "{position} declared but {} requires airborne positions",
+                acro.construction
+            ));
+        }
+
+        if BALANCE_CONSTRUCTIONS.contains(&acro.construction.as_str())
+            && A_POSITIONS.contains(&position.as_str())
+        {
+            ci.errors.push(format!(
+                "{position} declared but {} requires balance positions",
+                acro.construction
+            ));
+        }
+
+        for bonus in &acro.bonuses {
+            if AIRBORNE_BONUSES.contains(&bonus.as_str())
+                && all_b_positions.contains(&position.as_str())
+            {
+                ci.errors
+                    .push(format!("{position} declared but {bonus} requires airborne positions"));
+            }
+            if BALANCE_BONUSES.contains(&bonus.as_str()) && A_POSITIONS.contains(&position.as_str())
+            {
+                ci.errors
+                    .push(format!("{position} declared but {bonus} requires balance positions"));
+            }
+        }
+    }
+
+    ci
+}
+
 fn check_positions(acro: &TeamAcrobatic) -> CardIssues {
     const ONE_LEG_CONNECTIONS: &[&str] = &[
         "F1S", "1F1P", "1F1F", "FAb", "3pA", "1FA", "3pb", "FA+PF", "SP+L", ">F1P", "3pBb",
@@ -649,6 +733,7 @@ fn check_positions(acro: &TeamAcrobatic) -> CardIssues {
     let mut ci = CardIssues::default();
 
     let first_pos = acro.positions.first().map_or("", |v| v.as_str());
+    let pos2 = acro.positions.get(1).map_or("", |s| s.strip_prefix('2').unwrap_or(""));
     match first_pos {
         // TODO update this to use B_ONE_LEG_CONNECTIONS plus "qu" and "sn"
         "he" | "vs" | "gl" | "ba" | "sa" | "ne" | "ey" | "qu" => {
@@ -674,24 +759,6 @@ fn check_positions(acro: &TeamAcrobatic) -> CardIssues {
     ]
     .concat();
 
-    let pos2 = acro.positions.get(1).map_or("", |s| s.strip_prefix('2').unwrap_or(""));
-
-    if acro.construction.contains('^')
-        && (!all_b_positions.contains(&first_pos) || !A_POSITIONS.contains(&pos2))
-    {
-        ci.errors
-            .push("fly-above must have a balance position followed by an airborne position".into());
-    }
-
-    if acro.construction == "Thr^Lh" && !(first_pos == "br" || first_pos == "ct") {
-        ci.errors.push("For Thr^Lh balance position must be Bridge or Cat".into());
-    }
-
-    if acro.construction == "Thr^2F" && first_pos == "spl" {
-        ci.warnings
-            .push("split position in fly-above construction, should that be owl position?".into());
-    }
-
     let valid_positions = match acro.group {
         Airborne => A_POSITIONS,
         Balance | Platform => &all_b_positions,
@@ -706,7 +773,14 @@ fn check_positions(acro: &TeamAcrobatic) -> CardIssues {
         }
     }
 
-    if (acro.group == Balance || acro.group == Combined) && acro.positions.len() == 2 {
+    // above is just checking that the claimed position is one that is
+    // allowed at all, now for Group C, we'll do a more complicated
+    // check depending on construction, bonuses, etc.
+    if acro.group == Combined {
+        ci += check_group_c_positions(acro);
+    }
+
+    if acro.group == Balance && acro.positions.len() == 2 {
         let pos1_head_up =
             B_ONE_LEG_POSITIONS.contains(&first_pos) || B_TWO_LEG_POSITIONS.contains(&first_pos);
         let pos1_head_down = B_HEAD_DOWN_POSITIONS.contains(&first_pos);
@@ -726,31 +800,6 @@ fn check_positions(acro: &TeamAcrobatic) -> CardIssues {
         if pos1_head_down && pos2_head_up && !acro.bonuses.contains(&"SdUp".into()) {
             ci.warnings
                 .push(format!("{first_pos} is heads-down and {pos2} is heads-up, is this right?"));
-        }
-    }
-
-    if acro.construction.starts_with("Thr>") {
-        if (acro.bonuses.contains(&"Jump".into()) || acro.bonuses.contains(&"Jump>".into()))
-            && !A_POSITIONS.contains(&first_pos)
-        {
-            ci.errors.push(format!(
-                "Jump declared, but first position {first_pos} is not an airborne position"
-            ));
-        }
-        if (!acro.bonuses.contains(&"Jump".into()) && !acro.bonuses.contains(&"Jump>".into()))
-            && A_POSITIONS.contains(&first_pos)
-        {
-            ci.warnings.push(format!("First position {first_pos} is an airborne position, but Jump/Jump> bonus not declared. If not starting with a jump, a balance position should be first"));
-        }
-
-        if acro.bonuses.contains(&"Jump".into()) && A_POSITIONS.contains(&first_pos) {
-            if acro.positions.len() == 1 {
-                ci.warnings.push("Jump declared, but no balance position declared".into());
-            } else if !all_b_positions.contains(&pos2) {
-                ci.warnings.push(format!(
-                    "Jump declared, but 2nd position {pos2} is not a balance position"
-                ));
-            }
         }
     }
 
@@ -984,6 +1033,9 @@ mod tests {
         forw_with_hand_ok: check_direction, "A-Sq-Forw-ln-hd", 0, 0,
         up_with_dive_warn: check_direction, "A-Sq-Up-ln-d", 0, 1,
         up_with_dive_twist_ok: check_direction, "A-Sq-Up-ln-dt1", 0, 0,
+        two_sup_wrong_dir_err: check_direction, "C-2Sup+-Side-sp", 1, 0,
+        turn_wrong_dir_err: check_direction, "C-Thr>Pair>-Side-sp-Turn", 1, 0,
+        two_sup_correct_decl_ok: check_direction, "C-2Sup+-Up-sp-Turn", 0, 0,
         airborne_two_rotations_err: check_rotations, "A-Sq-Side-ln-ct0.5+s1", 1, 0,
         airborne_rotation_ok: check_rotations, "A-Sq-Side-ln-ct0.5", 0, 0,
         combined_three_rotations_err: check_rotations, "C-Thr^2F-Back-ow/2tk-2F0.5+Cs1+Ct1", 1, 0,
@@ -1080,10 +1132,6 @@ mod tests {
         fly_above_with_spl: check_positions, "C-Thr^2F-Back-spl/2tk", 0, 1,
         fly_above_just_balance: check_positions, "C-Thr^2F-Back-ow", 1, 0,
         head_up_with_head_down: check_positions, "B-St-FS-sd/2bb", 0, 1,
-        head_up_with_head_up: check_positions, "C-Thr>StH-Forw-sd/2he", 0, 0,
-        head_down_with_head_up: check_positions, "C-Thr>StH-Forw-bb/2spl", 0, 1,
-        head_down_with_head_down: check_positions, "C-Thr>StH-Forw-bb/2ow", 0, 0,
-        c_does_not_warn: check_positions, "C-Thr>StH-Forw-vs/2gl-1F>1F", 0, 0,
         fly_above_lh_wrong_pos: check_positions, "C-Thr^Lh-Forw-so/2tk", 1, 0,
         fly_above_lh_right_pos: check_positions, "C-Thr^Lh-Forw-br/2tk", 0, 0,
     }
@@ -1160,16 +1208,16 @@ mod tests {
             ("C-Thr>St-Forw-co", 0, 0),
             ("C-Thr>St-Forw-ln-Jump>", 0, 0),
             ("C-Thr>St-Forw-ln/2co-Jump>", 0, 0),
-            ("C-Thr>St-Forw-ln/2co-Jump", 0, 0),
-            ("C-Thr>StH-Forw-ln/2bb-Jump", 0, 0),
+            ("C-Thr>St-Forw-sd/2co-Jump", 0, 0),
+            ("C-Thr>StH-Forw-sd/2bb-Jump", 0, 0),
             ("C-Thr>St-Forw-co-Jump>", 1, 0),
-            ("C-Thr>St-Forw-co-Jump", 1, 0),
+            ("C-Thr>St-Forw-co-Jump", 0, 0),
             ("C-Thr>StH-Forw-bb-Jump>", 1, 0),
-            ("C-Thr>StH-Forw-bb-Jump", 1, 0),
-            ("C-Thr>St-Forw-ln", 0, 1),
-            ("C-Thr>StH-Forw-ln", 0, 1),
-            ("C-Thr>St-Forw-ln-Jump", 0, 1),
-            ("C-Thr>St-Forw-ln/2ja-Jump", 0, 2),
+            ("C-Thr>StH-Forw-bb-Jump", 0, 0),
+            ("C-Thr>St-Forw-ln", 0, 0),
+            ("C-Thr>StH-Forw-ln", 0, 0),
+            ("C-Thr>St-Forw-ln-Jump", 1, 0),
+            ("C-Thr>St-Forw-sd/2ja-Jump", 0, 1),
             ("C-Thr>St-Forw-ln/2ja-Jump>", 0, 0),
         ];
         let cat = Category::default();
