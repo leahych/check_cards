@@ -385,27 +385,22 @@ fn are_bonuses_exclusive(bonus1: &str, bonus2: &str) -> bool {
 
 fn check_bonuses_allowed_constructions(construction: &str, bonuses: &Vec<String>) -> CardIssues {
     const P_ALLOWED: &[&str] = &["2S", "Flower", "Hand"];
-    static HM: std::sync::OnceLock<HashMap<&str, HashSet<&str>>> = std::sync::OnceLock::new();
+    static HM: std::sync::OnceLock<HashMap<&str, &[&str]>> = std::sync::OnceLock::new();
 
     let mut ci = CardIssues::default();
     let map = HM.get_or_init(|| {
         HashMap::from([
-            ("Turn", vec!["2Sup+"].into_iter().collect()),
-            ("Run", vec!["Thr>FF", "Thr>F"].into_iter().collect()),
-            ("Ju", vec!["Thr>FF", "Thr>F", "Thr>hand", "Thr>Sq"].into_iter().collect()),
-            ("Jump", vec!["Thr>St", "Thr>StH", "Thr>St2"].into_iter().collect()),
-            (
-                "Jump>",
-                vec!["Thr>St", "Thr>StH", "Thr>FF", "Thr>F", "Thr>hand", "Thr>Sq", "Thr>St2"]
-                    .into_iter()
-                    .collect(),
-            ),
-            ("1F>1F+", vec!["Thr>StH>1F"].into_iter().collect()),
-            ("2F>2F", vec!["Thr>StH"].into_iter().collect()),
-            ("Spider", P_ALLOWED.iter().copied().collect()),
-            ("Climb", P_ALLOWED.iter().copied().collect()),
-            ("Fall", P_ALLOWED.iter().copied().collect()),
-            ("FTurn", P_ALLOWED.iter().copied().collect()),
+            ("Turn", &["2Sup+"] as &[&str]),
+            ("Run", &["Thr>FF", "Thr>F"]),
+            ("Ju", &["Thr>FF", "Thr>F", "Thr>hand", "Thr>Sq"]),
+            ("Jump", &["Thr>St", "Thr>StH", "Thr>St2"]),
+            ("Jump>", &["Thr>St", "Thr>StH", "Thr>FF", "Thr>F", "Thr>hand", "Thr>Sq", "Thr>St2"]),
+            ("1F>1F+", &["Thr>StH>1F"]),
+            ("2F>2F", &["Thr>StH"]),
+            ("Spider", P_ALLOWED),
+            ("Climb", P_ALLOWED),
+            ("Fall", P_ALLOWED),
+            ("FTurn", P_ALLOWED),
         ])
     });
     for bonus in bonuses {
@@ -414,7 +409,7 @@ fn check_bonuses_allowed_constructions(construction: &str, bonuses: &Vec<String>
         {
             ci.errors.push(format!(
                 "{bonus} can only be used with {} constructions",
-                allowed_constructions.iter().copied().collect::<Vec<&str>>().join(", ")
+                allowed_constructions.join(", ")
             ));
         }
     }

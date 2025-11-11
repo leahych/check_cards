@@ -5,7 +5,7 @@ use crate::{
     get_expected_routine_time,
 };
 use regex_lite::Regex;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::time::Duration;
 
 macro_rules! hybrids {
@@ -457,46 +457,22 @@ fn check_routine_times(card: &CoachCard) -> CardIssues {
     ci
 }
 
-fn check_tres(category: Category, tre: &String) -> CardIssues {
-    static HASHMAP: std::sync::OnceLock<HashMap<Events, HashSet<&str>>> =
-        std::sync::OnceLock::new();
-    let tre_map = HASHMAP.get_or_init(|| {
-        HashMap::from([
-            (
-                Solo,
-                vec![
-                    "TRE1a", "TRE1b", "TRE2a", "TRE2b", "TRE3", "TRE4a", "TRE4b", "TRE5a", "TRE5b",
-                ]
-                .into_iter()
-                .collect(),
-            ),
-            (
-                Duet,
-                vec![
-                    "TRE1a", "TRE1b", "TRE2a", "TRE2b", "TRE3", "TRE4a", "TRE4b", "TRE5a", "TRE5b",
-                ]
-                .into_iter()
-                .collect(),
-            ),
-            (MixedDuet, vec!["TRE1a", "TRE1b", "TRE2a", "TRE2b", "TRE3"].into_iter().collect()),
-            (
-                Team,
-                vec![
-                    "TRE1a", "TRE1b", "TRE2a", "TRE2b", "TRE3a", "TRE3b", "TRE4", "TRE5a", "TRE5b",
-                ]
-                .into_iter()
-                .collect(),
-            ),
-        ])
-    });
-
+fn check_tres(category: Category, tre: &str) -> CardIssues {
     let mut ci = CardIssues::default();
     if category.free {
         ci.errors.push("TRE in free routine?".into());
     } else {
-        let empty_set = HashSet::<&str>::new();
-        let valid_tres = tre_map.get(&category.event).unwrap_or(&empty_set);
-        if !valid_tres.contains(tre.as_str()) {
+        let valid_tres: &[&str] = match category.event {
+            Solo | Duet => {
+                &["TRE1a", "TRE1b", "TRE2a", "TRE2b", "TRE3", "TRE4a", "TRE4b", "TRE5a", "TRE5b"]
+            }
+            MixedDuet => &["TRE1a", "TRE1b", "TRE2a", "TRE2b", "TRE3"],
+            Team => {
+                &["TRE1a", "TRE1b", "TRE2a", "TRE2b", "TRE3a", "TRE3b", "TRE4", "TRE5a", "TRE5b"]
+            }
+            Acrobatic | Combo | Trio | Events::Unknown => &[],
+        };
+        if !valid_tres.contains(&tre) {
             ci.errors.push(format!("{tre} is not a valid TRE for {:?}", category.event));
         }
     }
@@ -749,7 +725,7 @@ pub fn check_one_element(category: Category, element: &ElementKind) -> CardIssue
     static PAIR_ACRO_CHECKS: &[fn(Category, &String) -> CardIssues] = &[check_pair_acro];
     static TEAM_ACRO_CHECKS: &[fn(Category, &TeamAcrobatic, &String) -> CardIssues] =
         &[check_team_acro];
-    static TRE_CHECKS: &[fn(Category, &String) -> CardIssues] = &[check_tres];
+    static TRE_CHECKS: &[fn(Category, &str) -> CardIssues] = &[check_tres];
 
     let mut ci = CardIssues::default();
     match &element {
@@ -929,13 +905,13 @@ mod tests {
 
     fn run_tre_test(
         name: &str,
-        check_fn: fn(Category, &String) -> CardIssues,
+        check_fn: fn(Category, &str) -> CardIssues,
         cat: Category,
         tre: &str,
     ) {
         let err_expected = if name.ends_with("_err") { 1 } else { 0 };
         let warn_expected = if name.ends_with("_warn") { 1 } else { 0 };
-        let result = check_fn(cat, &tre.to_string());
+        let result = check_fn(cat, tre);
         // println!("TEST {:?}", result.errors);
         assert_eq!(result.errors.len(), err_expected);
         assert_eq!(result.warnings.len(), warn_expected);
