@@ -375,6 +375,44 @@ fn are_bonuses_exclusive(bonus1: &str, bonus2: &str) -> bool {
     false
 }
 
+fn check_bonuses_allowed_constructions(construction: &str, bonuses: &Vec<String>) -> CardIssues {
+    const P_ALLOWED: &[&str] = &["2S", "Flower", "Hand"];
+    static HM: std::sync::OnceLock<HashMap<&str, HashSet<&str>>> = std::sync::OnceLock::new();
+
+    let mut ci = CardIssues::default();
+    let map = HM.get_or_init(|| {
+        HashMap::from([
+            ("Run", vec!["Thr>FF", "Thr>F"].into_iter().collect()),
+            ("Ju", vec!["Thr>FF", "Thr>F", "Thr>hand", "Thr>Sq"].into_iter().collect()),
+            ("Jump", vec!["Thr>St", "Thr>StH", "Thr>St2"].into_iter().collect()),
+            (
+                "Jump>",
+                vec!["Thr>St", "Thr>StH", "Thr>FF", "Thr>F", "Thr>hand", "Thr>Sq", "Thr>St2"]
+                    .into_iter()
+                    .collect(),
+            ),
+            ("1F>1F+", vec!["Thr>StH>1F"].into_iter().collect()),
+            ("2F>2F", vec!["Thr>StH"].into_iter().collect()),
+            ("Spider", P_ALLOWED.iter().copied().collect()),
+            ("Climb", P_ALLOWED.iter().copied().collect()),
+            ("Fall", P_ALLOWED.iter().copied().collect()),
+            ("FTurn", P_ALLOWED.iter().copied().collect()),
+        ])
+    });
+    for bonus in bonuses {
+        if let Some(allowed_constructions) = map.get(bonus.as_str())
+            && !allowed_constructions.contains(&construction)
+        {
+            ci.errors.push(format!(
+                "{bonus} can only be used with {} constructions",
+                allowed_constructions.iter().copied().collect::<Vec<&str>>().join(", ")
+            ));
+        }
+    }
+
+    ci
+}
+
 fn check_bonuses(acro: &TeamAcrobatic) -> CardIssues {
     let mut ci = CardIssues::default();
 
@@ -452,23 +490,7 @@ fn check_bonuses(acro: &TeamAcrobatic) -> CardIssues {
         }
     }
 
-    let p_construction_bonuses = &["Spider", "Climb", "Fall", "FTurn"];
-    for bonus in p_construction_bonuses {
-        const ALLOWED: &[&str] = &["2S", "Flower", "Hand"];
-        if acro.bonuses.contains(&(*bonus).into()) && !ALLOWED.contains(&acro.construction.as_str())
-        {
-            ci.errors.push(format!(
-                "{bonus} bonus can only be used with {} constructions",
-                ALLOWED.join(", ")
-            ));
-        }
-    }
-
-    if (acro.bonuses.contains(&"Jump".into()) || acro.bonuses.contains(&"Jump>".into()))
-        && !acro.construction.starts_with("Thr>")
-    {
-        ci.errors.push("Jump and Jump> can only be used with Thr> constructions".into());
-    }
+    ci += check_bonuses_allowed_constructions(acro.construction.as_str(), &acro.bonuses);
 
     if acro.bonuses.contains(&"Jump".into())
         && (!acro.rotations.is_empty()
@@ -497,7 +519,7 @@ fn check_age_restrictions(ag: AgeGroups, acro: &TeamAcrobatic) -> CardIssues {
     }
     for bonus in &acro.bonuses {
         if JRSR_ONLY_BONUSES.contains(&bonus.as_str()) {
-            ci.errors.push(format!("{bonus} is only allowed in Senior routines"));
+            ci.errors.push(format!("{bonus} is only allowed in JR/SR routines"));
         }
     }
     ci
