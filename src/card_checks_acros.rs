@@ -419,6 +419,11 @@ fn check_bonuses(acro: &TeamAcrobatic) -> CardIssues {
         }
     }
 
+    if acro.bonuses.contains(&"Catch".into()) && !acro.bonuses.contains(&"Dbl".into()) {
+        ci.warnings
+            .push("Catch requires two simultaneous acrobatics, so Dbl should be claimed".into());
+    }
+
     match acro.bonuses.len().cmp(&2) {
         Ordering::Less => {
             for rotation in &acro.rotations {
@@ -652,8 +657,12 @@ fn check_positions(acro: &TeamAcrobatic) -> CardIssues {
     if acro.construction.contains('^')
         && (!all_b_positions.contains(&first_pos) || !A_POSITIONS.contains(&pos2))
     {
-        ci.warnings
+        ci.errors
             .push("fly-above must have a balance position followed by an airborne position".into());
+    }
+
+    if acro.construction == "Thr^Lh" && !(first_pos == "br" || first_pos == "ct") {
+        ci.errors.push("For Thr^Lh balance position must be Bridge or Cat".into());
     }
 
     if acro.construction == "Thr^2F" && first_pos == "spl" {
@@ -999,8 +1008,9 @@ mod tests {
         sp_with_split_err: check_bonuses, "A-2Sup-Up-sp-Split", 1, 0,
         box_with_porp_err: check_bonuses, "P-Knees-4p-Bo-Porp", 1, 0,
         no_conn_with_c: check_bonuses, "A-Thr-Side-ln-c", 0, 1,
-        no_conn_with_c_ok: check_bonuses, "A-Thr-Side-ln-c-Catch", 0, 0,
+        no_conn_with_c_ok: check_bonuses, "A-Thr-Side-ln-c-Catch/Dbl", 0, 0,
         no_conn_with_c_ok2: check_bonuses, "A-Thr-Side-ln-c-Dbl/Pos3", 0, 0,
+        conn_with_c_ok: check_bonuses, "A-Thr-Side-ln-c-Conn", 0, 0,
         three_bonuses: check_bonuses, "B-St-FS-ln/2he-Hold/Mov/Dbl", 1, 0,
         dup_bonuses: check_bonuses, "B-LH-Le-mo-Mov/Mov", 1, 0,
         dup_bonuses_ok: check_bonuses, "C-Thr>FF-Forw-ln-CRoll/CRoll", 0, 0,
@@ -1022,6 +1032,8 @@ mod tests {
         somersault_with_retsq_err: check_bonuses, "A-Sq-Up-tk-s1-RetSq", 1, 0,
         back_with_retsq_warn: check_bonuses, "A-Sq-Back-sp-RetSq", 0, 1,
         twist_with_retsq_ok: check_bonuses, "A-Sq-Up-sp-t1-RetSq", 0, 0,
+        catch_without_dbl_warn: check_bonuses, "A-Thr-Forw-ln-Catch", 0, 1,
+        catch_with_dbl_ok: check_bonuses, "A-Thr-Forw-ln-Catch/Dbl", 0, 0,
         st_bad_connection: check_construction, "B-St>-FS-sd", 0, 1,
         st_good_connection: check_construction, "B-St>-F1S-he", 0, 0,
         non_st_bad_connection: check_construction, "B-St-FS-sd", 0, 0,
@@ -1041,15 +1053,17 @@ mod tests {
         invalid_airborne_position: check_positions, "A-Sq-Forw-ar", 1, 0,
         one_leg_pos_two_leg_conn: check_positions, "B-St-FS-he", 0, 1,
         one_leg_pos_one_leg_conn: check_positions, "B-St-F1S-he", 0, 0,
-        fly_above_airborne_first: check_positions, "C-Thr^2F-Back-tk/2ow", 0, 1,
+        fly_above_airborne_first: check_positions, "C-Thr^2F-Back-tk/2ow", 1, 0,
         fly_above_balance_first: check_positions, "C-Thr^2F-Back-ow/2tk", 0, 0,
         fly_above_with_spl: check_positions, "C-Thr^2F-Back-spl/2tk", 0, 1,
-        fly_above_just_balance: check_positions, "C-Thr^2F-Back-ow", 0, 1,
+        fly_above_just_balance: check_positions, "C-Thr^2F-Back-ow", 1, 0,
         head_up_with_head_down: check_positions, "B-St-FS-sd/2bb", 0, 1,
         head_up_with_head_up: check_positions, "C-Thr>StH-Forw-sd/2he", 0, 0,
         head_down_with_head_up: check_positions, "C-Thr>StH-Forw-bb/2spl", 0, 1,
         head_down_with_head_down: check_positions, "C-Thr>StH-Forw-bb/2ow", 0, 0,
         c_does_not_warn: check_positions, "C-Thr>StH-Forw-vs/2gl-1F>1F", 0, 0,
+        fly_above_lh_wrong_pos: check_positions, "C-Thr^Lh-Forw-so/2tk", 1, 0,
+        fly_above_lh_right_pos: check_positions, "C-Thr^Lh-Forw-br/2tk", 0, 0,
     }
 
     #[test]
