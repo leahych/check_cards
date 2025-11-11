@@ -540,19 +540,49 @@ fn check_construction(acro: &TeamAcrobatic) -> CardIssues {
             "St",
             &[
                 "1P1P", "1PPx", "PP", "FP", "SiSb", "Bp", "E", "PH/", "AP", "SiS", "FS", "F1S",
-                "Tw", "S+", "1F1P", "1F1F",
+                "Tw", "S+", "1PH", "1F1P", "1F1F",
             ] as &[&str],
         ),
-        ("StH", &["1P1F", "FF", "FF/", "PF", "ShF", "LayF", "SiF", "S+", "1F1F"]),
-        ("2SupU", &["Le", "1FH+1FP"]),
+        ("StH", &["1P1F", "FF", "FF/", "PF", "ShF", "LayF", "SiF", "S+", "1F1F", "H1F/", "HT+"]),
+        ("2SupU", &["Le", "1FH+1FP", "PP2"]),
         ("2SupD", &["Tow"]),
         ("2SupM", &["Le", "Ch"]),
-        ("2SupDF", &["Tow"]),
-        ("St>", &["PP", "PF", "Bp", "ShF", "E", "F1S", "LayF"]),
+        ("2SupD2F", &["Tow"]),
         ("L", &["Li"]),
         ("L2F+", &["Li"]),
+        ("St>", &["PP", "PF", "Bp", "ShF", "E", "F1S", "LayF", "1P1F", "2pH", "PH/"]),
         ("LH", &["LiH"]),
         ("Lh2F", &["LiH"]),
+        ("P", &["F2A", "SiA", "1FA", "3pA", "HA", ">F1P", "2pA/", "4p", "3pbA", "BA", ">2P2P"]),
+        ("Box", &["4p", "3pA", "SiA", "F2A", "HA"]),
+        (
+            "Knees",
+            &["2pK", "3pbA", "3pK", "SP+K", "F2A", "SiA", "3pA", ">F1P", ">2P2P", "BA", "1FA"],
+        ),
+        (
+            "B",
+            &[
+                "2pBb", ">F1P", "L/Sif+P", "SiF+Pb", "SP+L", "FA+PF", "F2A", "SiA", "HP+L", "FAb",
+                "3pA", "1FA", "HA", "3pS",
+            ],
+        ),
+        (
+            "DB",
+            &[
+                "L/Sif+P", "ShF+P", "SiF+Pb", "SP+L", "FA+PF", "3pK", "F2A", "SiA", ">F1P",
+                "ShiShi+", "SF+TP", "HP+L", "3pA", "1FA", "4p", "DBB",
+            ],
+        ),
+        ("Chariot", &["2pA/", "4p", "3pbA", "3pA", "FAb", "F2A", "SiA", "1FA", "BA"]),
+        (
+            "2S",
+            &[
+                "2b/", "2pBb", "FA+PF", "3pbA", "HA", "3pA", "F2A", "SiA", "1FA", "SP+K", "3pS",
+                "ShF+P", "L/Sif+P", "2pA/", "BA",
+            ],
+        ),
+        ("Flower", &["2pA/", "3pbA", "HA", "3pA", "F2A", "SiA", "1FA", "BA"]),
+        ("Hand", &["2pA/", "3pbA", "HA", "1FA", "3pA", "F2A", "SiA", "3pbA", "BA"]),
     ]);
 
     let mut ci = CardIssues::default();
