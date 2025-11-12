@@ -918,7 +918,7 @@ fn check_pair_acro_common_base_marks(card: &CoachCard) -> CardIssues {
 }
 
 pub fn check_one_acro(category: Category, acro: &TeamAcrobatic, dd: &str) -> CardIssues {
-    let acros_checks = &[
+    let acro_checks = &[
         check_num_athletes,
         check_team_acro_validity,
         check_direction,
@@ -932,7 +932,7 @@ pub fn check_one_acro(category: Category, acro: &TeamAcrobatic, dd: &str) -> Car
     let mut element_ci = CardIssues::default();
     element_ci += check_age_restrictions(category.ag, acro);
     element_ci += check_dd_limits(category, acro.group, dd);
-    for check in acros_checks {
+    for check in acro_checks {
         element_ci += check(acro);
     }
     element_ci
