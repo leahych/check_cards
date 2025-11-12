@@ -246,20 +246,143 @@ fn check_direction(acro: &TeamAcrobatic) -> CardIssues {
     ci
 }
 
+fn check_rotation_construction(acro: &TeamAcrobatic) -> CardIssues {
+    const R_SLASH: &[&str] = &["r0.5/", "r1/", "r1.5/"];
+    const R_PLAIN: &[&str] = &["r0.5", "r1", "r1.5"];
+    const R_PLUS: &[&str] = &["r0.5+", "r1+", "r1.5+", "r2+"];
+    const R_BANG: &[&str] = &["r0.5!", "r1!", "r1.5!", "r2!"];
+    const R_PLAIN_AND_PLUS: &[&str] = &["r0.5", "r1", "r1.5", "r0.5+", "r1+", "r1.5+", "r2+"];
+    const R_PLAIN_AND_BANG: &[&str] = &["r0.5", "r1", "r1.5", "r0.5!", "r1!", "r1.5!", "r2!"];
+    const R_L: &[&str] = &["r/L", "r0.5L", "r1L"];
+    const P_R: &[&str] = &["Pr", "Pr0.5", "Pr1", "Pr1.5"];
+    const P_H: &[&str] = &["Ph", "P0.5h", "P1h", "P1.5h"];
+    const P_2S: &[&str] = &["P2S", "P2Sr0.5", "P2Sr1"];
+    const P_DB: &[&str] = &["PDB", "PDB0.5", "PDB1"];
+    const C_BANG: &[&str] = &["Cr0.5!", "Cr1!", "Cr1.5!"];
+    const C_R_AND_BANG: &[&str] = &["Cr0.5", "Cr1", "Cr1.5", "Cr0.5!", "Cr1!", "Cr1.5!"];
+    const C_L: &[&str] = &["Cr0.5L"];
+    const C_P: &[&str] = &["CP0.5"];
+    const C_2F: &[&str] = &["2F0.5", "2F1"];
+    const C_FEATURED_ROTATIONS: &[&str] = &[
+        "Ct0.5", "Ct1", "Ct1.5", "Ct2", "Ct2.5", "Ct3", "Cd", "Cdt0.5", "Cdt1", "Cdt1.5", "Cs1",
+        "Css1", "Cs1.5", "Cs1.5o", "Cf1", "Cf1.5", "Cc", "Cct0.5", "Cct1", "Ch", "Cht0.5", "Cht1",
+        "Cs1t0.5", "Cs1t1", "Cs1t1.5", "Cs1t2", "Css1t0.5", "Css1t1", "Css1t1.5", "Css1t2",
+        "Cs1t1o", "Cs1t1.5o", "Cs1t2o", "Chs0.5",
+    ];
+    static HM: std::sync::OnceLock<HashMap<&str, &[&str]>> = std::sync::OnceLock::new();
+
+    let mut ci = CardIssues::default();
+    let con = match acro.group {
+        Airborne => return ci,
+        Combined | Platform => &acro.construction,
+        Balance => &acro.connection_grip,
+    };
+
+    let rotation_map = HM.get_or_init(|| {
+        HashMap::from([
+            ("FS", R_SLASH),
+            ("FP", R_PLAIN_AND_PLUS),
+            ("SiSb", R_PLAIN),
+            ("Bp", R_PLAIN),
+            ("E", R_PLAIN),
+            ("AP", R_PLAIN),
+            ("SiS", R_PLAIN),
+            ("F1S", R_PLAIN_AND_PLUS),
+            ("Tw", R_PLAIN),
+            ("1F1P", R_PLAIN_AND_PLUS),
+            ("S+", R_PLAIN_AND_BANG),
+            ("PP", R_PLAIN_AND_BANG),
+            ("1F1F", R_PLAIN_AND_BANG),
+            ("F1F", R_PLUS),
+            ("1P1P", R_BANG),
+            ("1P1F", R_BANG),
+            ("1PPx", R_BANG),
+            ("PF", R_BANG),
+            ("PH/", R_BANG),
+            ("PP2", R_BANG),
+            ("2PH", R_BANG),
+            ("1PH", R_BANG),
+            ("FF", R_BANG),
+            ("FF/", R_BANG),
+            ("ShF", R_BANG),
+            ("LayF", R_BANG),
+            ("SiF", R_BANG),
+            ("H1F/", R_BANG),
+            ("HT+", R_BANG),
+            ("LiH", R_L),
+            ("Li", R_L),
+            ("P", P_R),
+            ("Box", P_R),
+            ("Knees", P_R),
+            ("B", P_R),
+            ("Chariot", P_R),
+            ("Hand", P_H),
+            ("2S", P_2S),
+            ("Flower", P_2S),
+            ("DB", P_DB),
+            ("Thr>St", C_R_AND_BANG),
+            ("Thr>St2", C_R_AND_BANG),
+            ("Thr>StH", C_BANG),
+            ("Thr>StH>1F", C_BANG),
+            ("Thr^Lh", C_L),
+            ("Thr>F", C_P),
+            ("Thr>FF", C_P),
+            ("Thr>hand", C_P),
+            ("Thr^2F", C_2F),
+        ])
+    });
+
+    let allowed_rotations = rotation_map.get(con.as_str());
+    for rotation in &acro.rotations {
+        // Group C limits rotations of the base, but rotation of the
+        // featured swimmer does not depend on the base.
+        if acro.group == Combined && C_FEATURED_ROTATIONS.contains(&rotation.as_str()) {
+            continue;
+        }
+
+        // need to check here because we don't want to return an error
+        // when a group C acro doesn't allow rotation of the base but
+        // does allow for rotation of the featured athlete.
+        // TODO this check is more complicated since technically for
+        // Group C we should only allow them to claim one rotation of
+        // the base and one of the feature swimmer. ISS does not let
+        // you mis-code this, so this is a lower priority.
+        if let Some(allowed_rotations) = allowed_rotations {
+            if !allowed_rotations.contains(&rotation.as_str()) {
+                ci.errors.push(format!(
+                    "for {con} the rotation must be one {}",
+                    allowed_rotations.join(", ")
+                ));
+            }
+        } else {
+            ci.errors.push(format!("no rotations of the construction allowed for {con}"));
+        }
+    }
+
+    ci
+}
+
 fn check_rotations(acro: &TeamAcrobatic) -> CardIssues {
     let mut ci = CardIssues::default();
 
     match acro.rotations.len().cmp(&2) {
-        Ordering::Less => {}
+        Ordering::Less => {
+            if acro.rotations.is_empty() {
+                return ci;
+            }
+        }
         Ordering::Equal => {
             if acro.group != Combined {
                 ci.errors.push("Only one rotation allowed, but two declared".into());
             }
         }
-        Ordering::Greater => ci.errors.push(format!(
-            "{} rotations declared, but only two rotations allowed",
-            acro.rotations.len()
-        )),
+        Ordering::Greater => {
+            ci.errors.push(format!(
+                "{} rotations declared, but only two rotations allowed",
+                acro.rotations.len()
+            ));
+            return ci;
+        }
     }
 
     if acro.rotations.iter().any(|rotation| rotation.contains('o'))
@@ -279,76 +402,14 @@ fn check_rotations(acro: &TeamAcrobatic) -> CardIssues {
         );
     }
 
-    let two_sup_constructions: &[&str] = &["2SupU", "2SupD", "2SupM", "2SupD2F"];
-    let reg_r_rotations = Regex::new(r"^r(0.5|1|1.5)$").unwrap();
-    let rotation_map: &[(Regex, &[&str])] = &[
-        (
-            reg_r_rotations.clone(),
-            &["FP", "SiSb", "Bp", "E", "AP", "SiS", "F1S", "Tw", "S+", "1F1P", "1F1F"],
-        ),
-        (Regex::new(r"^r(0.5|1|1.5)/$").unwrap(), &["FS"]),
-        (Regex::new(r"^r(0.5|1|1.5|2)\+$").unwrap(), &["F1S", "FP", "1F1P", "1F1F"]),
-        (
-            // E isn't listed, but meets the requirements in on page
-            //451, who knows if that is intended or not
-            Regex::new(r"^r(0.5|1|1.5|2)!$").unwrap(),
-            &[
-                "1P1P", "1P1F", "1PPx", "PP", "PF", "PH/", "FF", "FF/", "ShF", "LayF", "SiF", "S+",
-                "1F1F", "E",
-            ],
-        ),
-        (Regex::new(r"^r(/|0.5|1)L$").unwrap(), &["LiH", "Li"]),
-        (Regex::new(r"^Cr(0.5|1|1.5)$").unwrap(), &["Thr>St"]),
-        (Regex::new(r"^Cr(0.5|1|1.5)!$").unwrap(), &["Thr>StH"]),
-        (Regex::new(r"^Cr0.5L$").unwrap(), &["Thr^Lh"]),
-        (Regex::new(r"^CP0.5$").unwrap(), &["Thr>FF", "Thr>F"]),
-        (Regex::new(r"^2F(0.5|1)$").unwrap(), &["Thr^2F"]),
-        // Note: this isn't strictly true, since Platforms can change
-        // constructions, but if you do that, you are outside what we
-        // can catch
-        (Regex::new(r"^Pr(0.5|1|1.5)?$").unwrap(), &["P", "Box", "Knees", "B", "Chariot"]),
-        (Regex::new(r"^P(0.5|1|1.5|2)?h$").unwrap(), &["Hand"]),
-        (Regex::new(r"^P2S(r0.5|r1)?$").unwrap(), &["2S", "Flower"]),
-        (Regex::new(r"^PDB(0.5|1)?$").unwrap(), &["DB"]),
-    ];
+    ci += check_rotation_construction(acro);
 
+    // FUTURE look at cleaning this up
     let unlikely_twist_pos =
         &[vec!["tk".to_string()], vec!["pk".to_string()], vec!["rg".to_string()]];
     let just_twist_regex = Regex::new(r"^t(0.5|1|1.5|2|2.5|3)$").unwrap();
 
-    let construction_or_connection = match acro.group {
-        Airborne | Combined | Platform => &acro.construction,
-        Balance => &acro.connection_grip,
-    };
-
-    // TODO reverse this, for the various constructions or
-    // connections, one of the rotations must match the regex, if there
-    // is no regex, that connection/construction does not allow rotations
-
     for rotation in &acro.rotations {
-        for (rx, allowed) in rotation_map {
-            // page 450 mentions 2Sup constructions can be used with
-            // r rotations just to add an exception about group b
-            // rotations only needing to match against connections
-            // so we have to special case this check
-            //
-            // I don't have a good way to compare regex objects so
-            // we'll just run the match again
-            if reg_r_rotations.is_match(rotation)
-                && two_sup_constructions.contains(&acro.construction.as_str())
-            {
-                continue;
-            }
-
-            if rx.is_match(rotation) {
-                if !allowed.contains(&construction_or_connection.as_str()) {
-                    ci.errors
-                        .push(format!("{rotation} can only be used with {}", allowed.join(", ")));
-                }
-                break;
-            }
-        }
-
         if just_twist_regex.is_match(rotation) && unlikely_twist_pos.contains(&acro.positions) {
             ci.warnings.push(format!(
                 "twist declared, but {} is usually performed as a somersault",
@@ -1075,7 +1136,7 @@ mod tests {
         lih_with_rl_ok: check_rotations, "B-St-LiH-sd-r/L", 0, 0,
         sth_with_cr_err: check_rotations, "C-Thr>StH-Forw-ln-Cr0.5", 1, 0,
         st_with_cr_ok: check_rotations, "C-Thr>St-Forw-ln-Cr0.5", 0, 0,
-        st_with_cr_bang_err: check_rotations, "C-Thr>St-Forw-ln-Cr0.5!", 1, 0,
+        st_with_cr_bang_ok: check_rotations, "C-Thr>St-Forw-ln-Cr0.5!", 0, 0,
         sth_with_cr_bang_ok: check_rotations, "C-Thr>StH-Forw-ln-Cr0.5!", 0, 0,
         two_f_with_crl_err: check_rotations, "C-Thr^2F-Back-tk-Cr0.5L+Cs1", 1, 0,
         lh_with_crl_ok: check_rotations, "C-Thr^Lh-Back-tk-Cr0.5L+Cs1", 0, 0,
@@ -1101,8 +1162,8 @@ mod tests {
         tuck_just_twist_warn: check_rotations, "A-Sq-Back-tk-t1", 0, 1,
         tuck_with_jay_twist_ok: check_rotations, "A-Sq-Back-tk/2ja-t1", 0, 0,
         line_with_twist_ok: check_rotations, "A-Sq-Up-ln-t1", 0, 0,
-        st_trans_e_r_bang_ok: check_rotations, "B-St>-E-bo/2ow-r0.5!-Pos3", 0, 0,
-        supu_le_r_ok: check_rotations, "B-2SupU-Le-bb/2ow-r0.5", 0, 0,
+        st_trans_e_r_bang_ok: check_rotations, "B-St>-E-bo/2ow-r0.5-Pos3", 0, 0,
+        supu_le_r_err: check_rotations, "B-2SupU-Le-bb/2ow-r0.5", 1, 0,
         fp_one_leg_r_ok: check_rotations, "B-St-FP-he/2ba-r0.5", 0, 0,
         sp_with_split_err: check_bonuses, "A-2Sup-Up-sp-Split", 1, 0,
         box_with_porp_err: check_bonuses, "P-Knees-4p-Bo-Porp", 1, 0,
