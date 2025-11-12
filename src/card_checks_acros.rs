@@ -566,9 +566,12 @@ fn check_bonuses(acro: &TeamAcrobatic) -> CardIssues {
         );
     }
 
+    let torso_down_positions =
+        [B_FREE_POSITIONS, B_HORIZONTAL_POSITIONS, B_HEAD_DOWN_POSITIONS, B_EXTREME_FLEX_POSITIONS]
+            .concat();
     if acro.bonuses.contains(&"SdUp".into())
-        && !B_TORSO_DOWN_POSITIONS.contains(&first_pos)
-        && !B_TORSO_DOWN_POSITIONS.contains(&second_pos)
+        && !torso_down_positions.contains(&first_pos)
+        && !torso_down_positions.contains(&second_pos)
     {
         ci.warnings.push("SdUp claimed, but no head/torso down position claimed".into());
     }
@@ -665,22 +668,22 @@ const B_HORIZONTAL_POSITIONS: &[&str] = &["co", "spl", "so", "pi"];
 const B_HEAD_DOWN_POSITIONS: &[&str] = &["bb", "bo", "ff", "wi", "br", "ow", "ma"];
 const B_EXTREME_FLEX_POSITIONS: &[&str] = &["dr", "qu", "sn"];
 
-// TODO re-examine this
-const B_TORSO_DOWN_POSITIONS: &[&str] = &["bb", "bo", "wi", "ow", "dr", "qu", "sh", "mo", "ne"];
-
 fn check_connection(acro: &TeamAcrobatic) -> CardIssues {
     // not a category but positions that can be done by standing w/two feet
-    // TODO check if there are more now
     const TWO_FOOT_POSITIONS: &[&str] = &["sd", "mo", "sh", "dr"];
-    // ShF and E aren't handstand, but have the same sort of movement
-    const HANDSTAND_CONNECTIONS: &[&str] = &["1P1P", "1P1F", "1PPx", "PP", "PF", "PH/", "ShF", "E"];
+    // a few of these aren't handstands, but have the same sort of movement
+    // so they should also probably start in bamboo
+    const HANDSTAND_CONNECTIONS: &[&str] = &[
+        "1P1P", "1P1F", "1PPx", "PP", "PF", "PH/", "PP2", "1pH", "1PH", "2pH", "2PH", "H1F/",
+        "HT+", "ShF", "E",
+    ];
     const TWO_SUP_UP_CONSTRUCTIONS: &[&str] = &["2SupU", "2SupM"];
 
     // similar, anything that could be considered head up
-    // TODO figure out if any horizontal positions could count
-    let head_up_positions = [B_ONE_LEG_POSITIONS, B_TWO_LEG_POSITIONS, B_FREE_POSITIONS].concat();
+    let head_up_positions =
+        [B_ONE_LEG_POSITIONS, B_TWO_LEG_POSITIONS, B_FREE_POSITIONS, B_HORIZONTAL_POSITIONS]
+            .concat();
 
-    // TODO check if this is correct
     let laying_positions = [B_FREE_POSITIONS, B_HORIZONTAL_POSITIONS].concat();
 
     let mut ci = CardIssues::default();
@@ -692,16 +695,17 @@ fn check_connection(acro: &TeamAcrobatic) -> CardIssues {
                     .push(format!("expected two foot position with FS, but found {first_pos}"));
             }
         }
-        "1P1P" | "1P1F" | "1PPx" | "PP" | "PF" | "Bp" | "ShF" | "E" | "PH/" | "Tw" => {
-            // monkey is a free position so it can be head down
-            if !B_HEAD_DOWN_POSITIONS.contains(&first_pos) && first_pos != "mo" {
+        "1P1P" | "1P1F" | "1PPx" | "PP" | "PF" | "Bp" | "ShF" | "E" | "PH/" | "Tw" | "1pH"
+        | "1PH" | "2pH" | "2PH" | "H1F/" | "HT+" => {
+            if !B_HEAD_DOWN_POSITIONS.contains(&first_pos) && !B_FREE_POSITIONS.contains(&first_pos)
+            {
                 ci.warnings.push(format!(
                     "expected head-down position with {}, but found {first_pos}",
                     acro.connection_grip
                 ));
             }
         }
-        "FP" | "FF" | "FF/" | "F1S" | "SiF" | "1FH+1FP" | "1F1P" | "1F1F" => {
+        "FP" | "FF" | "FF/" | "SiSb" | "F1S" | "SiF" | "1FH+1FP" | "1F1P" | "1F1F" => {
             if !head_up_positions.contains(&first_pos) {
                 ci.warnings.push(format!(
                     "expected head-up position with {}, but found {first_pos}",
@@ -710,16 +714,14 @@ fn check_connection(acro: &TeamAcrobatic) -> CardIssues {
             }
         }
         "LayF" | "S+" => {
-            // it is ambiguous if owl should be used or split should be
-            // used if the athlete is in splits head down, so allow it
-            // end though LayF is Sit/Stand/Lay
-            if !laying_positions.contains(&first_pos) && first_pos != "ow" {
+            if !laying_positions.contains(&first_pos) {
                 ci.warnings.push(format!(
                     "expected sit, stand, or lay position with {}, but found {first_pos}",
                     acro.connection_grip
                 ));
             }
         }
+        // LiH | AP | SiS | Le | Tow | Li | Ch
         _ => {}
     }
 
@@ -819,19 +821,15 @@ fn check_positions(acro: &TeamAcrobatic) -> CardIssues {
 
     let first_pos = acro.positions.first().map_or("", |v| v.as_str());
     let pos2 = acro.positions.get(1).map_or("", |s| s.strip_prefix('2').unwrap_or(""));
-    match first_pos {
-        // TODO update this to use B_ONE_LEG_CONNECTIONS plus "qu" and "sn"
-        "he" | "vs" | "gl" | "ba" | "sa" | "ne" | "ey" | "qu" => {
-            if !acro.connection_grip.is_empty()
-                && !ONE_LEG_CONNECTIONS.contains(&acro.connection_grip.as_str())
-            {
-                ci.warnings.push(format!(
-                    "one leg position, {first_pos}, declared, but {} is not a one leg connection",
-                    acro.connection_grip
-                ));
-            }
-        }
-        _ => {}
+
+    if (B_ONE_LEG_POSITIONS.contains(&first_pos) || first_pos == "qu" || first_pos == "sn")
+        && !acro.connection_grip.is_empty()
+        && !ONE_LEG_CONNECTIONS.contains(&acro.connection_grip.as_str())
+    {
+        ci.warnings.push(format!(
+            "one leg position, {first_pos}, declared but {} is not a one leg connection",
+            acro.connection_grip
+        ));
     }
 
     let all_b_positions = [
@@ -1183,7 +1181,7 @@ mod tests {
         jump_with_rotation: check_bonuses, "C-Thr>St-Forw-sd-Cd-Jump", 0, 1,
         jump_transit_with_2nd_pos_airborne_ok: check_bonuses, "C-Thr>St-Forw-ow/2ln-Jump>", 0, 0,
         sdup_with_no_head_down_pos: check_bonuses, "B-St-F1S-he/2sa-SdUp", 0, 1,
-        sdup_with_head_down_pos: check_bonuses, "B-St-F1S-he/2ne-SdUp", 0, 0,
+        sdup_with_head_down_pos: check_bonuses, "B-St-F1S-he/2ow-SdUp", 0, 0,
         feet_with_retpa_err: check_bonuses, "A-Feet-Up-sp-RetPa", 1, 0,
         somersault_with_retpa_err: check_bonuses, "A-Shou-Up-tk-s1-RetPa", 1, 0,
         back_with_retpa_warn: check_bonuses, "A-Shou-Back-ln-RetPa", 0, 1,
