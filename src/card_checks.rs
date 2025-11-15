@@ -1077,6 +1077,9 @@ mod tests {
         team_tre4a_err: check_tres, Category{ag: JRSR, event: Team, free: false}, "TRE4a",
         solo_tre4a_ok: check_tres, Category{ag: JRSR, event: Solo, free: false}, "TRE4a",
         free_solo_tre4a_err: check_tres, Category{ag: JRSR, event: Solo, free: true}, "TRE4a",
+        mixed_duet_tre4a_err: check_tres, Category{ag: JRSR, event: MixedDuet, free: false}, "TRE4a",
+        mixed_duet_tre3_ok: check_tres, Category{ag: JRSR, event: MixedDuet, free: false}, "TRE3",
+        tre_in_combo_err: check_tres, Category{ag: Youth, event: Combo, free: false}, "TRE4a",
     }
 
     routine_tests! {

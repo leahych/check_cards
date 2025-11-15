@@ -501,7 +501,7 @@ fn check_bonuses(acro: &TeamAcrobatic) -> CardIssues {
     {
         // warn because technically you could do something before Spich
         // and then you'd start with that position, but that's unlikely
-        ci.warnings.push("Spich requires going from bamboo to shrimp or shrimp to bamboo".into());
+        ci.errors.push("Spich requires going from bamboo to shrimp or shrimp to bamboo".into());
     }
 
     if acro.bonuses.contains(&"RetPa".into()) || acro.bonuses.contains(&"RetSq".into()) {
@@ -1112,7 +1112,8 @@ mod tests {
 
     acro_tests! {
         reqs_6_dbl_err: check_num_athletes, "B-2SupD2F-Le-co-Dbl", 1, 0,
-        dbl_warns: check_num_athletes, "A-Sq-Back-pk/2rg-s1-Dbl", 0, 1,
+        reqs_5_dbl_warns: check_num_athletes, "A-Sq-Back-pk/2rg-s1-Dbl", 0, 1,
+        reqs_4_dbl_warns: check_num_athletes, "A-Thr-Back-pk/2rg-s1-Dbl", 0, 1,
         no_dbl_ok: check_num_athletes, "A-Sq-Back-pk/2rg-s1", 0, 0,
         //missing_direction: check_team_acro_validity, "A-Sq", 1, 0,
         missing_positions: check_team_acro_validity, "A-Sq-Back", 1, 0,
@@ -1208,6 +1209,9 @@ mod tests {
         hula_with_ja_ok: check_bonuses, "A-Shou-Up-ja-Hula", 0, 0,
         rotf_with_head_down_err: check_bonuses, "B-St-LayF-wi-RotF", 1, 0,
         rotf_with_horizontal_ok: check_bonuses, "B-St-LayF-co-RotF", 0, 0,
+        spich_incorrect_pos_err: check_bonuses, "P-Knees-SP+K-sh/2ow-Spich", 1, 0,
+        spich_bb_sh_ok: check_bonuses, "P-Knees-SP+K-bb/2sh-Spich", 0, 0,
+        spich_sh_bb_ok: check_bonuses, "P-Knees-SP+K-sh/2bb-Spich", 0, 0,
         st_bad_connection: check_construction, "B-St>-FS-sd", 0, 1,
         st_good_connection: check_construction, "B-St>-F1S-he", 0, 0,
         non_st_bad_connection: check_construction, "B-St-FS-sd", 0, 0,
@@ -1234,6 +1238,8 @@ mod tests {
         head_up_with_head_down: check_positions, "B-St-FS-sd/2bb", 0, 1,
         fly_above_lh_wrong_pos: check_positions, "C-Thr^Lh-Forw-so/2tk", 1, 0,
         fly_above_lh_right_pos: check_positions, "C-Thr^Lh-Forw-br/2tk", 0, 0,
+        head_down_to_up_warn: check_positions, "B-St-F1S-ow/2ne", 0, 1,
+        head_down_to_up_ok: check_positions, "B-St-F1S-ow/2ne-SdUp", 0, 0,
     }
 
     #[test]
@@ -1322,6 +1328,10 @@ mod tests {
             ("C-Thr^St-Forw-ow/2ln-Jump>", 2, 0),
             ("C-Thr>St-Forw-ow/2ln-Jump", 1, 0),
             ("C-Thr>St-Forw-ow/2ln-Jump>", 1, 0),
+            ("C-2Sup+-Up-spl", 1, 0),
+            ("C-2Sup+-Up-sp", 0, 0),
+            ("C-Thr>F-Side-ln", 1, 0),
+            ("C-Thr>F-Side-sd", 0, 0),
         ];
         let cat = Category::default();
         for (s, errs, warns) in acros.into_iter() {
