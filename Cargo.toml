@@ -36,7 +36,7 @@ chrono = "0.4.42"
 
 [dependencies]
 calamine = { version = "0.31.0", features = ["chrono"] }
-regex-lite = "0.1.7"
+regex-lite = "0.1.8"
 wasm-bindgen = "0.2.99"
 wasm-bindgen-futures = "0.4.55"
 semver = "1.0.27"
