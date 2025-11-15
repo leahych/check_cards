@@ -11,7 +11,7 @@ To check code coverage, run `cargo llvm-cov --html`.
 
 At this time there are no automated tests for the web code. To run a
 development server, build and package the code by running:
-`wasm-pack build --target web;cp index.html pkg/`
+`wasm-pack build --target web;cp index.html pkg/; cp text.html pkg/`
 
 and then run a webserver that serves `pkg/` directory. For example:
 
