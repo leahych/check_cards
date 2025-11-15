@@ -164,10 +164,12 @@ fn check_num_athletes(acro: &TeamAcrobatic) -> CardIssues {
         return ci;
     }
 
-    // LH probably needs/usually is done with 5+, and 6+ for Lh2F, but not required
+    // LH probably needs/usually is done with 5+, but not required
     // it isn't clear that 2Sup/2SupH requires 5
-    let req5 = ["Sq", "2SupU", "2SupD", "2SupM", "St>", "2S", "Flower", "Thr>Pair>", "Thr^LH"];
-    let req6 = ["2SuD2F", "2Sup+", "Thr>St2"];
+    let req5 =
+        ["Sq", "2SupU", "2SupD", "2SupM", "St>", "2S", "Flower", "Thr>Pair>", "Thr>FF", "Thr^Lh"];
+    // Lh2F might not really require 6+, but realistically it isn't happening with 4-5.
+    let req6 = ["2SupD2F", "Lh2F", "2Sup+", "Thr>St2", "Thr>StH>1F"];
     if req6.contains(&acro.construction.as_str()) {
         ci.errors.push(format!("{} with Dbl requires 12 athletes!", acro.construction));
     } else if req5.contains(&acro.construction.as_str()) {
@@ -667,7 +669,6 @@ fn check_construction(acro: &TeamAcrobatic) -> CardIssues {
 const A_POSITIONS: &[&str] = &["tk", "pk", "kt", "ln", "sp", "ja", "rg"];
 const B_ONE_LEG_POSITIONS: &[&str] = &["he", "vs", "gl", "ba", "sa", "ne", "ey"];
 const B_TWO_LEG_POSITIONS: &[&str] = &["sd"];
-// TODO will ISS use PP or pp or should I check for both?
 const B_FREE_POSITIONS: &[&str] = &["mo", "PP", "ct", "sh", "hp", "fl", "tu"];
 const B_HORIZONTAL_POSITIONS: &[&str] = &["co", "spl", "so", "pi"];
 const B_HEAD_DOWN_POSITIONS: &[&str] = &["bb", "bo", "ff", "wi", "br", "ow", "ma"];
@@ -1104,7 +1105,7 @@ mod tests {
     }
 
     acro_tests! {
-        reqs_6_dbl_err: check_num_athletes, "B-2SuD2F-Le-co-Dbl", 1, 0,
+        reqs_6_dbl_err: check_num_athletes, "B-2SupD2F-Le-co-Dbl", 1, 0,
         dbl_warns: check_num_athletes, "A-Sq-Back-pk/2rg-s1-Dbl", 0, 1,
         no_dbl_ok: check_num_athletes, "A-Sq-Back-pk/2rg-s1", 0, 0,
         //missing_direction: check_team_acro_validity, "A-Sq", 1, 0,
