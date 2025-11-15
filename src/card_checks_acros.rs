@@ -573,6 +573,14 @@ fn check_bonuses(acro: &TeamAcrobatic) -> CardIssues {
         ci.errors.push("Hula requires that the featured athlete be in Ring or Jay position".into());
     }
 
+    let horizontal_positions = [B_FREE_POSITIONS, B_HORIZONTAL_POSITIONS].concat();
+    if acro.bonuses.contains(&"RotF".into())
+        && !horizontal_positions.contains(&first_pos)
+        && !horizontal_positions.contains(&second_pos)
+    {
+        ci.errors.push("RotF claimed, but no horizontal position claimed".into());
+    }
+
     let torso_down_positions =
         [B_FREE_POSITIONS, B_HORIZONTAL_POSITIONS, B_HEAD_DOWN_POSITIONS, B_EXTREME_FLEX_POSITIONS]
             .concat();
@@ -1198,6 +1206,8 @@ mod tests {
         rotation_with_no_hold_ok: check_bonuses, "B-St-FS-ln-r0.5", 0, 0,
         hula_with_pike_err: check_bonuses, "A-Shou-Up-pk-Hula", 1, 0,
         hula_with_ja_ok: check_bonuses, "A-Shou-Up-ja-Hula", 0, 0,
+        rotf_with_head_down_err: check_bonuses, "B-St-LayF-wi-RotF", 1, 0,
+        rotf_with_horizontal_ok: check_bonuses, "B-St-LayF-co-RotF", 0, 0,
         st_bad_connection: check_construction, "B-St>-FS-sd", 0, 1,
         st_good_connection: check_construction, "B-St>-F1S-he", 0, 0,
         non_st_bad_connection: check_construction, "B-St-FS-sd", 0, 0,
