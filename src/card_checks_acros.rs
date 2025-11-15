@@ -560,15 +560,6 @@ fn check_bonuses(acro: &TeamAcrobatic) -> CardIssues {
 
     ci += check_bonuses_allowed_constructions(acro.construction.as_str(), &acro.bonuses);
 
-    if acro.bonuses.contains(&"Jump".into())
-        && (!acro.rotations.is_empty()
-            || (acro.positions.len() == 2 && A_POSITIONS.contains(&second_pos)))
-    {
-        ci.warnings.push(
-            "Jump should only be used when the featured athlete remains on the construction".into(),
-        );
-    }
-
     if acro.bonuses.contains(&"Hold".into()) && !acro.rotations.is_empty() {
         ci.warnings.push("Hold and Rotation must not be simultaneous".into());
     }
@@ -789,9 +780,12 @@ fn check_group_c_positions(acro: &TeamAcrobatic) -> CardIssues {
         const AIRBORNE_BONUSES: &[&str] = &["Jump>", "Turn"];
         const BALANCE_CONSTRUCTIONS: &[&str] = &["Thr>FF", "Thr>F"];
         const BALANCE_BONUSES: &[&str] = &["Ju", "Jump", "1F>1F", "1F>1F+", "2F>2F"];
+
+        let position = position.strip_prefix('2').unwrap_or(position);
+
         if (AIRBORNE_CONSTRUCTIONS.contains(&acro.construction.as_str())
             || acro.construction.ends_with('>'))
-            && all_b_positions.contains(&position.as_str())
+            && all_b_positions.contains(&position)
         {
             ci.errors.push(format!(
                 "{position} declared but {} requires airborne positions",
@@ -800,7 +794,7 @@ fn check_group_c_positions(acro: &TeamAcrobatic) -> CardIssues {
         }
 
         if BALANCE_CONSTRUCTIONS.contains(&acro.construction.as_str())
-            && A_POSITIONS.contains(&position.as_str())
+            && A_POSITIONS.contains(&position)
         {
             ci.errors.push(format!(
                 "{position} declared but {} requires balance positions",
@@ -809,14 +803,11 @@ fn check_group_c_positions(acro: &TeamAcrobatic) -> CardIssues {
         }
 
         for bonus in &acro.bonuses {
-            if AIRBORNE_BONUSES.contains(&bonus.as_str())
-                && all_b_positions.contains(&position.as_str())
-            {
+            if AIRBORNE_BONUSES.contains(&bonus.as_str()) && all_b_positions.contains(&position) {
                 ci.errors
                     .push(format!("{position} declared but {bonus} requires airborne positions"));
             }
-            if BALANCE_BONUSES.contains(&bonus.as_str()) && A_POSITIONS.contains(&position.as_str())
-            {
+            if BALANCE_BONUSES.contains(&bonus.as_str()) && A_POSITIONS.contains(&position) {
                 ci.errors
                     .push(format!("{position} declared but {bonus} requires balance positions"));
             }
@@ -1192,10 +1183,6 @@ mod tests {
         non_mut_excl_bonuses_ok: check_bonuses, "P-Hand-3pA-ne-Climb/Fall", 0, 0,
         spider_with_p_err: check_bonuses, "P-P-4pAb-ne-Spider", 1, 0,
         spider_with_2s_ok: check_bonuses, "P-2S-4pAb-ne-Spider", 0, 0,
-        flyover_with_jump_transit_err: check_bonuses, "C-Thr^St-Forw-ow/2ln-Jump>", 1, 0,
-        jump_with_2nd_pos_airborne: check_bonuses, "C-Thr>St-Forw-ow/2ln-Jump", 0, 1,
-        jump_with_rotation: check_bonuses, "C-Thr>St-Forw-sd-Cd-Jump", 0, 1,
-        jump_transit_with_2nd_pos_airborne_ok: check_bonuses, "C-Thr>St-Forw-ow/2ln-Jump>", 0, 0,
         sdup_with_no_head_down_pos: check_bonuses, "B-St-F1S-he/2sa-SdUp", 0, 1,
         sdup_with_head_down_pos: check_bonuses, "B-St-F1S-he/2ow-SdUp", 0, 0,
         feet_with_retpa_err: check_bonuses, "A-Feet-Up-sp-RetPa", 1, 0,
@@ -1312,7 +1299,7 @@ mod tests {
         let acros = [
             ("C-Thr>St-Forw-co", 0, 0),
             ("C-Thr>St-Forw-ln-Jump>", 0, 0),
-            ("C-Thr>St-Forw-ln/2co-Jump>", 0, 0),
+            ("C-Thr>St-Forw-ln/2co-Jump>", 1, 0),
             ("C-Thr>St-Forw-sd/2co-Jump", 0, 0),
             ("C-Thr>StH-Forw-sd/2bb-Jump", 0, 0),
             ("C-Thr>St-Forw-co-Jump>", 1, 0),
@@ -1322,8 +1309,11 @@ mod tests {
             ("C-Thr>St-Forw-ln", 0, 0),
             ("C-Thr>StH-Forw-ln", 0, 0),
             ("C-Thr>St-Forw-ln-Jump", 1, 0),
-            ("C-Thr>St-Forw-sd/2ja-Jump", 0, 1),
+            ("C-Thr>St-Forw-sd/2ja-Jump", 1, 0),
             ("C-Thr>St-Forw-ln/2ja-Jump>", 0, 0),
+            ("C-Thr^St-Forw-ow/2ln-Jump>", 2, 0),
+            ("C-Thr>St-Forw-ow/2ln-Jump", 1, 0),
+            ("C-Thr>St-Forw-ow/2ln-Jump>", 1, 0),
         ];
         let cat = Category::default();
         for (s, errs, warns) in acros.into_iter() {
