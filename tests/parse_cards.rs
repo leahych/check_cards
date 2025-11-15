@@ -171,7 +171,7 @@ fn test_parse_iss_team() {
                 },
             ],
             theme: "Test".to_string(),
-            iss_ver: Some(Version::new(3, 0, 4)),
+            iss_ver: Some(Version::new(3, 0, 5)),
             end_time: NaiveTime::from_hms_opt(0, 3, 29).unwrap(),
         },
         issues.iter().next().unwrap().1

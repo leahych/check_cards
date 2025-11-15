@@ -19,7 +19,7 @@ macro_rules! hybrids {
 
 use crate::ElementKind::{ChoHy, Hybrid, PairAcro, SuConn, TRE, TeamAcro};
 
-const LATEST_ISS_VERSION: semver::Version = semver::Version::new(3, 0, 4);
+const LATEST_ISS_VERSION: semver::Version = semver::Version::new(3, 0, 5);
 fn check_iss_version(card: &CoachCard) -> CardIssues {
     let mut ci = CardIssues::default();
     if let Some(iss_ver) = card.iss_ver.as_ref() {
