@@ -230,6 +230,9 @@ fn check_direction(acro: &TeamAcrobatic) -> CardIssues {
         if acro.construction == "2Sup+" {
             ci.errors.push("Direction should be Up for 2Sup+".into());
         }
+        if acro.bonuses.contains(&"Hula".into()) {
+            ci.errors.push("Direction should be Up for Hula".into());
+        }
         if acro.bonuses.contains(&"Turn".into()) {
             ci.errors.push("Direction should be Up for Turn".into());
         }
@@ -564,6 +567,17 @@ fn check_bonuses(acro: &TeamAcrobatic) -> CardIssues {
         ci.warnings.push(
             "Jump should only be used when the featured athlete remains on the construction".into(),
         );
+    }
+
+    if acro.bonuses.contains(&"Hold".into()) && !acro.rotations.is_empty() {
+        ci.warnings.push("Hold and Rotation must not be simultaneous".into());
+    }
+
+    if acro.bonuses.contains(&"Hula".into())
+        && !acro.positions.contains(&"rg".into())
+        && !acro.positions.contains(&"ja".into())
+    {
+        ci.errors.push("Hula requires that the featured athlete be in Ring or Jay position".into());
     }
 
     let torso_down_positions =
@@ -1119,6 +1133,8 @@ mod tests {
         two_sup_wrong_dir_err: check_direction, "C-2Sup+-Side-sp", 1, 0,
         turn_wrong_dir_err: check_direction, "C-Thr>Pair>-Side-sp-Turn", 1, 0,
         two_sup_correct_decl_ok: check_direction, "C-2Sup+-Up-sp-Turn", 0, 0,
+        hula_with_side_err: check_direction, "A-Shou-Side-rg-Hula", 1, 0,
+        hula_with_up_ok: check_direction, "A-Shou-Up-rg-Hula", 0, 0,
         airborne_two_rotations_err: check_rotations, "A-Sq-Side-ln-ct0.5+s1", 1, 0,
         airborne_rotation_ok: check_rotations, "A-Sq-Side-ln-ct0.5", 0, 0,
         combined_three_rotations_err: check_rotations, "C-Thr^2F-Back-ow/2tk-2F0.5+Cs1+Ct1", 1, 0,
@@ -1192,6 +1208,11 @@ mod tests {
         twist_with_retsq_ok: check_bonuses, "A-Sq-Up-sp-t1-RetSq", 0, 0,
         catch_without_dbl_warn: check_bonuses, "A-Thr-Forw-ln-Catch", 0, 1,
         catch_with_dbl_ok: check_bonuses, "A-Thr-Forw-ln-Catch/Dbl", 0, 0,
+        hold_with_rotation_warn: check_bonuses, "B-St-FS-ln-r0.5/-Hold", 0, 1,
+        hold_with_no_rotation_ok: check_bonuses, "B-St-FS-ln-Hold", 0, 0,
+        rotation_with_no_hold_ok: check_bonuses, "B-St-FS-ln-r0.5", 0, 0,
+        hula_with_pike_err: check_bonuses, "A-Shou-Up-pk-Hula", 1, 0,
+        hula_with_ja_ok: check_bonuses, "A-Shou-Up-ja-Hula", 0, 0,
         st_bad_connection: check_construction, "B-St>-FS-sd", 0, 1,
         st_good_connection: check_construction, "B-St>-F1S-he", 0, 0,
         non_st_bad_connection: check_construction, "B-St-FS-sd", 0, 0,
