@@ -869,18 +869,16 @@ fn check_positions(acro: &TeamAcrobatic) -> CardIssues {
     }
 
     if acro.group == Balance && acro.positions.len() == 2 {
-        let pos1_head_up =
-            B_ONE_LEG_POSITIONS.contains(&first_pos) || B_TWO_LEG_POSITIONS.contains(&first_pos);
-        let pos1_head_down = B_HEAD_DOWN_POSITIONS.contains(&first_pos);
-        // sit, stand, lay has some things that could be "head down" but
-        // I'm not sure any that could be combined with head up positions
-        // we'll see if anyone complains
-        // TODO see if this check is still correct
+        let pos1_head_up = B_ONE_LEG_POSITIONS.contains(&first_pos)
+            || B_TWO_LEG_POSITIONS.contains(&first_pos)
+            || B_HORIZONTAL_POSITIONS.contains(&first_pos);
+        let pos1_head_down = B_HEAD_DOWN_POSITIONS.contains(&first_pos)
+            || B_EXTREME_FLEX_POSITIONS.contains(&first_pos);
         let pos2_head_up = B_ONE_LEG_POSITIONS.contains(&pos2)
             || B_TWO_LEG_POSITIONS.contains(&pos2)
-            || B_FREE_POSITIONS.contains(&pos2)
             || B_HORIZONTAL_POSITIONS.contains(&pos2);
-        let pos2_head_down = B_HEAD_DOWN_POSITIONS.contains(&pos2);
+        let pos2_head_down =
+            B_HEAD_DOWN_POSITIONS.contains(&pos2) || B_EXTREME_FLEX_POSITIONS.contains(&pos2);
         if pos1_head_up && pos2_head_down {
             ci.warnings
                 .push(format!("{first_pos} is heads-up and {pos2} is heads-down, is this right?"));
