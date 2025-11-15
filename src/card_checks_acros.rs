@@ -819,8 +819,7 @@ fn check_group_c_positions(acro: &TeamAcrobatic) -> CardIssues {
 
 fn check_positions(acro: &TeamAcrobatic) -> CardIssues {
     const ONE_LEG_CONNECTIONS: &[&str] = &[
-        "F1S", "1F1P", "1F1F", "FAb", "3pA", "1FA", "3pb", "FA+PF", "SP+L", ">F1P", "3pBb",
-        "3pB+b", "1Fxs/", "FA+PF", "FP",
+        "F1S", "1F1P", "1F1F", "FAb", "3pA", "1FA", "3pS", "3pbA", "FA+PF", ">F1P", "FP", "ShiShi+",
     ];
     let mut ci = CardIssues::default();
 
