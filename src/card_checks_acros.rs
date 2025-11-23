@@ -467,6 +467,7 @@ fn check_bonuses_allowed_constructions(construction: &str, bonuses: &Vec<String>
             ("Climb", P_ALLOWED),
             ("Fall", P_ALLOWED),
             ("FTurn", P_ALLOWED),
+            ("Diva", &["2S"]),
         ])
     });
     for bonus in bonuses {
@@ -571,6 +572,14 @@ fn check_bonuses(acro: &TeamAcrobatic) -> CardIssues {
         && !acro.positions.contains(&"ja".into())
     {
         ci.errors.push("Hula requires that the featured athlete be in Ring or Jay position".into());
+    }
+
+    if acro.bonuses.contains(&"Spider".into()) && first_pos != "br" {
+        ci.errors.push("Spider requires bridge position".into());
+    }
+
+    if acro.bonuses.contains(&"Diva".into()) && acro.connection_grip != "3pS" {
+        ci.errors.push("Diva requires 3pS connection".into());
     }
 
     let horizontal_positions = [B_FREE_POSITIONS, B_HORIZONTAL_POSITIONS].concat();
@@ -698,19 +707,24 @@ fn check_connection(acro: &TeamAcrobatic) -> CardIssues {
         [B_ONE_LEG_POSITIONS, B_TWO_LEG_POSITIONS, B_FREE_POSITIONS, B_HORIZONTAL_POSITIONS]
             .concat();
 
-    let laying_positions = [B_FREE_POSITIONS, B_HORIZONTAL_POSITIONS].concat();
+    // snail isn't exactly a horizontal position, but can be used connections
+    // like ShiShi+ which expect a horizontal position, so let's allow it for
+    // anything that might be laying, and we can tighten up checks later if
+    // needed
+    let laying_positions = [B_FREE_POSITIONS, B_HORIZONTAL_POSITIONS, &["sn"]].concat();
 
     let mut ci = CardIssues::default();
     let first_pos = acro.positions.first().map_or("", |v| v.as_str());
     match acro.connection_grip.as_str() {
-        "FS" => {
+        "FS" | "F2A" => {
             if !TWO_FOOT_POSITIONS.contains(&first_pos) {
                 ci.warnings
                     .push(format!("expected two foot position with FS, but found {first_pos}"));
             }
         }
         "1P1P" | "1P1F" | "1PPx" | "PP" | "PF" | "Bp" | "ShF" | "E" | "PH/" | "Tw" | "1pH"
-        | "1PH" | "2pH" | "2PH" | "H1F/" | "HT+" => {
+        | "1PH" | "2pH" | "2PH" | "H1F/" | "HT+" | "SP+L" | "HA" | "ShF+P" | "2pA/" | ">2P2P"
+        | "HP+L" => {
             if !B_HEAD_DOWN_POSITIONS.contains(&first_pos) && !B_FREE_POSITIONS.contains(&first_pos)
             {
                 ci.warnings.push(format!(
@@ -719,7 +733,8 @@ fn check_connection(acro: &TeamAcrobatic) -> CardIssues {
                 ));
             }
         }
-        "FP" | "FF" | "FF/" | "SiSb" | "F1S" | "SiF" | "1FH+1FP" | "1F1P" | "1F1F" => {
+        "FP" | "FF" | "FF/" | "SiSb" | "F1S" | "SiF" | "1FH+1FP" | "1F1P" | "1F1F" | "FAb"
+        | "SiF+Pb" => {
             if !head_up_positions.contains(&first_pos) {
                 ci.warnings.push(format!(
                     "expected head-up position with {}, but found {first_pos}",
@@ -727,12 +742,22 @@ fn check_connection(acro: &TeamAcrobatic) -> CardIssues {
                 ));
             }
         }
-        "LayF" | "S+" => {
+        "LayF" | "S+" | "SiA" | "L/SiF+P" | "SF+TP" | "ShiShi+" => {
             if !laying_positions.contains(&first_pos) {
                 ci.warnings.push(format!(
                     "expected sit, stand, or lay position with {}, but found {first_pos}",
                     acro.connection_grip
                 ));
+            }
+        }
+        "BA" | "DBB" => {
+            if first_pos != "br" {
+                ci.errors.push(format!("{} requires bridge position", acro.connection_grip));
+            }
+        }
+        "2pBb" => {
+            if first_pos != "qu" {
+                ci.errors.push(format!("2pBb requires queen position but found {first_pos}"));
             }
         }
         // LiH | AP | SiS | Le | Tow | Li | Ch
@@ -1186,10 +1211,12 @@ mod tests {
         three_bonuses: check_bonuses, "B-St-FS-ln/2he-Hold/Mov/Dbl", 1, 0,
         dup_bonuses: check_bonuses, "B-LH-Le-mo-Mov/Mov", 1, 0,
         dup_bonuses_ok: check_bonuses, "C-Thr>FF-Forw-ln-CRoll/CRoll", 0, 0,
-        mut_excl_bonuses: check_bonuses, "P-2S-3pA-ne-Spider/Climb", 1, 0,
+        mut_excl_bonuses: check_bonuses, "P-2S-3pA-br-Spider/Climb", 1, 0,
         non_mut_excl_bonuses_ok: check_bonuses, "P-Hand-3pA-ne-Climb/Fall", 0, 0,
-        spider_with_p_err: check_bonuses, "P-P-4pAb-ne-Spider", 1, 0,
-        spider_with_2s_ok: check_bonuses, "P-2S-4pAb-ne-Spider", 0, 0,
+        spider_with_p_err: check_bonuses, "P-P-4pAb-br-Spider", 1, 0,
+        spider_with_2s_ok: check_bonuses, "P-2S-4pAb-br-Spider", 0, 0,
+        spider_without_bridge_err: check_bonuses, "P-2S-4pAb-ne-Spider", 1, 0,
+        spider_with_bridge_ok: check_bonuses, "P-2S-4pAb-br-Spider", 0, 0,
         sdup_with_no_head_down_pos: check_bonuses, "B-St-F1S-he/2sa-SdUp", 0, 1,
         sdup_with_head_down_pos: check_bonuses, "B-St-F1S-he/2ow-SdUp", 0, 0,
         feet_with_retpa_err: check_bonuses, "A-Feet-Up-sp-RetPa", 1, 0,
@@ -1212,6 +1239,9 @@ mod tests {
         spich_incorrect_pos_err: check_bonuses, "P-Knees-SP+K-sh/2ow-Spich", 1, 0,
         spich_bb_sh_ok: check_bonuses, "P-Knees-SP+K-bb/2sh-Spich", 0, 0,
         spich_sh_bb_ok: check_bonuses, "P-Knees-SP+K-sh/2bb-Spich", 0, 0,
+        diva_without_2s_err: check_bonuses, "P-B-3pS-ow-Diva", 1, 0,
+        diva_without_3ps_err: check_bonuses, "P-2S-3pbA-ow-Diva", 1, 0,
+        diva_with_2s_3ps_ok: check_bonuses, "P-2S-3pS-ow-Diva", 0, 0,
         st_bad_connection: check_construction, "B-St>-FS-sd", 0, 1,
         st_good_connection: check_construction, "B-St>-F1S-he", 0, 0,
         non_st_bad_connection: check_construction, "B-St-FS-sd", 0, 0,
@@ -1228,6 +1258,10 @@ mod tests {
         le_with_ff_warn: check_connection, "B-FF-Le-so", 0, 1,
         le_with_2sup_d_warn: check_connection, "B-2SupD-Le-so", 0, 1,
         le_with_2sup_u_ok: check_connection, "B-2SupU-Le-so", 0, 0,
+        ba_with_wi_err: check_connection, "P-DB-BA-wi", 1, 0,
+        ba_wtih_br_ok: check_connection, "P-DB-BA-br", 0, 0,
+        two_pbb_with_wi_err: check_connection, "P-B-2pBb-wi", 1, 0,
+        two_pbb_with_qu_ok: check_connection, "P-B-2pBb-qu", 0, 0,
         invalid_airborne_position: check_positions, "A-Sq-Forw-ar", 1, 0,
         one_leg_pos_two_leg_conn: check_positions, "B-St-FS-he", 0, 1,
         one_leg_pos_one_leg_conn: check_positions, "B-St-F1S-he", 0, 0,
