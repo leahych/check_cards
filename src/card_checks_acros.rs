@@ -485,12 +485,16 @@ fn check_bonuses_allowed_constructions(construction: &str, bonuses: &Vec<String>
 }
 
 fn check_bonuses(acro: &TeamAcrobatic) -> CardIssues {
+    const ALLOWED_SPLIT_POSITIONS: &[&str] = &["tk", "ln", "kt"];
     let mut ci = CardIssues::default();
 
     let first_pos = acro.positions.first().map_or("", |v| v);
     let second_pos = acro.positions.get(1).map_or("", |v| v.strip_prefix('2').unwrap_or(v));
-    if acro.bonuses.contains(&"Split".into()) && first_pos == "sp" {
-        ci.errors.push("for Split bonus, sp is a take-off and should not be declared first".into());
+    if acro.bonuses.contains(&"Split".into()) && !ALLOWED_SPLIT_POSITIONS.contains(&first_pos) {
+        ci.errors.push(format!(
+            "for Split bonus, first position should be {}",
+            ALLOWED_SPLIT_POSITIONS.join(", ")
+        ));
     }
 
     if acro.bonuses.contains(&"Porp".into()) && first_pos != "bb" {
