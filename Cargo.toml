@@ -16,6 +16,7 @@ crate-type = ["cdylib", "lib"]
 codegen-units = 1
 lto = true
 opt-level = 'z'
+strip = true
 
 [lints.rust]
 future-incompatible = "warn"
