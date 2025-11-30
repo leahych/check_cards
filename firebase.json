@@ -4,6 +4,21 @@
     "ignore": [
       "firebase.json",
       "**/.*"
+    ],
+    // allow Synkro to access the js and wasm files so it can use the
+    // checker directly. Long term, it might be better to make this an
+    // NPM library, but this works for now. (as long as the bandwidth
+    // requirements don't get crazy).
+    "headers": [
+      {
+        "source": "**/*.@(js|ts|wasm)",
+        "headers": [
+          {
+            "key": "Access-Control-Allow-Origin",
+            "value": "*"
+          }
+        ]
+      }
     ]
   }
 }
