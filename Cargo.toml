@@ -40,7 +40,7 @@ chrono = "0.4.42"
 calamine = { version = "0.31.0", features = ["chrono"] }
 regex-lite = "0.1.8"
 wasm-bindgen = "0.2.99"
-wasm-bindgen-futures = "0.4.55"
+wasm-bindgen-futures = "0.4.56"
 semver = "1.0.27"
 console_error_panic_hook = "0.1.7"
 
