@@ -37,7 +37,7 @@ similar-names = "allow"
 chrono = "0.4.42"
 
 [dependencies]
-calamine = { version = "0.31.0", features = ["chrono"] }
+calamine = { version = "0.32.0", features = ["chrono"] }
 regex-lite = "0.1.8"
 wasm-bindgen = "0.2.99"
 wasm-bindgen-futures = "0.4.56"
