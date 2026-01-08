@@ -643,6 +643,11 @@ fn check_hybrid_common_base_marks(category: Category, decls: &[String]) -> CardI
 
 fn check_hybrid_start_end(_: Category, decls: &[String]) -> CardIssues {
     let mut ci = CardIssues::default();
+
+    if decls.is_empty() {
+        return ci;
+    }
+
     // get the last normal decl and ignore PC bonuses
     let end_pos = decls.len() - 1;
     let end_pos = if decls[end_pos].ends_with("PC") { end_pos - 1 } else { end_pos };
@@ -1046,6 +1051,7 @@ mod tests {
         back_layout_at_start_ok: check_hybrid_start_end, TECH_MIXED, &["FB", "R1", "T4e"],
         front_layout_in_middle_warn: check_hybrid_start_end, TECH_MIXED, &["R1", "F4a", "T4e"],
         front_layout_at_start_ok: check_hybrid_start_end, TECH_MIXED, &["F4a", "R1", "T4e"],
+        no_decls_ok: check_hybrid_start_end, TECH_MIXED, &[],
         duet_c4plus: check_connections_in_non_team, Category{ag: AG12U, event: Duet, free: true}, &["C4+"],
         combo_c4plus_ok: check_connections_in_non_team, Category{ag: AG12U, event: Combo, free: true}, &["C4+"],
         duet_c4_ok: check_connections_in_non_team, Category{ag: AG12U, event: Duet, free: true}, &["C4"],
