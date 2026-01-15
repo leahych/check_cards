@@ -644,14 +644,13 @@ fn check_hybrid_common_base_marks(category: Category, decls: &[String]) -> CardI
 fn check_hybrid_start_end(_: Category, decls: &[String]) -> CardIssues {
     let mut ci = CardIssues::default();
 
-    if decls.is_empty() {
-        return ci;
-    }
+    let decls: &[String] = if decls.last().is_some_and(|x| x.ends_with("PC")) {
+        &decls[..decls.len() - 1]
+    } else {
+        decls
+    };
 
-    // get the last normal decl and ignore PC bonuses
-    let end_pos = decls.len() - 1;
-    let end_pos = if decls[end_pos].ends_with("PC") { end_pos - 1 } else { end_pos };
-
+    let end_pos = decls.len().wrapping_sub(1);
     for (i, decl) in decls.iter().enumerate() {
         if decl.starts_with("FB") && i != 0 {
             ci.errors.push(format!("{decl} must be at the start of a hybrid"));
@@ -1052,6 +1051,7 @@ mod tests {
         front_layout_in_middle_warn: check_hybrid_start_end, TECH_MIXED, &["R1", "F4a", "T4e"],
         front_layout_at_start_ok: check_hybrid_start_end, TECH_MIXED, &["F4a", "R1", "T4e"],
         no_decls_ok: check_hybrid_start_end, TECH_MIXED, &[],
+        just_pc2_ok: check_hybrid_start_end, TECH_MIXED, &["4PC"],
         duet_c4plus: check_connections_in_non_team, Category{ag: AG12U, event: Duet, free: true}, &["C4+"],
         combo_c4plus_ok: check_connections_in_non_team, Category{ag: AG12U, event: Combo, free: true}, &["C4+"],
         duet_c4_ok: check_connections_in_non_team, Category{ag: AG12U, event: Duet, free: true}, &["C4"],
