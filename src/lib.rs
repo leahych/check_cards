@@ -248,10 +248,14 @@ impl TeamAcrobatic {
             }
         }
 
-        let positions = split_pos_bonus(parts.next().unwrap_or(""))
-            .iter()
-            .map(|s| str::to_lowercase(s))
-            .collect();
+        // at one point this went through and did to_lowercase on all
+        // the positions because the acro code did not check for
+        // position validity. Now that check_positions covers all
+        // positions we don't need to worry about reporting that an
+        // acro is fine just because it uses "Kt" instead of "kt" and
+        // a more specific test is only checking against the correct
+        // name.
+        let positions = split_pos_bonus(parts.next().unwrap_or_default());
 
         let mut rotations = vec![];
         let mut bonuses = vec![];
