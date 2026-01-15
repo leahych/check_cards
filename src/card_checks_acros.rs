@@ -188,7 +188,7 @@ fn check_team_acro_validity(acro: &TeamAcrobatic) -> CardIssues {
         || acro.positions.len() > 2
     {
         ci.errors.push("is missing one or more parts".into());
-    } else if !acro.positions.is_empty() && acro.positions[0].starts_with('2') {
+    } else if acro.positions.first().is_some_and(|pos| pos.starts_with('2')) {
         ci.errors.push(format!(
             "has second position, {}, but missing first position",
             acro.positions[0]
