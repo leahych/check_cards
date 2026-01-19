@@ -34,7 +34,7 @@ missing-errors-doc = "allow"
 similar-names = "allow"
 
 [build-dependencies]
-chrono = "0.4.42"
+chrono = "0.4.43"
 
 [dependencies]
 calamine = { version = "0.32.0", features = ["chrono"] }
@@ -45,7 +45,7 @@ semver = "1.0.27"
 console_error_panic_hook = "0.1.7"
 
 [dependencies.chrono]
-version = "0.4.42"
+version = "0.4.43"
 default-features = false
 features = ["alloc"]
 
