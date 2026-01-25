@@ -341,6 +341,8 @@ fn check_rotation_construction(acro: &TeamAcrobatic) -> CardIssues {
     for rotation in &acro.rotations {
         // Group C limits rotations of the base, but rotation of the
         // featured swimmer does not depend on the base.
+        // TODO the error message isn't great if they manually type a rotation
+        // that does not exist in the Group C somersaults
         if acro.group == Combined && C_FEATURED_ROTATIONS.contains(&rotation.as_str()) {
             continue;
         }
@@ -390,13 +392,25 @@ fn check_rotations(acro: &TeamAcrobatic) -> CardIssues {
         }
     }
 
-    if acro.rotations.iter().any(|rotation| rotation.contains('o'))
-        && !acro.positions.contains(&"2ln".into())
-        && !acro.bonuses.contains(&"Pos3".into())
-    {
-        ci.warnings.push(
-            "Somersault with open declared, but 2ln or Pos3 not declared, is this right?".into(),
-        );
+    if acro.rotations.iter().any(|rotation| rotation.contains('o')) {
+        let first_pos = acro.positions.first().map_or("", |m| m.as_str());
+        let second_pos = acro.positions.get(1).map_or("", |m| m.as_str());
+
+        if first_pos != "tk" && first_pos != "pk" {
+            // something like a fly above could start with ow and then
+            // have 2tk-Pos3 for the open somersault, lets make sure we
+            // aren't warning in that case.
+            if second_pos != "2tk" && second_pos != "2pk" {
+                ci.warnings.push("Somersault with open declared, but first airborne position is not tuck or pike, is this right?".into());
+            } else if !acro.bonuses.contains(&"Pos3".into()) {
+                ci.warnings.push(
+                    "Somersault with open declared, but Pos3 not declared, is this right?".into(),
+                );
+            }
+        } else if second_pos != "2ln" {
+            ci.warnings
+                .push("Somersault with open declared, but 2ln not declared, is this right?".into());
+        }
     }
 
     if acro.rotations.iter().any(|rotation| rotation.contains("ss"))
@@ -1194,7 +1208,10 @@ mod tests {
         b_with_db_err: check_rotations, "P-B-F2A-ln-PDB1", 1, 0,
         db_with_db_ok: check_rotations, "P-DB-F2A-ln-PDB1", 0, 0,
         only_ln_with_open_warn: check_rotations, "A-Sq-Back-ln-s1.5t0.5o", 0, 1,
+        arch_with_open_warn: check_rotations, "A-Sq-Back-ja/2ln-s1.5t0.5o", 0, 1,
         ln_pk_with_open_ok: check_rotations, "A-Sq-Back-pk/2ln-s1.5t0.5o", 0, 0,
+        flyabove_with_open_warn: check_rotations, "C-Thr^2F-Bln-ow/2ja-2F1+Cs1t1o-Pos3", 0, 1,
+        flyabove_with_open_ok: check_rotations, "C-Thr^2F-Bln-ow/2tk-2F1+Cs1t1o-Pos3", 0, 0,
         ss_without_ln_err: check_rotations, "A-Sq-Back-pk-ss1", 1, 0,
         ss_with_two_positions_err: check_rotations, "A-Sq-Back-pk/2ln-ss1", 1, 0,
         ss_with_ln_ok: check_rotations, "A-Sq-Back-ln-ss1", 0, 0,
