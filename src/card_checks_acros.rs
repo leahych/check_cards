@@ -854,10 +854,12 @@ fn check_group_c_positions(acro: &TeamAcrobatic) -> CardIssues {
     }
 
     for position in &acro.positions {
-        const AIRBORNE_CONSTRUCTIONS: &[&str] = &["2Sup+", "Thr+Thr", "Sn"];
+        const AIRBORNE_CONSTRUCTIONS: &[&str] =
+            &["2Sup+", "Thr+Thr", "Sn", "Thr>head>", "Thr>Pair>"];
         const AIRBORNE_BONUSES: &[&str] = &["Jump>", "Turn"];
         const BALANCE_CONSTRUCTIONS: &[&str] = &["Thr>FF", "Thr>F"];
-        const BALANCE_BONUSES: &[&str] = &["Ju", "Jump", "1F>1F", "1F>1F+", "2F>2F"];
+        const BALANCE_BONUSES: &[&str] =
+            &["Ju", "1P>H", "H>1P", "Jump", "On1Foot", "1F>1F", "1F>1F+", "2F>2F"];
 
         let position = position.strip_prefix('2').unwrap_or(position);
 
