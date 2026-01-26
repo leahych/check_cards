@@ -498,9 +498,35 @@ fn check_bonuses_allowed_constructions(construction: &str, bonuses: &Vec<String>
     ci
 }
 
+fn check_bonus_validity(acro: &TeamAcrobatic) -> CardIssues {
+    let mut ci = CardIssues::default();
+
+    let valid_bonuses: &[&str] = match acro.group {
+        Airborne => {
+            &["Dbl", "Pos3", "Grip", "Conn", "Catch", "Split", "Hula", "RetSq", "RetPa", "Feet"]
+        }
+        Balance => &["Dbl", "Pos3", "SdUp", "Wave", "Twirl", "RotF", "Moon", "Mov", "Hold"],
+        Combined => &[
+            "Dbl", "Pos3", "Slip", "Star", "Cx", "Twirl", "CRoll", "Turn", "Run", "Ju", "1P>H",
+            "H>1P", "Jump", "Jump>", "On1Foot", "1F>1F", "1F>1F+", "2F>2F",
+        ],
+        Platform => &[
+            "Dbl", "Pos3", "UP", "Porp", "Spich", "Trav", "Stand", "Diva", "PRoll", "Box",
+            "Spider", "Climb", "Arch", "Kozak", "Dive", "CH", "Ps1", "Ps1t0.5", "Ps1op",
+            "Ps1t0,5o", "Ps1t1", "Pf1", "Pf1o", "Mov", "Mov1", "Mov1+t", "Fall", "FTurn",
+        ],
+    };
+    for bonus in &acro.bonuses {
+        if !valid_bonuses.contains(&bonus.as_str()) {
+            ci.errors.push(format!("{bonus} is not a valid bonus"));
+        }
+    }
+    ci
+}
+
 fn check_bonuses(acro: &TeamAcrobatic) -> CardIssues {
     const ALLOWED_SPLIT_POSITIONS: &[&str] = &["tk", "ln", "kt"];
-    let mut ci = CardIssues::default();
+    let mut ci = check_bonus_validity(acro);
 
     let first_pos = acro.positions.first().map_or("", |v| v);
     let second_pos = acro.positions.get(1).map_or("", |v| v.strip_prefix('2').unwrap_or(v));
@@ -1263,6 +1289,10 @@ mod tests {
         diva_without_2s_err: check_bonuses, "P-B-3pS-ow-Diva", 1, 0,
         diva_without_3ps_err: check_bonuses, "P-2S-3pbA-ow-Diva", 1, 0,
         diva_with_2s_3ps_ok: check_bonuses, "P-2S-3pS-ow-Diva", 0, 0,
+        a_bonus_err: check_bonuses, "A-Thr-Forw-ln-Dbbl", 1, 0,
+        b_bonus_err: check_bonuses, "B-St-FS-ln-SdU", 1, 0,
+        c_bonus_err: check_bonuses, "C-Thr^2F-Back-ow/2tk-Pos4", 1, 0,
+        p_bonus_err: check_bonuses, "P-P-F2A-ln-Pss1", 1, 0,
         st_bad_connection: check_construction, "B-St>-FS-sd", 0, 1,
         st_good_connection: check_construction, "B-St>-F1S-he", 0, 0,
         non_st_bad_connection: check_construction, "B-St-FS-sd", 0, 0,
