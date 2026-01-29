@@ -217,10 +217,10 @@ fn check_team_acro_validity(acro: &TeamAcrobatic) -> CardIssues {
 fn check_direction(acro: &TeamAcrobatic) -> CardIssues {
     let mut ci = CardIssues::default();
     for rotation in &acro.rotations {
-        if rotation.starts_with('c') && acro.direction != Some(Sideways) {
+        if (rotation.starts_with('c') || rotation == "C") && acro.direction != Some(Sideways) {
             ci.errors.push("Direction should always be Sideways for cartwheels".into());
         }
-        if rotation.starts_with('h')
+        if (rotation.starts_with('h') || rotation == "H")
             && (acro.direction != Some(Forwards) && acro.direction != Some(Backwards))
         {
             ci.errors
@@ -240,7 +240,7 @@ fn check_direction(acro: &TeamAcrobatic) -> CardIssues {
         }
     }
 
-    let somersaults_only = Regex::new(r"^(d|s1|s1.5|s2|s2.5|s3)$").unwrap();
+    let somersaults_only = Regex::new(r"^(D|d|s)").unwrap();
     if acro.direction == Some(Upwards)
         && somersaults_only.is_match(acro.rotations.first().unwrap_or(&String::new()))
     {
@@ -1194,11 +1194,14 @@ mod tests {
         pos3_bonus_ok: check_team_acro_validity, "A-Sq-Back-pk/2rg-Pos3", 0, 0,
         bad_2nd_pos: check_team_acro_validity, "A-Sq-Back-pk/3rg", 1, 0,
         back_with_cart_err: check_direction, "A-Sq-Back-ln-ct0.5", 1, 0,
+        back_with_cart2_err: check_direction, "A-Sq-Back-ln-C", 1, 0,
         side_with_cart_ok: check_direction, "A-Sq-Side-ln-ct0.5", 0, 0,
         side_with_hand_err: check_direction, "A-Sq-Side-ln-hd", 1, 0,
+        side_with_hand2_err: check_direction, "A-Sq-Side-ln-H", 1, 0,
         forw_with_hand_ok: check_direction, "A-Sq-Forw-ln-hd", 0, 0,
-        up_with_dive_warn: check_direction, "A-Sq-Up-ln-d", 0, 1,
+        up_with_dive_warn: check_direction, "A-Sq-Up-ln-D", 0, 1,
         up_with_dive_twist_ok: check_direction, "A-Sq-Up-ln-dt1", 0, 0,
+        up_with_somersault_warn: check_direction, "A-Sq-Up-ln-ss1", 0, 1,
         two_sup_wrong_dir_err: check_direction, "C-2Sup+-Side-sp", 1, 0,
         turn_wrong_dir_err: check_direction, "C-Thr>Pair>-Side-sp-Turn", 1, 0,
         two_sup_correct_decl_ok: check_direction, "C-2Sup+-Up-sp-Turn", 0, 0,

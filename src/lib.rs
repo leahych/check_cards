@@ -190,7 +190,7 @@ pub struct TeamAcrobatic {
 
 fn is_rotation(group: AcroGroup, rotation: &str) -> Option<String> {
     let r = Regex::new(match group {
-        AcroGroup::Airborne => "^[cdfhst]",
+        AcroGroup::Airborne => "^([chfst]|[CDH]$)", // or CDH but not things like Dbl
         AcroGroup::Balance => "^r",
         AcroGroup::Combined => "^(C[cdfhrstP]|2F)",
         // consistency is the hobgoblin of little minds
@@ -345,12 +345,38 @@ impl ops::AddAssign<Self> for CardIssues {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::AcroDirection::Backwards;
+    use crate::AcroGroup::Airborne;
 
     #[test]
     fn test_parse_team_acro() {
         assert!(TeamAcrobatic::from("Q-Sq-Forw-ln").is_err());
         assert!(TeamAcrobatic::from("A-Sq-Bln-ln").is_err());
         assert!(TeamAcrobatic::from("A-Sq-Down-ln").is_err());
+        assert_eq!(
+            TeamAcrobatic::from("A-Sq-Back-ln-D"),
+            Ok(TeamAcrobatic {
+                group: Airborne,
+                construction: "Sq".to_string(),
+                direction: Some(Backwards),
+                connection_grip: "".to_string(),
+                positions: vec!["ln".to_string()],
+                rotations: vec!["D".to_string()],
+                bonuses: vec![],
+            })
+        );
+        assert_eq!(
+            TeamAcrobatic::from("A-Sq-Back-ln-Dbl"),
+            Ok(TeamAcrobatic {
+                group: Airborne,
+                construction: "Sq".to_string(),
+                direction: Some(Backwards),
+                connection_grip: "".to_string(),
+                positions: vec!["ln".to_string()],
+                rotations: vec![],
+                bonuses: vec!["Dbl".to_string()],
+            })
+        )
     }
 
     #[test]
