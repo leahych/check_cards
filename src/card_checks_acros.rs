@@ -681,7 +681,7 @@ fn check_construction(acro: &TeamAcrobatic) -> CardIssues {
         ("LH", &["LiH"]),
         ("Lh2F", &["LiH"]),
         ("P", &["F2A", "SiA", "1FA", "3pA", "HA", ">F1P", "2pA/", "4p", "3pbA", "BA", ">2P2P"]),
-        ("Box", &["4p", "3pA", "SiA", "F2A", "HA"]),
+        ("Box", &["4p", "3pA", "SiA", "F2A", "HA", "3pbA"]),
         (
             "Knees",
             &["2pK", "3pbA", "3pK", "SP+K", "F2A", "SiA", "3pA", ">F1P", ">2P2P", "BA", "1FA"],
@@ -690,14 +690,14 @@ fn check_construction(acro: &TeamAcrobatic) -> CardIssues {
             "B",
             &[
                 "2pBb", ">F1P", "L/SiF+P", "SiF+Pb", "SP+L", "FA+PF", "F2A", "SiA", "HP+L", "FAb",
-                "3pA", "1FA", "HA", "3pS",
+                "3pA", "1FA", "HA", "3pS", "3pbA",
             ],
         ),
         (
             "DB",
             &[
                 "L/SiF+P", "ShF+P", "SiF+Pb", "SP+L", "FA+PF", "3pK", "F2A", "SiA", ">F1P",
-                "ShiShi+", "SF+TP", "HP+L", "3pA", "1FA", "4p", "DBB",
+                "ShiShi+", "SF+TP", "HP+L", "3pA", "1FA", "4p", "DBB", "3pbA",
             ],
         ),
         ("Chariot", &["2pA/", "4p", "3pbA", "3pA", "FAb", "F2A", "SiA", "1FA", "BA"]),
@@ -709,7 +709,7 @@ fn check_construction(acro: &TeamAcrobatic) -> CardIssues {
             ],
         ),
         ("Flower", &["2pA/", "3pbA", "HA", "3pA", "F2A", "SiA", "1FA", "BA"]),
-        ("Hand", &["2pA/", "3pbA", "HA", "1FA", "3pA", "F2A", "SiA", "3pbA", "BA"]),
+        ("Hand", &["2pA/", "3pbA", "HA", "1FA", "3pA", "F2A", "SiA", "BA"]),
     ]);
 
     let mut ci = CardIssues::default();
