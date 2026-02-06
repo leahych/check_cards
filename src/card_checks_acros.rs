@@ -751,11 +751,16 @@ fn check_connection(acro: &TeamAcrobatic) -> CardIssues {
         [B_ONE_LEG_POSITIONS, B_TWO_LEG_POSITIONS, B_FREE_POSITIONS, B_HORIZONTAL_POSITIONS]
             .concat();
 
-    // snail isn't exactly a horizontal position, but can be used connections
-    // like ShiShi+ which expect a horizontal position, so let's allow it for
-    // anything that might be laying, and we can tighten up checks later if
-    // needed
-    let laying_positions = [B_FREE_POSITIONS, B_HORIZONTAL_POSITIONS, &["sn"]].concat();
+    // The extreme flex positions can be done in a ballet leg platform
+    // with a foot under the hips, and that can count as laying on the
+    // foot, so we'll add those positions what is allowed.
+    //
+    // Positions such as willow or bridge can also be done where the
+    // torso is vertical but the athlete is laying on a foot, so we'll
+    // also allow those positions.
+    let laying_positions =
+        [B_FREE_POSITIONS, B_HORIZONTAL_POSITIONS, B_EXTREME_FLEX_POSITIONS, &["wi", "br"]]
+            .concat();
 
     let mut ci = CardIssues::default();
     let first_pos = acro.positions.first().map_or("", |v| v.as_str());
@@ -1399,7 +1404,7 @@ mod tests {
     }
 
     #[test]
-    fn test_combined_positions() {
+    fn test_for_all_issues() {
         let acros = [
             ("C-Thr>St-Forw-co", 0, 0),
             ("C-Thr>St-Forw-ln-Jump>", 0, 0),
@@ -1422,6 +1427,7 @@ mod tests {
             ("C-2Sup+-Up-sp", 0, 0),
             ("C-Thr>F-Side-ln", 1, 0),
             ("C-Thr>F-Side-sd", 0, 0),
+            ("P-B-L/SiF+P-wi/2ow-Dive", 0, 0),
         ];
         let cat = Category::default();
         for (s, errs, warns) in acros.into_iter() {
