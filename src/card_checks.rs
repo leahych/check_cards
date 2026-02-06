@@ -683,16 +683,6 @@ fn check_ascent_connection(_: Category, decls: &[String]) -> CardIssues {
     ci
 }
 
-fn check_hybrid_sketchy_declarations(_: Category, decls: &[String]) -> CardIssues {
-    let mut ci = CardIssues::default();
-    for decl in decls {
-        if decl.starts_with("C2b+") {
-            ci.warnings.push("C2b+ could probably be claimed as C4+ instead".into());
-        }
-    }
-    ci
-}
-
 fn check_flexibility_combinations(_: Category, decls: &[String]) -> CardIssues {
     let mut ci = CardIssues::default();
     let mut prev_decl = "";
@@ -723,7 +713,6 @@ pub fn check_one_element(category: Category, element: &ElementKind) -> CardIssue
         check_hybrid_common_base_marks,
         check_hybrid_start_end,
         check_ascent_connection,
-        check_hybrid_sketchy_declarations,
         check_flexibility_combinations,
     ];
     static PAIR_ACRO_CHECKS: &[fn(Category, &String) -> CardIssues] = &[check_pair_acro];
@@ -1075,7 +1064,6 @@ mod tests {
         pike_to_back_conn_ok: check_ascent_connection, TECH_MIXED, &["A3a", "C4"],
         rise_to_conn_warn: check_ascent_connection, TECH_MIXED, &["A3b", "C4+"],
         rise_to_rotate_conn_ok: check_ascent_connection, TECH_MIXED, &["A3b", "C5"],
-        c2b_plus_warn: check_hybrid_sketchy_declarations, Category{ag: AG12U, event: Team, free: true}, &["C2b+"],
     }
 
     tre_tests! {
