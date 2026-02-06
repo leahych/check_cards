@@ -689,14 +689,14 @@ fn check_construction(acro: &TeamAcrobatic) -> CardIssues {
         (
             "B",
             &[
-                "2pBb", ">F1P", "L/Sif+P", "SiF+Pb", "SP+L", "FA+PF", "F2A", "SiA", "HP+L", "FAb",
+                "2pBb", ">F1P", "L/SiF+P", "SiF+Pb", "SP+L", "FA+PF", "F2A", "SiA", "HP+L", "FAb",
                 "3pA", "1FA", "HA", "3pS",
             ],
         ),
         (
             "DB",
             &[
-                "L/Sif+P", "ShF+P", "SiF+Pb", "SP+L", "FA+PF", "3pK", "F2A", "SiA", ">F1P",
+                "L/SiF+P", "ShF+P", "SiF+Pb", "SP+L", "FA+PF", "3pK", "F2A", "SiA", ">F1P",
                 "ShiShi+", "SF+TP", "HP+L", "3pA", "1FA", "4p", "DBB",
             ],
         ),
@@ -705,7 +705,7 @@ fn check_construction(acro: &TeamAcrobatic) -> CardIssues {
             "2S",
             &[
                 "2b/", "2pBb", "FA+PF", "3pbA", "HA", "3pA", "F2A", "SiA", "1FA", "SP+K", "3pS",
-                "ShF+P", "L/Sif+P", "2pA/", "BA",
+                "ShF+P", "L/SiF+P", "2pA/", "BA",
             ],
         ),
         ("Flower", &["2pA/", "3pbA", "HA", "3pA", "F2A", "SiA", "1FA", "BA"]),
