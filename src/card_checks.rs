@@ -698,6 +698,16 @@ fn check_flexibility_combinations(_: Category, decls: &[String]) -> CardIssues {
                 "Claiming F3a F3a requires athletes to show at least 5 split positions".into(),
             );
         }
+
+        // check for declaring a knight, but then doing a flex move
+        // that starts with a fishtail
+        //
+        // don't use .starts_with because this is something that is more
+        // likely to be correct when there are multiple groups. If it
+        // becomes an issue, I could make the check more complicated.
+        if prev_decl == "F1b" && (decl == "F4e" || decl == "F4f") {
+            ci.warnings.push(format!("Claiming {prev_decl} {decl} involves going to a knight, and then back to a fishtail is this correct?"));
+        }
         prev_decl = decl;
     }
     ci
@@ -1383,6 +1393,8 @@ mod tests {
             (&["ROB".to_string(), "F1a".to_string()], 1),
             (&["RO1".to_string(), "F1a".to_string()], 1),
             (&["F3a".to_string(), "F3a".to_string()], 1),
+            (&["F1b".to_string(), "F4e".to_string()], 1),
+            (&["F1b".to_string(), "F4f".to_string()], 1),
         ];
         for (decls, warns) in hybrids {
             let ci = check_flexibility_combinations(TECH_MIXED, decls);
