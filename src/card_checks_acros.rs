@@ -413,12 +413,17 @@ fn check_rotations(acro: &TeamAcrobatic) -> CardIssues {
         }
     }
 
-    if acro.rotations.iter().any(|rotation| rotation.contains("ss"))
-        && (acro.positions.len() > 1 || !acro.positions.contains(&"ln".into()))
-    {
-        ci.errors.push(
-            "Straight somersault can only be declared with one position and that must be ln".into(),
-        );
+    if acro.rotations.iter().any(|rotation| rotation.contains("ss")) {
+        // allow for things like C-Thr^2F-Bln-ow/2ln-Css1
+        if (acro.construction.contains('^') && !acro.positions.contains(&"2ln".into()))
+            || (!acro.construction.contains('^')
+                && (acro.positions.len() > 1 || !acro.positions.contains(&"ln".into())))
+        {
+            ci.errors.push(
+                "Straight somersault can only be declared with one position and that must be ln"
+                    .into(),
+            );
+        }
     }
 
     ci += check_rotation_construction(acro);
@@ -1252,6 +1257,7 @@ mod tests {
         ss_without_ln_err: check_rotations, "A-Sq-Back-pk-ss1", 1, 0,
         ss_with_two_positions_err: check_rotations, "A-Sq-Back-pk/2ln-ss1", 1, 0,
         ss_with_ln_ok: check_rotations, "A-Sq-Back-ln-ss1", 0, 0,
+        c_ss_with_ln_ok: check_rotations, "C-Thr^2F-Bln-ow/2ln-2F0.5+Css1t1", 0, 0,
         bad_c_mutliple_rotations: check_rotations, "C-Thr^2F-Bln-ow/2tk-Cr1!+Cs1-Pos3", 1, 0,
         good_c_mutliple_rotations: check_rotations, "C-Thr^2F-Bln-ow/2tk-2F1+Cs1-Pos3", 0, 0,
         tuck_just_twist_warn: check_rotations, "A-Sq-Back-tk-t1", 0, 1,
@@ -1336,6 +1342,7 @@ mod tests {
         fly_above_lh_right_pos: check_positions, "C-Thr^Lh-Forw-br/2tk", 0, 0,
         head_down_to_up_warn: check_positions, "B-St-F1S-ow/2ne", 0, 1,
         head_down_to_up_ok: check_positions, "B-St-F1S-ow/2ne-SdUp", 0, 0,
+        queen_ok: check_positions, "P-B-2pBb-qu", 0, 0,
     }
 
     #[test]
