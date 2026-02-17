@@ -190,7 +190,7 @@ pub struct TeamAcrobatic {
 
 fn is_rotation(group: AcroGroup, rotation: &str) -> Option<String> {
     let r = Regex::new(match group {
-        AcroGroup::Airborne => "^([chfst]|[CDH]$)", // or CDH but not things like Dbl
+        AcroGroup::Airborne => "^([cdhfst]|[CDH]$)", // or CDH but not things like Dbl
         AcroGroup::Balance => "^r",
         AcroGroup::Combined => "^(C[cdfhrstP]|2F)",
         // consistency is the hobgoblin of little minds
@@ -362,6 +362,18 @@ mod tests {
                 connection_grip: "".to_string(),
                 positions: vec!["ln".to_string()],
                 rotations: vec!["D".to_string()],
+                bonuses: vec![],
+            })
+        );
+        assert_eq!(
+            TeamAcrobatic::from("A-Sq-Back-ln-dt0.5"),
+            Ok(TeamAcrobatic {
+                group: Airborne,
+                construction: "Sq".to_string(),
+                direction: Some(Backwards),
+                connection_grip: "".to_string(),
+                positions: vec!["ln".to_string()],
+                rotations: vec!["dt0.5".to_string()],
                 bonuses: vec![],
             })
         );
