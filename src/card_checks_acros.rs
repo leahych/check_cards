@@ -240,7 +240,7 @@ fn check_direction(acro: &TeamAcrobatic) -> CardIssues {
         }
     }
 
-    let somersaults_only = Regex::new(r"^(D|d|s)").unwrap();
+    let somersaults_only = Regex::new(r"^(D|s)").unwrap();
     if acro.direction == Some(Upwards)
         && somersaults_only.is_match(acro.rotations.first().unwrap_or(&String::new()))
     {
