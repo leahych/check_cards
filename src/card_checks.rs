@@ -593,17 +593,19 @@ fn check_category(card: &CoachCard) -> CardIssues {
 }
 
 fn check_hybrid_common_base_marks(category: Category, decls: &[String]) -> CardIssues {
-    const PROBLEM_CODES: &[&str] = &["A4b", "F10", "T9b"]; // FUTURE add F9?
+    const PROBLEM_JOIN_CODES: &[&str] = &["A4b", "F10"]; // FUTURE add F9?
     const TECH_DUET_MIRROR_CODES: &[&str] = &["C1a", "C2a", "C4", "C6a", "C6b", "C7"];
     const KNIGHT_CODES: &[&str] = &["F3c", "F5a", "F5c", "F6b", "F6c", "F8a"];
     let mut ci = CardIssues::default();
     let mut prev_decl = "";
     for decl in decls {
-        for code in PROBLEM_CODES {
+        for code in PROBLEM_JOIN_CODES {
             if decl.starts_with(code) {
                 ci.warnings.push(format!(
                     "{decl} has a very high risk of base marking, athletes must not be vertical at ¾ point"
                 ));
+            } else if decl.starts_with("T9b") {
+                ci.warnings.push("T9b has a very high risk of base marking, it needs 8.5 height and a 1 second hold".into());
             }
         }
 
