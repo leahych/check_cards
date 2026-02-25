@@ -607,7 +607,10 @@ fn check_hybrid_common_base_marks(category: Category, decls: &[String]) -> CardI
             }
         }
         if decl.starts_with("T9b") {
-            ci.warnings.push("T9b has a very high risk of base marking, it needs 8.5 height and a 1 second hold".into());
+            ci.warnings.push(
+                "T9b has a very high risk of base marking, it needs 8.5 height and a 1 second hold"
+                    .into(),
+            );
         }
 
         if category.event == Trio && decl.starts_with("C4") {
