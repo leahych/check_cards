@@ -13,7 +13,7 @@ pub enum ParseResult {
 }
 
 fn parse_element(line: &str) -> Result<ElementKind, String> {
-    if line == "ChoHy" {
+    if line == "ChoHy" || line == "ChoHY" {
         return Ok(ChoHy);
     }
 
