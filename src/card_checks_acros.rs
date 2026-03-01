@@ -772,8 +772,10 @@ fn check_connection(acro: &TeamAcrobatic) -> CardIssues {
     match acro.connection_grip.as_str() {
         "FS" | "F2A" => {
             if !TWO_FOOT_POSITIONS.contains(&first_pos) {
-                ci.warnings
-                    .push(format!("expected two foot position with FS, but found {first_pos}"));
+                ci.warnings.push(format!(
+                    "expected two foot position with {}, but found {first_pos}",
+                    acro.connection_grip
+                ));
             }
         }
         "1P1P" | "1P1F" | "1PPx" | "PP" | "PF" | "Bp" | "ShF" | "E" | "PH/" | "Tw" | "1pH"
