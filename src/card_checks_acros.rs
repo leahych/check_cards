@@ -960,7 +960,10 @@ fn check_positions(acro: &TeamAcrobatic) -> CardIssues {
         ci += check_group_c_positions(acro);
     }
 
-    if acro.group == Balance && acro.positions.len() == 2 {
+    let balance_acro = acro.group == Balance
+        || acro.group == Platform
+        || acro.positions.iter().all(|pos| all_b_positions.contains(&pos.as_str()));
+    if balance_acro && acro.positions.len() == 2 {
         let pos1_head_up = B_ONE_LEG_POSITIONS.contains(&first_pos)
             || B_TWO_LEG_POSITIONS.contains(&first_pos)
             || B_HORIZONTAL_POSITIONS.contains(&first_pos);
@@ -1340,6 +1343,7 @@ mod tests {
         fly_above_with_spl: check_positions, "C-Thr^2F-Back-spl/2tk", 0, 1,
         fly_above_just_balance: check_positions, "C-Thr^2F-Back-ow", 1, 0,
         head_up_with_head_down: check_positions, "B-St-FS-sd/2bb", 0, 1,
+        head_down_with_head_up: check_positions, "P-Knees-SP+K-bb/2spl", 0, 1,
         fly_above_lh_wrong_pos: check_positions, "C-Thr^Lh-Forw-so/2tk", 1, 0,
         fly_above_lh_right_pos: check_positions, "C-Thr^Lh-Forw-br/2tk", 0, 0,
         head_down_to_up_warn: check_positions, "B-St-F1S-ow/2ne", 0, 1,
