@@ -129,7 +129,7 @@ fn test_parse_iss_team() {
                     start_time: NaiveTime::from_hms_opt(0, 0, 46).unwrap(),
                     stop_time: NaiveTime::from_hms_opt(0, 1, 0).unwrap(),
                     kind: Hybrid(
-                        vec_of_strings("FB F6a AB A6 S1 AB 2R1 F1a F2b F3a 1PC"),
+                        vec_of_strings("FB F6a AB A6 S1 AB 2R1 F1a F2b F3b 1PC"),
                         "3.75".into()
                     ),
                 },

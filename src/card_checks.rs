@@ -699,9 +699,10 @@ fn check_flexibility_combinations(_: Category, decls: &[String]) -> CardIssues {
         {
             ci.warnings.push(format!("An additional action (of any sort) must be performed between {prev_decl} and {decl}"));
         }
-        if decl.starts_with("F3a") && prev_decl.starts_with("F3a") {
+        if decl.starts_with("F3a") {
             ci.warnings.push(
-                "Claiming F3a F3a requires athletes to show at least 5 split positions".into(),
+                "F3a means Right/Left split to opposite split, back to the initial split, 3 total splits"
+                    .into(),
             );
         }
 
@@ -1390,14 +1391,14 @@ mod tests {
         let hybrids = [
             (&["F1a".to_string(), "F2a".to_string()], 0),
             (&["F1a".to_string(), "F2b".to_string()], 0),
-            (&["F1a".to_string(), "F3a".to_string()], 0),
+            (&["F1a".to_string(), "F3a".to_string()], 1),
             (&["F1a".to_string(), "F3b".to_string()], 0),
             (&["F1a".to_string(), "F6d".to_string()], 0),
             (&["F1a".to_string(), "F2c".to_string()], 1),
             (&["F1b".to_string(), "F3c".to_string()], 1),
             (&["ROB".to_string(), "F1a".to_string()], 1),
             (&["RO1".to_string(), "F1a".to_string()], 1),
-            (&["F3a".to_string(), "F3a".to_string()], 1),
+            (&["F3a".to_string(), "F3a".to_string()], 2),
             (&["F1b".to_string(), "F4e".to_string()], 1),
             (&["F1b".to_string(), "F4f".to_string()], 1),
         ];
