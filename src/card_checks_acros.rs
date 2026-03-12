@@ -860,9 +860,15 @@ fn check_group_c_positions(acro: &TeamAcrobatic) -> CardIssues {
         ci.errors.push("For Thr^Lh balance position must be Bridge or Cat".into());
     }
 
-    if acro.construction == "Thr^2F" && first_pos == "spl" {
-        ci.warnings
-            .push("split position in fly-above construction, should that be owl position?".into());
+    if acro.construction.contains("Thr^2F")
+        && (B_ONE_LEG_POSITIONS.contains(&first_pos)
+            || B_TWO_LEG_POSITIONS.contains(&first_pos)
+            || B_HORIZONTAL_POSITIONS.contains(&first_pos))
+    {
+        ci.warnings.push(
+            "head-up position in fly-above construction, should that be a head-down position?"
+                .into(),
+        );
     }
 
     for position in &acro.positions {
