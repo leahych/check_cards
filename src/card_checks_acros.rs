@@ -455,7 +455,7 @@ fn are_bonuses_exclusive(bonus1: &str, bonus2: &str) -> bool {
         &["Stand", "Diva"],
         &["Spider", "Climb"],
         &[
-            "Dive", "CH", "Ps1", "Ps1t0.5", "Ps1op", "Ps1t0,5o", "Ps1t1", "Pf1", "Pf1o", "Mov",
+            "Dive", "CH", "Ps1", "Ps1t0.5", "Ps1o", "Ps1t0,5o", "Ps1t1", "Pf1", "Pf1o", "Mov",
             "Mov1", "Mov1+t", "Fall", "FTurn",
         ],
         &["Ju", "1P>H", "H>1P", "Jump", "Jump>", "On1Foot", "1F>1F", "1F>1F+", "2F>2F"],
@@ -517,8 +517,8 @@ fn check_bonus_validity(acro: &TeamAcrobatic) -> CardIssues {
         ],
         Platform => &[
             "Dbl", "Pos3", "UP", "Porp", "Spich", "Trav", "Stand", "Diva", "PRoll", "Box",
-            "Spider", "Climb", "Arch", "Kozak", "Dive", "CH", "Ps1", "Ps1t0.5", "Ps1op",
-            "Ps1t0,5o", "Ps1t1", "Pf1", "Pf1o", "Mov", "Mov1", "Mov1+t", "Fall", "FTurn",
+            "Spider", "Climb", "Arch", "Kozak", "Dive", "CH", "Ps1", "Ps1t0.5", "Ps1o", "Ps1t0,5o",
+            "Ps1t1", "Pf1", "Pf1o", "Mov", "Mov1", "Mov1+t", "Fall", "FTurn",
         ],
     };
     for bonus in &acro.bonuses {
