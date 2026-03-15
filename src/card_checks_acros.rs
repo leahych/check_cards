@@ -984,7 +984,17 @@ fn check_positions(acro: &TeamAcrobatic) -> CardIssues {
             ci.warnings
                 .push(format!("{first_pos} is heads-up and {pos2} is heads-down, is this right?"));
         }
-        if pos1_head_down && pos2_head_up && !acro.bonuses.contains(&"SdUp".into()) {
+
+        // If SdUp bonus is there, they are purposefully standing up,
+        // so a head up position is expected. For platforms, standing
+        // up and then dismounting is common. For now, just check for
+        // "sd" since that is the most common way of getting out of a
+        // head down position in a platform.
+        if pos1_head_down
+            && pos2_head_up
+            && !acro.bonuses.contains(&"SdUp".into())
+            && !(acro.group == Platform && pos2 == "sd")
+        {
             ci.warnings
                 .push(format!("{first_pos} is heads-down and {pos2} is heads-up, is this right?"));
         }
@@ -1354,6 +1364,7 @@ mod tests {
         fly_above_lh_right_pos: check_positions, "C-Thr^Lh-Forw-br/2tk", 0, 0,
         head_down_to_up_warn: check_positions, "B-St-F1S-ow/2ne", 0, 1,
         head_down_to_up_ok: check_positions, "B-St-F1S-ow/2ne-SdUp", 0, 0,
+        head_down_to_up_ok2: check_positions, "P-P-3pA-ow/2sd-Dive", 0, 0,
         queen_ok: check_positions, "P-B-2pBb-qu", 0, 0,
     }
 
