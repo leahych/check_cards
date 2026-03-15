@@ -32,7 +32,7 @@ fn test_parse_aqua_team() {
                     number: 2,
                     start_time: NaiveTime::from_hms_opt(0, 0, 3).unwrap(),
                     stop_time: NaiveTime::from_hms_opt(0, 0, 4).unwrap(),
-                    kind: TRE("TRE2a".to_string()),
+                    kind: TRE("TRE2a".into(), "2.6".into()),
                 },
                 Element {
                     number: 3,

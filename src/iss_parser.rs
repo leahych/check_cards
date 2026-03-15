@@ -82,7 +82,9 @@ fn parse_elements(
             "TRE" => {
                 let code = row1_cols.next().unwrap_or(&Data::String(String::new())).to_string();
                 let code = code.split('-').next_back().unwrap_or("").to_owned();
-                elem.kind = TRE(code);
+                let dd_col = row2_cols.next_back().unwrap_or(&Data::Float(0.0));
+                let dd = if dd_col.is_float() { dd_col.to_string() } else { String::new() };
+                elem.kind = TRE(code, dd);
             }
             "ACRO" | "ACROBATIC" | "ACRO-A" | "ACRO-B" | "ACRO-C" | "ACRO-P" => {
                 if team_event {

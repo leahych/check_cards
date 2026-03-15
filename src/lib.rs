@@ -282,7 +282,7 @@ pub enum ElementKind {
     PairAcro(String),
     ChoHy,
     Hybrid(Vec<String>, String),
-    TRE(String),
+    TRE(String, String),
     SuConn,
 }
 

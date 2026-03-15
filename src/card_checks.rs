@@ -457,11 +457,12 @@ fn check_routine_times(card: &CoachCard) -> CardIssues {
     ci
 }
 
-fn check_tres(category: Category, tre: &str) -> CardIssues {
+fn check_tres(category: Category, tre: &str, _dd: &str) -> CardIssues {
     let mut ci = CardIssues::default();
     if category.free {
         ci.errors.push("TRE in free routine?".into());
     } else {
+        // TODO validate DD
         let valid_tres: &[&str] = match category.event {
             Solo | Duet => {
                 &["TRE1a", "TRE1b", "TRE2a", "TRE2b", "TRE3", "TRE4a", "TRE4b", "TRE5a", "TRE5b"]
@@ -735,7 +736,7 @@ pub fn check_one_element(category: Category, element: &ElementKind) -> CardIssue
     static PAIR_ACRO_CHECKS: &[fn(Category, &String) -> CardIssues] = &[check_pair_acro];
     static TEAM_ACRO_CHECKS: &[fn(Category, &TeamAcrobatic, &String) -> CardIssues] =
         &[check_team_acro];
-    static TRE_CHECKS: &[fn(Category, &str) -> CardIssues] = &[check_tres];
+    static TRE_CHECKS: &[fn(Category, &str, &str) -> CardIssues] = &[check_tres];
 
     let mut ci = CardIssues::default();
     match &element {
@@ -755,9 +756,9 @@ pub fn check_one_element(category: Category, element: &ElementKind) -> CardIssue
             }
             ci += check_dd_limits(category, dd);
         }
-        TRE(decl) => {
+        TRE(decl, dd) => {
             for check in TRE_CHECKS {
-                ci += check(category, decl);
+                ci += check(category, decl, dd);
             }
         }
         ChoHy | SuConn => {}
@@ -819,7 +820,7 @@ mod tests {
             for hybrid in hybrids.into_iter() {
                 let decls: Vec<String> = hybrid.into_iter().map(|s| s.to_string()).collect();
                 let kind = if decls[0].starts_with("TRE") {
-                    TRE(decls[0].clone())
+                    TRE(decls[0].clone(), "".into())
                 } else if decls[0] == "ChoHy" {
                     ChoHy
                 } else if decls[0] == "SuConn" {
@@ -913,20 +914,6 @@ mod tests {
         assert_eq!(result.warnings.len(), warn_expected);
     }
 
-    fn run_tre_test(
-        name: &str,
-        check_fn: fn(Category, &str) -> CardIssues,
-        cat: Category,
-        tre: &str,
-    ) {
-        let err_expected = if name.ends_with("_err") { 1 } else { 0 };
-        let warn_expected = if name.ends_with("_warn") { 1 } else { 0 };
-        let result = check_fn(cat, tre);
-        // println!("TEST {:?}", result.errors);
-        assert_eq!(result.errors.len(), err_expected);
-        assert_eq!(result.warnings.len(), warn_expected);
-    }
-
     #[test]
     fn test_check_iss_version() {
         let not_set = check_iss_version(&CardBuilder::new().card);
@@ -945,17 +932,6 @@ mod tests {
             #[test]
             fn $name () {
                 run_test(stringify!($name), $fname, &CardBuilder::new().category($category).hybrids($value).card);
-            }
-        )*
-        }
-    }
-
-    macro_rules! tre_tests {
-        ($($name:ident: $fname:expr, $category:expr, $value:expr,)*) => {
-        $(
-            #[test]
-            fn $name () {
-                run_tre_test(stringify!($name), $fname, $category, $value);
             }
         )*
         }
@@ -1082,14 +1058,20 @@ mod tests {
         rise_to_rotate_conn_ok: check_ascent_connection, TECH_MIXED, &["A3b", "C5"],
     }
 
-    tre_tests! {
-        solo_invalid_tre_err: check_tres, Category{ag: JRSR, event: Solo, free: false}, "TRE5m",
-        team_tre4a_err: check_tres, Category{ag: JRSR, event: Team, free: false}, "TRE4a",
-        solo_tre4a_ok: check_tres, Category{ag: JRSR, event: Solo, free: false}, "TRE4a",
-        free_solo_tre4a_err: check_tres, Category{ag: JRSR, event: Solo, free: true}, "TRE4a",
-        mixed_duet_tre4a_err: check_tres, Category{ag: JRSR, event: MixedDuet, free: false}, "TRE4a",
-        mixed_duet_tre3_ok: check_tres, Category{ag: JRSR, event: MixedDuet, free: false}, "TRE3",
-        tre_in_combo_err: check_tres, Category{ag: Youth, event: Combo, free: false}, "TRE4a",
+    #[test]
+    fn test_check_tres() {
+        let conditions = [
+            ("solo_invalid_tre", Category { ag: JRSR, event: Solo, free: false }, "TRE5m", "", 1),
+            ("team_tre4a", Category { ag: JRSR, event: Team, free: false }, "TRE4a", "", 1),
+            ("solo_tre4a", Category { ag: JRSR, event: Solo, free: false }, "TRE4a", "", 0),
+            ("free_solo_tre4a", Category { ag: JRSR, event: Solo, free: true }, "TRE4a", "", 1),
+            ("md_tre4a", Category { ag: JRSR, event: MixedDuet, free: false }, "TRE4a", "", 1),
+            ("md_tre3", Category { ag: JRSR, event: MixedDuet, free: false }, "TRE3", "", 0),
+            ("tre_in_combo_err", Category { ag: Youth, event: Combo, free: false }, "TRE4a", "", 1),
+        ];
+        for (case, cat, tre, dd, errs) in conditions {
+            assert_eq!(check_tres(cat, tre, dd).errors.len(), errs, "{}", case);
+        }
     }
 
     routine_tests! {

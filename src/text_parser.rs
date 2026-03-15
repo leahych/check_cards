@@ -22,7 +22,7 @@ fn parse_element(line: &str) -> Result<ElementKind, String> {
     }
 
     if line.starts_with("TRE") {
-        return Ok(TRE(line.into()));
+        return Ok(TRE(line.into(), String::new()));
     }
 
     if ["A-", "B-", "C-", "P-"].iter().any(|s| line.starts_with(*s)) {
@@ -108,7 +108,7 @@ mod tests {
     fn test_parse_text_tre() {
         assert_eq!(
             parse_text("SR", true, "Solo", "TRE1a"),
-            ParseResult::Element(EXPECTED_CATEGORY, TRE("TRE1a".into()))
+            ParseResult::Element(EXPECTED_CATEGORY, TRE("TRE1a".into(), "".into()))
         );
     }
 
