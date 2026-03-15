@@ -959,6 +959,17 @@ fn check_positions(acro: &TeamAcrobatic) -> CardIssues {
         }
     }
 
+    // FUTURE Group C also has Airborne take-off positions, but that
+    // check is harder. For now, leave this as just for Airborne and
+    // see if this become an issue for Combined.
+    if acro.group == Airborne
+        && acro.positions.len() == 2
+        && acro.positions.first() == Some(&"ln".to_string())
+    {
+        ci.warnings
+            .push("line claimed as 1st position, are you sure line isn't take-off".to_string());
+    }
+
     // above is just checking that the claimed position is one that is
     // allowed at all, now for Group C, we'll do a more complicated
     // check depending on construction, bonuses, etc.
@@ -1366,6 +1377,7 @@ mod tests {
         head_down_to_up_ok: check_positions, "B-St-F1S-ow/2ne-SdUp", 0, 0,
         head_down_to_up_ok2: check_positions, "P-P-3pA-ow/2sd-Dive", 0, 0,
         queen_ok: check_positions, "P-B-2pBb-qu", 0, 0,
+        airborne_ln_as_takeoff: check_positions, "A-Sq-Back-ln/2tk-s1", 0, 1,
     }
 
     #[test]
