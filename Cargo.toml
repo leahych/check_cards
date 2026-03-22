@@ -2,7 +2,7 @@
 name = "check_cards"
 version = "1.4.0"
 edition = "2024"
-rust-version = "1.85.0"
+rust-version = "1.94.0"
 description = "A tool for checking for issues in Artistic Swimming Coach Cards"
 homepage = "https://check-cards.web.app"
 keywords = ["artistic", "swimming", "artistic-swimming", "synchro"]
