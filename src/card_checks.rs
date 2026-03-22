@@ -22,12 +22,11 @@ use crate::ElementKind::{ChoHy, Hybrid, PairAcro, SuConn, TRE, TeamAcro};
 const LATEST_ISS_VERSION: semver::Version = semver::Version::new(3, 0, 5);
 fn check_iss_version(card: &CoachCard) -> CardIssues {
     let mut ci = CardIssues::default();
-    if let Some(iss_ver) = card.iss_ver.as_ref() {
-        if iss_ver < &LATEST_ISS_VERSION {
-            ci.warnings.push(format!(
-                "Card produced with version {iss_ver}, latest is {LATEST_ISS_VERSION}"
-            ));
-        }
+    if let Some(iss_ver) = card.iss_ver.as_ref()
+        && iss_ver < &LATEST_ISS_VERSION
+    {
+        ci.warnings
+            .push(format!("Card produced with version {iss_ver}, latest is {LATEST_ISS_VERSION}"));
     }
     ci
 }
@@ -548,14 +547,14 @@ fn check_overlapping_elements(card: &CoachCard) -> CardIssues {
 
     let mut prev_elem: Option<&Element> = None;
     for elem in &card.elements {
-        if let Some(prev_elem) = prev_elem {
-            if elem.start_time < prev_elem.stop_time {
-                ci.errors.push(format!(
-                    "Element {}: starts before Element {} ends",
-                    elem.number,
-                    elem.number - 1
-                ));
-            }
+        if let Some(prev_elem) = prev_elem
+            && elem.start_time < prev_elem.stop_time
+        {
+            ci.errors.push(format!(
+                "Element {}: starts before Element {} ends",
+                elem.number,
+                elem.number - 1
+            ));
         }
         prev_elem = Some(elem);
     }

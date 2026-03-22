@@ -56,11 +56,10 @@ fn check_dd_limits(category: Category, group: AcroGroup, dd: &str) -> CardIssues
     ]);
 
     let mut ci = CardIssues::default();
-    if let Some(max_dd) = map.get(&Cg { c: category, g: group }) {
-        if dd.parse().unwrap_or(0.0) > *max_dd {
-            ci.errors
-                .push(format!("{category} may not have an acrobatic that has a DD > {max_dd}"));
-        }
+    if let Some(max_dd) = map.get(&Cg { c: category, g: group })
+        && dd.parse().unwrap_or(0.0) > *max_dd
+    {
+        ci.errors.push(format!("{category} may not have an acrobatic that has a DD > {max_dd}"));
     }
     ci
 }
@@ -718,15 +717,15 @@ fn check_construction(acro: &TeamAcrobatic) -> CardIssues {
     ]);
 
     let mut ci = CardIssues::default();
-    if let Some(allowed_grips) = allowed_grip_map.get(acro.construction.as_str()) {
-        if !allowed_grips.contains(&acro.connection_grip.as_str()) {
-            ci.warnings.push(format!(
-                "{} cannot be used with {}, must be a connection such as {}",
-                acro.construction,
-                acro.connection_grip,
-                allowed_grips.join(", ")
-            ));
-        }
+    if let Some(allowed_grips) = allowed_grip_map.get(acro.construction.as_str())
+        && !allowed_grips.contains(&acro.connection_grip.as_str())
+    {
+        ci.warnings.push(format!(
+            "{} cannot be used with {}, must be a connection such as {}",
+            acro.construction,
+            acro.connection_grip,
+            allowed_grips.join(", ")
+        ));
     }
 
     ci
