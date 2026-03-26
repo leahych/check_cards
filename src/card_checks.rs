@@ -456,24 +456,68 @@ fn check_routine_times(card: &CoachCard) -> CardIssues {
     ci
 }
 
-fn check_tres(category: Category, tre: &str, _dd: &str) -> CardIssues {
+fn check_tres(category: Category, tre: &str, dd: &str) -> CardIssues {
     let mut ci = CardIssues::default();
     if category.free {
         ci.errors.push("TRE in free routine?".into());
     } else {
-        // TODO validate DD
-        let valid_tres: &[&str] = match category.event {
-            Solo | Duet => {
-                &["TRE1a", "TRE1b", "TRE2a", "TRE2b", "TRE3", "TRE4a", "TRE4b", "TRE5a", "TRE5b"]
-            }
-            MixedDuet => &["TRE1a", "TRE1b", "TRE2a", "TRE2b", "TRE3"],
-            Team => {
-                &["TRE1a", "TRE1b", "TRE2a", "TRE2b", "TRE3a", "TRE3b", "TRE4", "TRE5a", "TRE5b"]
-            }
-            Acrobatic | Combo | Trio | Events::Unknown => &[],
+        let valid_tres = match category.event {
+            Solo => HashMap::from([
+                ("TRE1a", "2.7"),
+                ("TRE1b", "2.1"),
+                ("TRE2a", "3"),
+                ("TRE2b", "2.7"),
+                ("TRE3", "3.2"),
+                ("TRE4a", "2.9"),
+                ("TRE4b", "2.6"),
+                ("TRE5a", "2.4"),
+                ("TRE5b", "2.1"),
+            ]),
+            Duet => HashMap::from([
+                ("TRE1a", "3"),
+                ("TRE1b", "2.5"),
+                ("TRE2a", "2.8"),
+                ("TRE2b", "2.4"),
+                ("TRE3", "3.1"),
+                ("TRE4a", "3.2"),
+                ("TRE4b", "2.7"),
+                ("TRE5a", "2.3"),
+                ("TRE5b", "2.1"),
+            ]),
+            MixedDuet => HashMap::from([
+                ("TRE1a", "2.7"),
+                ("TRE1b", "2.5"),
+                ("TRE2a", "2.4"),
+                ("TRE2b", "2.2"),
+                ("TRE3", "3"),
+            ]),
+            Team => HashMap::from([
+                ("TRE1a", "2.5"),
+                ("TRE1b", "2.3"),
+                ("TRE2a", "2.6"),
+                ("TRE2b", "2.3"),
+                ("TRE3a", "2.6"),
+                ("TRE3b", "2.3"),
+                ("TRE4", "2.9"),
+                ("TRE5a", "2.4"),
+                ("TRE5b", "2.1"),
+            ]),
+            Acrobatic | Combo | Trio | Events::Unknown => HashMap::new(),
         };
-        if !valid_tres.contains(&tre) {
-            ci.errors.push(format!("{tre} is not a valid TRE for {:?}", category.event));
+        match valid_tres.get(&tre) {
+            Some(expected_dd) => {
+                // when someone enters a card into a textbox, we leave the DD as blank
+                // in that case we don't want to warn about that since there is no way
+                // for the user to fix that.
+                if !dd.is_empty() && dd != *expected_dd {
+                    ci.errors.push(format!(
+                        "expected {tre} to have a DD of {expected_dd} but DD is {dd}"
+                    ));
+                }
+            }
+            None => {
+                ci.errors.push(format!("{tre} is not a valid TRE for {:?}", category.event));
+            }
         }
     }
     ci
@@ -1062,6 +1106,8 @@ mod tests {
         let conditions = [
             ("solo_invalid_tre", Category { ag: JRSR, event: Solo, free: false }, "TRE5m", "", 1),
             ("team_tre4a", Category { ag: JRSR, event: Team, free: false }, "TRE4a", "", 1),
+            ("team_wrong_dd", Category { ag: JRSR, event: Team, free: false }, "TRE4", "1.4", 1),
+            ("team_right_dd", Category { ag: JRSR, event: Team, free: false }, "TRE4", "2.9", 0),
             ("solo_tre4a", Category { ag: JRSR, event: Solo, free: false }, "TRE4a", "", 0),
             ("free_solo_tre4a", Category { ag: JRSR, event: Solo, free: true }, "TRE4a", "", 1),
             ("md_tre4a", Category { ag: JRSR, event: MixedDuet, free: false }, "TRE4a", "", 1),
