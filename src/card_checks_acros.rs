@@ -1039,6 +1039,69 @@ fn check_pair_acro_common_base_marks(card: &CoachCard) -> CardIssues {
     ci
 }
 
+fn check_pair_acro_validity(card: &CoachCard) -> CardIssues {
+    const PAIR_ACROS: &[&str] = &[
+        "L»",
+        "L!»",
+        "L",
+        "Lf»",
+        "L!f»",
+        "L!r0.5»",
+        "L!",
+        "Lf",
+        "L!r1»",
+        "L!fr0.5»",
+        "Lr0.5",
+        "SL>",
+        "L!r0.5",
+        "Lfr0.5",
+        "L!f",
+        "SL!>",
+        "Lr1",
+        "J",
+        "W!»",
+        "L!r1",
+        "L!fr0.5",
+        "SL!f>",
+        "SL!r0.5>",
+        "Jr0.5",
+        "Jf",
+        "W!d",
+        "L!fr1",
+        "SL!fr0.5>",
+        "W!r0.5",
+        "W!f",
+        "Jd",
+        "Js0.5B",
+        "W!s0.5",
+        "W!fr0.5",
+        "Jpd",
+        "W!r1",
+        "Jdf",
+        "W!fr1",
+        "Js0.5t0.5",
+        "W!s0.5t0.5",
+        "Js1B",
+        "W!fr1.5",
+        "JBs1t0.5",
+        "Jfs1B",
+        "Js1F",
+        "Js1B+f",
+        "SL!f2+r1>",
+        "Js1B+pf",
+        "W!s1F",
+        "JF1B",
+    ];
+
+    let mut ci = CardIssues::default();
+    for (num, acro) in pair_acros!(card.elements) {
+        if !PAIR_ACROS.contains(&acro.as_str()) {
+            ci.errors.push(format!("Element {num}: {acro} is not a valid pair acro"));
+        }
+    }
+    ci
+}
+
 pub fn check_one_acro(category: Category, acro: &TeamAcrobatic, dd: &str) -> CardIssues {
     let acro_checks = &[
         check_num_athletes,
@@ -1065,7 +1128,11 @@ pub fn run_acro_checks(card: &CoachCard) -> CardIssues {
 
     let checks: &[fn(&CoachCard) -> CardIssues] = match card.category.event {
         Solo | Events::Unknown => &[],
-        Duet | MixedDuet | Trio => &[check_duplicate_pair_acros, check_pair_acro_common_base_marks],
+        Duet | MixedDuet | Trio => &[
+            check_pair_acro_validity,
+            check_duplicate_pair_acros,
+            check_pair_acro_common_base_marks,
+        ],
         Acrobatic | Combo | Team => &[check_groups_for_acro_routine, check_team_duplicate_acros],
     };
     for check in checks {
@@ -1426,6 +1493,20 @@ mod tests {
         assert_eq!(pair_acro_helper(Duet, "Jf").len(), 0);
         assert_eq!(pair_acro_helper(Duet, "W!»").len(), 0);
         assert_eq!(pair_acro_helper(Duet, "Jfs1B").len(), 0);
+    }
+
+    #[test]
+    fn test_check_pair_validity() {
+        let card = CardBuilder::new()
+            .category(Category { ag: AG12U, event: Duet, free: true })
+            .pair_acros(&["L!F"])
+            .card;
+        assert_eq!(check_pair_acro_validity(&card).errors.len(), 1);
+        let card = CardBuilder::new()
+            .category(Category { ag: AG12U, event: Duet, free: true })
+            .pair_acros(&["L!f"])
+            .card;
+        assert_eq!(check_pair_acro_validity(&card).errors.len(), 0);
     }
 
     #[test]
