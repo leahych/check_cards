@@ -98,7 +98,6 @@ dependencies = [
  "regex-lite",
  "semver",
  "wasm-bindgen",
- "wasm-bindgen-futures",
  "web-sys",
 ]
 

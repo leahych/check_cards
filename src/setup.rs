@@ -8,7 +8,9 @@ use gloo::utils::document;
 use std::io::Cursor;
 use std::panic;
 use wasm_bindgen::prelude::*;
-use web_sys::{Document, Event, HtmlInputElement, HtmlTableElement, HtmlTableSectionElement};
+use web_sys::{
+    Document, Event, HtmlInputElement, HtmlTableElement, HtmlTableSectionElement, js_sys,
+};
 
 const ACCEPT_LIST: [&str; 4] = [
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -42,7 +44,7 @@ fn process_files(input_element: &HtmlInputElement) {
         }
         let doc = input_element.owner_document().unwrap();
         let file = file.clone();
-        wasm_bindgen_futures::spawn_local(async move {
+        js_sys::futures::spawn_local(async move {
             let res = gloo::file::futures::read_as_bytes(&file).await;
             let ci = blob_to_issues(file.name().as_str(), res);
             show_issues(&doc, ci);
@@ -58,7 +60,7 @@ pub fn on_text_input_changed(ag: String, event: String, free: bool, input: Strin
     // note: I think this means if we don't finish processing
     // before input changes again we'll get interleaved results
     if !input.trim().is_empty() {
-        wasm_bindgen_futures::spawn_local(async move {
+        js_sys::futures::spawn_local(async move {
             let ci = text_to_issues(ag.as_str(), free, event.as_str(), input.as_str());
             show_issues(&doc, ci);
         });
