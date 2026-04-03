@@ -356,7 +356,7 @@ fn check_rotation_construction(acro: &TeamAcrobatic) -> CardIssues {
         if let Some(allowed_rotations) = allowed_rotations {
             if !allowed_rotations.contains(&rotation.as_str()) {
                 ci.errors.push(format!(
-                    "for {con} the rotation must be one {}",
+                    "for {con} the rotation must be one of {}",
                     allowed_rotations.join(", ")
                 ));
             }

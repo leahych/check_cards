@@ -89,8 +89,7 @@ fn parse_elements(
             "ACRO" | "ACROBATIC" | "ACRO-A" | "ACRO-B" | "ACRO-C" | "ACRO-P" => {
                 if team_event {
                     row1_cols.next(); // base mark/acro type
-                    let parts =
-                        row1_cols.filter(|x| x.is_string()).map(std::string::ToString::to_string);
+                    let parts = row1_cols.filter(|x| x.is_string()).map(ToString::to_string);
                     let code = parts.fold(String::new(), |acc, x| acc + "-" + &x);
                     let code = code.strip_prefix('-').unwrap_or(code.as_str());
 
