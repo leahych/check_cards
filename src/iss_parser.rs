@@ -103,8 +103,14 @@ fn parse_elements(
                     }
                 } else {
                     // TODO next might not be correct for AQUA cards
+                    // filter out ACRO, cards that were originally created
+                    // older versions of ISS can have "ACRO" both in the
+                    // part column and in the base mark column.
                     elem.kind = PairAcro(
-                        row1_cols.next().unwrap_or(&Data::String(String::new())).to_string(),
+                        row1_cols
+                            .find(|x| x.as_string() != Some("ACRO".into()))
+                            .unwrap_or(&Data::String(String::new()))
+                            .to_string(),
                     );
                 }
             }
