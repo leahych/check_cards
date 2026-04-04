@@ -1,30 +1,16 @@
 use crate::ElementKind::{ChoHy, Hybrid, PairAcro, SuConn, TRE, TeamAcro};
 use crate::Events::{Duet, Trio, Unknown};
 use crate::{AgeGroups, Category, CoachCard, Element, Events, TeamAcrobatic};
-use calamine::{Data, DataType, ExcelDateTime, Range, Reader, Rows, Xls, Xlsx};
-use chrono::{NaiveTime, Timelike};
+use calamine::{Data, DataType, Range, Reader, Rows, Xls, Xlsx};
+use chrono::NaiveTime;
 use std::io::{Read, Seek};
 
-fn parse_elements(
-    mut sheet: Rows<Data>,
-    aqua_card: bool,
-    team_event: bool,
-) -> (Vec<Element>, NaiveTime) {
+fn parse_elements(sheet: Rows<Data>, team_event: bool) -> (Vec<Element>, NaiveTime) {
     let mut elements = vec![];
     let mut end_time = NaiveTime::default();
 
-    while let Some(element_row1) = sheet.next() {
-        let element_row2 = if aqua_card {
-            match sheet.next() {
-                Some(row2) => row2,
-                None => break,
-            }
-        } else {
-            element_row1
-        };
-
-        let mut row1_cols = element_row1.iter().filter(|x| !x.is_empty());
-        let mut row2_cols = element_row2.iter().filter(|x| !x.is_empty());
+    for element_row in sheet {
+        let mut row_cols = element_row.iter().filter(|x| !x.is_empty());
 
         let mut elem = Element {
             number: 0,
@@ -33,81 +19,69 @@ fn parse_elements(
             kind: ChoHy,
         };
 
-        if aqua_card {
-            let def_date_time = Data::DateTime(ExcelDateTime::default());
-            let start_time =
-                row1_cols.next().unwrap_or(&def_date_time).as_datetime().unwrap_or_default();
-            let end_time =
-                row2_cols.next().unwrap_or(&def_date_time).as_datetime().unwrap_or_default();
-            elem.start_time = NaiveTime::from_hms_opt(0, start_time.hour(), start_time.minute())
-                .unwrap_or_default();
-            elem.stop_time =
-                NaiveTime::from_hms_opt(0, end_time.hour(), end_time.minute()).unwrap_or_default();
-        } else {
-            let start_end_time_str =
-                row1_cols.next().unwrap_or(&Data::String(String::new())).to_string();
-            let mut parts = start_end_time_str.split('-');
-            let val = "0:".to_owned() + parts.next().unwrap_or("0:00");
-            elem.start_time = NaiveTime::parse_from_str(val.as_str(), "%T").unwrap_or_default();
-            let val = "0:".to_owned() + parts.next().unwrap_or("0:00");
-            elem.stop_time = NaiveTime::parse_from_str(val.as_str(), "%T").unwrap_or_default();
-        }
+        let start_end_time_str =
+            row_cols.next().unwrap_or(&Data::String(String::new())).to_string();
+        let mut parts = start_end_time_str.split('-');
+        let val = "0:".to_owned() + parts.next().unwrap_or("0:00");
+        elem.start_time = NaiveTime::parse_from_str(val.as_str(), "%T").unwrap_or_default();
+        let val = "0:".to_owned() + parts.next().unwrap_or("0:00");
+        elem.stop_time = NaiveTime::parse_from_str(val.as_str(), "%T").unwrap_or_default();
 
         if elem.stop_time > end_time {
             end_time = elem.stop_time;
         }
 
-        let elment_type_str =
-            row1_cols.next().unwrap_or(&Data::String(String::new())).to_string().to_uppercase();
-        let (elem_num, elment_type_str) = match elment_type_str.parse() {
+        let element_type_str =
+            row_cols.next().unwrap_or(&Data::String(String::new())).to_string().to_uppercase();
+        let (elem_num, element_type_str) = match element_type_str.parse() {
             Ok(num) => (
                 num,
-                row1_cols.next().unwrap_or(&Data::String(String::new())).to_string().to_uppercase(),
+                row_cols.next().unwrap_or(&Data::String(String::new())).to_string().to_uppercase(),
             ),
             Err(_) => (
-                row1_cols
+                row_cols
                     .next()
                     .unwrap_or(&Data::Int(0))
                     .as_i64()
                     .unwrap_or(0)
                     .try_into()
                     .unwrap_or(0),
-                elment_type_str,
+                element_type_str,
             ),
         };
         elem.number = elem_num;
 
-        match elment_type_str.as_str() {
+        match element_type_str.as_str() {
             "CHOHY" => elem.kind = ChoHy,
             "TRE" => {
-                let code = row1_cols.next().unwrap_or(&Data::String(String::new())).to_string();
+                let code = row_cols.next().unwrap_or(&Data::String(String::new())).to_string();
                 let code = code.split('-').next_back().unwrap_or("").to_owned();
-                let dd_col = row2_cols.next_back().unwrap_or(&Data::Float(0.0));
+                let dd_col = row_cols.next_back().unwrap_or(&Data::Float(0.0));
                 let dd = if dd_col.is_float() { dd_col.to_string() } else { String::new() };
                 elem.kind = TRE(code, dd);
             }
             "ACRO" | "ACROBATIC" | "ACRO-A" | "ACRO-B" | "ACRO-C" | "ACRO-P" => {
                 if team_event {
-                    row1_cols.next(); // base mark/acro type
-                    let parts = row1_cols.filter(|x| x.is_string()).map(ToString::to_string);
+                    let dd_col = row_cols.clone().next_back().unwrap_or(&Data::Float(0.0));
+                    // turn DD into a string because it makes implementing Eq easier
+                    let dd = if dd_col.is_float() { dd_col.to_string() } else { String::new() };
+
+                    row_cols.next(); // base mark/acro type
+                    let parts = row_cols.filter(|x| x.is_string()).map(ToString::to_string);
                     let code = parts.fold(String::new(), |acc, x| acc + "-" + &x);
                     let code = code.strip_prefix('-').unwrap_or(code.as_str());
 
-                    // turn DD into a string because it makes implementing Eq easier
-                    let dd_col = row2_cols.next_back().unwrap_or(&Data::Float(0.0));
-                    let dd = if dd_col.is_float() { dd_col.to_string() } else { String::new() };
                     if let Ok(acro) = TeamAcrobatic::from(code) {
                         elem.kind = TeamAcro(acro, dd.clone());
                     } else {
                         // TODO log
                     }
                 } else {
-                    // TODO next might not be correct for AQUA cards
                     // filter out ACRO, cards that were originally created
                     // older versions of ISS can have "ACRO" both in the
                     // part column and in the base mark column.
                     elem.kind = PairAcro(
-                        row1_cols
+                        row_cols
                             .find(|x| x.as_string() != Some("ACRO".into()))
                             .unwrap_or(&Data::String(String::new()))
                             .to_string(),
@@ -123,9 +97,9 @@ fn parse_elements(
                 {
                     //row1_cols.next(); // base mark
                     // turn DD into a string because it makes implementing Eq easier
-                    let dd_col = row2_cols.next_back().unwrap_or(&Data::Float(0.0));
+                    let dd_col = row_cols.clone().next_back().unwrap_or(&Data::Float(0.0));
                     let dd = if dd_col.is_float() { dd_col.to_string() } else { String::new() };
-                    let decls = row1_cols
+                    let decls = row_cols
                         .filter(|x| x.is_string() && *x != "Hybrid")
                         .map(ToString::to_string)
                         .collect::<Vec<_>>()
@@ -180,7 +154,7 @@ fn parse_report(sheet: &Range<Data>) -> Vec<(String, CoachCard)> {
             // we don't warn about that for every single acro/combo
             let mut card = CoachCard { category, theme: String::from("foo"), ..Default::default() };
             (card.elements, card.end_time) =
-                parse_elements(element_range.rows(), false, card.category.event.is_team_event());
+                parse_elements(element_range.rows(), card.category.event.is_team_event());
             //println!("TEST {:?}", card);
             cards.push((name, card.clone()));
             elements_start = (0u32, 0u32);
@@ -191,8 +165,6 @@ fn parse_report(sheet: &Range<Data>) -> Vec<(String, CoachCard)> {
 }
 
 fn parse_iss_card(name: &str, sheet: &Range<Data>) -> Vec<(String, CoachCard)> {
-    let mut aqua_card = true;
-
     let mut card = CoachCard::default();
 
     let mut cur_positon = 0_usize;
@@ -204,10 +176,7 @@ fn parse_iss_card(name: &str, sheet: &Range<Data>) -> Vec<(String, CoachCard)> {
             Some(Data::DateTime(dt)) => dt.as_datetime().unwrap().format("%H:%M").to_string(),
             _ => continue,
         };
-        if row_name.contains("COACH CARD") {
-            // this isn't great but it works
-            aqua_card = false;
-        }
+
         if row_name.starts_with("Theme") {
             card.theme = cols.next().map_or_else(String::new, ToString::to_string);
         }
@@ -246,20 +215,14 @@ fn parse_iss_card(name: &str, sheet: &Range<Data>) -> Vec<(String, CoachCard)> {
         }
     }
 
-    if aqua_card && card.category.ag == AgeGroups::Unknown {
-        card.category.ag = AgeGroups::JRSR;
-    }
-
     let mut elements_start = sheet.start().unwrap();
     let mut elements_end = sheet.end().unwrap();
     elements_start.0 += u32::try_from(cur_positon).unwrap_or(0);
-    if !aqua_card {
-        // remove ISS hidden checksum column
-        elements_end.1 -= 1;
-    }
+    // remove ISS hidden checksum column
+    elements_end.1 -= 1;
     let element_range = sheet.range(elements_start, elements_end);
     (card.elements, card.end_time) =
-        parse_elements(element_range.rows(), aqua_card, card.category.event.is_team_event());
+        parse_elements(element_range.rows(), card.category.event.is_team_event());
 
     for row in element_range.rows() {
         assert!(!row.is_empty());
