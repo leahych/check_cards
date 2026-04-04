@@ -72,9 +72,9 @@ fn is_jrsr(txt: &str) -> bool {
 impl AgeGroups {
     const fn as_str(self) -> &'static str {
         match self {
-            Self::AG12U => "12-U",
-            Self::Youth => "Youth",
-            Self::JRSR => "JR/SR",
+            AG12U => "12-U",
+            Youth => "Youth",
+            JRSR => "JR/SR",
             Self::Unknown => "Unknown",
         }
     }
@@ -82,11 +82,11 @@ impl AgeGroups {
     fn from_str(input: &str) -> Self {
         let txt = input.to_uppercase();
         if is_12u(txt.as_str()) {
-            return Self::AG12U;
+            return AG12U;
         } else if is_youth(txt.as_str()) {
-            return Self::Youth;
+            return Youth;
         } else if is_jrsr(txt.as_str()) {
-            return Self::JRSR;
+            return JRSR;
         }
         Self::Unknown
     }
@@ -108,43 +108,43 @@ pub enum Events {
 impl Events {
     const fn as_str(self) -> &'static str {
         match self {
-            Self::Solo => "Solo",
-            Self::Duet => "Duet",
-            Self::MixedDuet => "Mixed Duet",
-            Self::Trio => "Trio",
-            Self::Team => "Team",
-            Self::Acrobatic => "Acrobatic",
-            Self::Combo => "Combo",
+            Solo => "Solo",
+            Duet => "Duet",
+            MixedDuet => "Mixed Duet",
+            Trio => "Trio",
+            Team => "Team",
+            Acrobatic => "Acrobatic",
+            Combo => "Combo",
             Self::Unknown => "Unknown",
         }
     }
 
     const fn is_team_event(self) -> bool {
-        matches!(self, Self::Team | Self::Acrobatic | Self::Combo)
+        matches!(self, Team | Acrobatic | Combo)
     }
 
     fn from_str(input: &str) -> Self {
         let input = input.to_uppercase();
         if input.contains("ACRO") {
-            return Self::Acrobatic;
+            return Acrobatic;
         }
         if input.contains("COMB") {
-            return Self::Combo;
+            return Combo;
         }
         if input.contains("TEAM") {
-            return Self::Team;
+            return Team;
         }
         if input.contains("MIXED") {
-            return Self::MixedDuet;
+            return MixedDuet;
         }
         if input.contains("DUET") {
-            return Self::Duet;
+            return Duet;
         }
         if input.contains("TRIO") {
-            return Self::Trio;
+            return Trio;
         }
         if input.contains("SOLO") {
-            return Self::Solo;
+            return Solo;
         }
         Self::Unknown
     }
@@ -393,31 +393,31 @@ mod tests {
 
     #[test]
     fn test_age_groups_from() {
-        assert_eq!(AgeGroups::from_str("12u"), AgeGroups::AG12U);
-        assert_eq!(AgeGroups::from_str("Youth"), AgeGroups::Youth);
-        assert_eq!(AgeGroups::from_str("13-15"), AgeGroups::Youth);
-        assert_eq!(AgeGroups::from_str("1517"), AgeGroups::JRSR);
-        assert_eq!(AgeGroups::from_str("1617"), AgeGroups::JRSR);
-        assert_eq!(AgeGroups::from_str("16-19"), AgeGroups::JRSR);
-        assert_eq!(AgeGroups::from_str("18-19"), AgeGroups::JRSR);
-        assert_eq!(AgeGroups::from_str("collegiate"), AgeGroups::JRSR);
-        assert_eq!(AgeGroups::from_str("jr"), AgeGroups::JRSR);
-        assert_eq!(AgeGroups::from_str("Junior"), AgeGroups::JRSR);
-        assert_eq!(AgeGroups::from_str("sr"), AgeGroups::JRSR);
-        assert_eq!(AgeGroups::from_str("Senior"), AgeGroups::JRSR);
+        assert_eq!(AgeGroups::from_str("12u"), AG12U);
+        assert_eq!(AgeGroups::from_str("Youth"), Youth);
+        assert_eq!(AgeGroups::from_str("13-15"), Youth);
+        assert_eq!(AgeGroups::from_str("1517"), JRSR);
+        assert_eq!(AgeGroups::from_str("1617"), JRSR);
+        assert_eq!(AgeGroups::from_str("16-19"), JRSR);
+        assert_eq!(AgeGroups::from_str("18-19"), JRSR);
+        assert_eq!(AgeGroups::from_str("collegiate"), JRSR);
+        assert_eq!(AgeGroups::from_str("jr"), JRSR);
+        assert_eq!(AgeGroups::from_str("Junior"), JRSR);
+        assert_eq!(AgeGroups::from_str("sr"), JRSR);
+        assert_eq!(AgeGroups::from_str("Senior"), JRSR);
         assert_eq!(AgeGroups::from_str(""), AgeGroups::Unknown);
     }
 
     #[test]
     fn test_event_from() {
-        assert_eq!(Events::from_str("acro"), Events::Acrobatic);
-        assert_eq!(Events::from_str("Acrobatic"), Events::Acrobatic);
-        assert_eq!(Events::from_str("combination"), Events::Combo);
-        assert_eq!(Events::from_str("combo"), Events::Combo);
-        assert_eq!(Events::from_str("duet"), Events::Duet);
-        assert_eq!(Events::from_str("MixedDuet"), Events::MixedDuet);
-        assert_eq!(Events::from_str("solo"), Events::Solo);
-        assert_eq!(Events::from_str("trio"), Events::Trio);
+        assert_eq!(Events::from_str("acro"), Acrobatic);
+        assert_eq!(Events::from_str("Acrobatic"), Acrobatic);
+        assert_eq!(Events::from_str("combination"), Combo);
+        assert_eq!(Events::from_str("combo"), Combo);
+        assert_eq!(Events::from_str("duet"), Duet);
+        assert_eq!(Events::from_str("MixedDuet"), MixedDuet);
+        assert_eq!(Events::from_str("solo"), Solo);
+        assert_eq!(Events::from_str("trio"), Trio);
         assert_eq!(Events::from_str(""), Events::Unknown);
     }
 }

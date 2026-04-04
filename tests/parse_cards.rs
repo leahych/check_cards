@@ -71,7 +71,7 @@ fn test_parse_iss_team() {
     let issues = parse_excel("", &mut file).expect("Could not parse card");
     assert_eq!(
         CoachCard {
-            category: Category { ag: AgeGroups::JRSR, free: true, event: Events::Team },
+            category: Category { ag: JRSR, free: true, event: Events::Team },
             elements: vec![
                 Element {
                     number: 1,
@@ -185,7 +185,7 @@ fn test_parse_iss_combo() {
     let issues = parse_excel("", &mut file).expect("Could not parse card");
     assert_eq!(
         CoachCard {
-            category: Category { ag: AgeGroups::Youth, free: true, event: Events::Combo },
+            category: Category { ag: AgeGroups::Youth, free: true, event: Combo },
             elements: vec![Element {
                 number: 1,
                 start_time: NaiveTime::from_hms_opt(0, 0, 0).unwrap(),

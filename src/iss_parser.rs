@@ -127,7 +127,7 @@ fn parse_elements(
                     let dd = if dd_col.is_float() { dd_col.to_string() } else { String::new() };
                     let decls = row1_cols
                         .filter(|x| x.is_string() && *x != "Hybrid")
-                        .map(std::string::ToString::to_string)
+                        .map(ToString::to_string)
                         .collect::<Vec<_>>()
                         .iter()
                         .flat_map(|x| x.split_whitespace())
@@ -209,7 +209,7 @@ fn parse_iss_card(name: &str, sheet: &Range<Data>) -> Vec<(String, CoachCard)> {
             aqua_card = false;
         }
         if row_name.starts_with("Theme") {
-            card.theme = cols.next().map_or_else(String::new, std::string::ToString::to_string);
+            card.theme = cols.next().map_or_else(String::new, ToString::to_string);
         }
         if row_name.starts_with("Age Group") {
             card.category.ag = cols.next().map_or_else(AgeGroups::default, |col| {
