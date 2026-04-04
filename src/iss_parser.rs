@@ -1,5 +1,5 @@
 use crate::ElementKind::{ChoHy, Hybrid, PairAcro, SuConn, TRE, TeamAcro};
-use crate::Events::{Duet, Trio, Unknown};
+use crate::Events::{Duet, Trio};
 use crate::{AgeGroups, Category, CoachCard, Element, Events, TeamAcrobatic};
 use calamine::{Data, DataType, Range, Reader, Rows, Xls, Xlsx};
 use chrono::NaiveTime;
