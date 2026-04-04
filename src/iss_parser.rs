@@ -103,7 +103,7 @@ fn parse_report(sheet: &Range<Data>) -> Vec<(String, CoachCard)> {
     for (i, row) in (0u32..).zip(sheet.rows()) {
         let mut cols = row.iter().filter(|x| !x.is_empty());
         let first_col = cols.next().unwrap_or(&Data::Empty);
-        if first_col == "EVENT" && category.event == Unknown {
+        if first_col == "EVENT" {
             let event_txt =
                 cols.next().map_or_else(String::new, ToString::to_string).to_uppercase();
             category.ag = AgeGroups::from_str(event_txt.as_str());
