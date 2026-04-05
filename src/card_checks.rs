@@ -43,7 +43,7 @@ fn points_for_declaration<T: AsRef<str>>(declaration: T) -> usize {
 fn check_max_families<T: AsRef<str>>(decls: &[T], family_regex: &Regex) -> usize {
     let matching_families = decls.iter().filter(|value| family_regex.is_match(value.as_ref()));
     let points = matching_families.map(points_for_declaration);
-    points.reduce(|total, item| total + item).unwrap_or(0)
+    points.reduce(|total, item| total + item).unwrap_or_default()
 }
 
 fn check_hybrid_declaration_maxes(category: Category, decls: &[String]) -> CardIssues {
@@ -70,7 +70,7 @@ fn check_hybrid_declaration_maxes(category: Category, decls: &[String]) -> CardI
     for decl in decls {
         let base_name = factor_regex.replace_all(decl.as_ref(), "").replace('+', "");
         let points =
-            decl_points.get(&base_name).copied().unwrap_or(0) + points_for_declaration(decl);
+            decl_points.get(&base_name).copied().unwrap_or_default() + points_for_declaration(decl);
         decl_points.insert(base_name, points);
     }
 
