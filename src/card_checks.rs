@@ -8,13 +8,11 @@ use regex_lite::Regex;
 use std::collections::HashMap;
 use std::time::Duration;
 
-macro_rules! hybrids {
-    ($elements:expr) => {
-        $elements.iter().filter_map(|e| match &e.kind {
-            Hybrid(decl, dd) => Some((e.number, decl, dd)),
-            _ => None,
-        })
-    };
+fn hybrids(v: &[Element]) -> impl Iterator<Item = (usize, &Vec<String>, &String)> {
+    v.iter().filter_map(|e| match &e.kind {
+        Hybrid(decl, dd) => Some((e.number, decl, dd)),
+        _ => None,
+    })
 }
 
 use crate::ElementKind::{ChoHy, Hybrid, PairAcro, SuConn, TRE, TeamAcro};
@@ -352,7 +350,7 @@ fn check_mixed_duet_elements(card: &CoachCard) -> CardIssues {
     let conn_regex = Regex::new(r"^C[\dB][A-z]?").unwrap();
     let thrust_regex = Regex::new(r"^T[\dB]").unwrap();
     let other_families_regex = Regex::new(r"^[AFRS]").unwrap();
-    let hybrids = hybrids!(card.elements);
+    let hybrids = hybrids(&card.elements);
     let con_thrust_hybrids = hybrids
         .filter(|(_, declarations, _)| {
             declarations.iter().filter(|decl| conn_regex.is_match(decl)).count() == 2
@@ -563,7 +561,7 @@ fn check_routine_has_all_families(card: &CoachCard) -> CardIssues {
         has_family_map.insert(family, false);
     }
 
-    for (_, hybrid, _) in hybrids!(card.elements) {
+    for (_, hybrid, _) in hybrids(&card.elements) {
         for decl in hybrid {
             for (family, rx) in &regex_map {
                 if rx.is_match(decl) {

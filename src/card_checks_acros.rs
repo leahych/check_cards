@@ -3,27 +3,25 @@ use crate::AcroGroup::{Airborne, Balance, Combined, Platform};
 use crate::AgeGroups::{AG12U, JRSR, Youth};
 use crate::ElementKind::{PairAcro, TeamAcro};
 use crate::Events::{Acrobatic, Combo, Duet, MixedDuet, Solo, Team, Trio};
-use crate::{AcroGroup, AgeGroups, CardIssues, Category, CoachCard, Events, TeamAcrobatic};
+use crate::{
+    AcroGroup, AgeGroups, CardIssues, Category, CoachCard, Element, Events, TeamAcrobatic,
+};
 use regex_lite::Regex;
 use std::cmp::Ordering;
 use std::collections::{HashMap, HashSet};
 
-macro_rules! pair_acros {
-    ($elements:expr) => {
-        $elements.iter().filter_map(|e| match &e.kind {
-            PairAcro(d) => Some((e.number, d)),
-            _ => None,
-        })
-    };
+fn pair_acros(v: &[Element]) -> impl Iterator<Item = (usize, &String)> {
+    v.iter().filter_map(|e| match &e.kind {
+        PairAcro(d) => Some((e.number, d)),
+        _ => None,
+    })
 }
 
-macro_rules! team_acros {
-    ($elements:expr) => {
-        $elements.iter().filter_map(|e| match &e.kind {
-            TeamAcro(d, dd) => Some((e.number, d, dd)),
-            _ => None,
-        })
-    };
+fn team_acros(v: &[Element]) -> impl Iterator<Item = (usize, &TeamAcrobatic, &String)> {
+    v.iter().filter_map(|e| match &e.kind {
+        TeamAcro(d, dd) => Some((e.number, d, dd)),
+        _ => None,
+    })
 }
 
 fn check_dd_limits(category: Category, group: AcroGroup, dd: &str) -> CardIssues {
@@ -71,7 +69,7 @@ fn check_groups_for_acro_routine(card: &CoachCard) -> CardIssues {
     }
 
     let mut group_counts = HashMap::<AcroGroup, usize>::new();
-    for (num, acro, _) in team_acros!(card.elements) {
+    for (num, acro, _) in team_acros(&card.elements) {
         let mut count = *group_counts.get(&acro.group).unwrap_or(&0usize);
         count += 1;
         group_counts.insert(acro.group, count);
@@ -94,7 +92,7 @@ fn check_groups_for_acro_routine(card: &CoachCard) -> CardIssues {
 fn check_duplicate_pair_acros(card: &CoachCard) -> CardIssues {
     let mut ci = CardIssues::default();
     let mut prev_acros = HashSet::new();
-    for (num, acro) in pair_acros!(card.elements) {
+    for (num, acro) in pair_acros(&card.elements) {
         if prev_acros.contains(&acro) {
             ci.errors.push(format!(
                 "Element {num}: cannot repeat acrobatics in {:?}",
@@ -131,13 +129,13 @@ fn check_duplicate_elements<'a, F: Fn(&TeamAcrobatic) -> Vec<String>>(
 
 fn check_team_duplicate_acros(card: &CoachCard) -> CardIssues {
     let group_a: Vec<(usize, &TeamAcrobatic, &String)> =
-        team_acros!(card.elements).filter(|(_, acro, _)| acro.group == Airborne).collect();
+        team_acros(&card.elements).filter(|(_, acro, _)| acro.group == Airborne).collect();
     let group_b: Vec<(usize, &TeamAcrobatic, &String)> =
-        team_acros!(card.elements).filter(|(_, acro, _)| acro.group == Balance).collect();
+        team_acros(&card.elements).filter(|(_, acro, _)| acro.group == Balance).collect();
     let group_c: Vec<(usize, &TeamAcrobatic, &String)> =
-        team_acros!(card.elements).filter(|(_, acro, _)| acro.group == Combined).collect();
+        team_acros(&card.elements).filter(|(_, acro, _)| acro.group == Combined).collect();
     let group_p: Vec<(usize, &TeamAcrobatic, &String)> =
-        team_acros!(card.elements).filter(|(_, acro, _)| acro.group == Platform).collect();
+        team_acros(&card.elements).filter(|(_, acro, _)| acro.group == Platform).collect();
 
     let positions = |a: &TeamAcrobatic| {
         a.positions.iter().map(|p| p.strip_prefix('2').unwrap_or(p).to_string()).collect()
@@ -1019,7 +1017,7 @@ fn check_pair_acro_common_base_marks(card: &CoachCard) -> CardIssues {
         return ci;
     }
 
-    for (num, acro) in pair_acros!(card.elements) {
+    for (num, acro) in pair_acros(&card.elements) {
         if acro == "J" || acro == "Jf" {
             // these can crash on the surface even though they don't end
             // '»', so we won't warn on them
@@ -1094,7 +1092,7 @@ fn check_pair_acro_validity(card: &CoachCard) -> CardIssues {
     ];
 
     let mut ci = CardIssues::default();
-    for (num, acro) in pair_acros!(card.elements) {
+    for (num, acro) in pair_acros(&card.elements) {
         if !PAIR_ACROS.contains(&acro.as_str()) {
             ci.errors.push(format!("Element {num}: {acro} is not a valid pair acro"));
         }
@@ -1139,7 +1137,7 @@ pub fn run_acro_checks(card: &CoachCard) -> CardIssues {
         ci += check(card);
     }
     if card.category.event.is_team_event() {
-        for (num, acro, dd) in team_acros!(card.elements) {
+        for (num, acro, dd) in team_acros(&card.elements) {
             let mut element_ci = check_one_acro(card.category, acro, dd);
             let prefix = format!("Element {num}: ");
             for err in &mut element_ci.errors {
