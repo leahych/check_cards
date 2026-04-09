@@ -53,8 +53,18 @@ fn parse_elements(sheet: Rows<Data>, team_event: bool) -> (Vec<Element>, NaiveTi
             }
             "ACRO" | "ACROBATIC" | "ACRO-A" | "ACRO-B" | "ACRO-C" | "ACRO-P" => {
                 if team_event {
-                    row_cols.next(); // base mark/acro type
-                    let code = row_cols.next().map_or_else(String::new, ToString::to_string);
+                    //row_cols.next(); // base mark/acro type
+                    let prefixes = &["ACRO-A", "ACRO-B", "ACRO-C", "ACRO-P"];
+                    let code = row_cols
+                        .find_map(|x| {
+                            if x.is_string() && !prefixes.contains(&&*x.to_string()) {
+                                x.as_string()
+                            } else {
+                                None
+                            }
+                        })
+                        .unwrap_or_default()
+                        .replace('\n', "");
                     if let Ok(acro) = TeamAcrobatic::from(code.as_str()) {
                         TeamAcro(acro, dd)
                     } else {
