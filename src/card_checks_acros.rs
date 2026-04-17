@@ -767,51 +767,45 @@ fn check_connection(acro: &TeamAcrobatic) -> CardIssues {
     let mut ci = CardIssues::default();
     let first_pos = acro.positions.first().map_or("", |v| v.as_str());
     match acro.connection_grip.as_str() {
-        "FS" | "F2A" => {
-            if !TWO_FOOT_POSITIONS.contains(&first_pos) {
-                ci.warnings.push(format!(
-                    "expected two foot position with {}, but found {first_pos}",
-                    acro.connection_grip
-                ));
-            }
+        "FS" | "F2A" if !TWO_FOOT_POSITIONS.contains(&first_pos) => {
+            ci.warnings.push(format!(
+                "expected two foot position with {}, but found {first_pos}",
+                acro.connection_grip
+            ));
         }
         "1P1P" | "1P1F" | "1PPx" | "PP" | "PF" | "Bp" | "ShF" | "E" | "PH/" | "Tw" | "1pH"
         | "1PH" | "2pH" | "2PH" | "H1F/" | "HT+" | "SP+L" | "HA" | "ShF+P" | "2pA/" | ">2P2P"
-        | "HP+L" => {
-            if !B_HEAD_DOWN_POSITIONS.contains(&first_pos) && !B_FREE_POSITIONS.contains(&first_pos)
-            {
-                ci.warnings.push(format!(
-                    "expected head-down position with {}, but found {first_pos}",
-                    acro.connection_grip
-                ));
-            }
+        | "HP+L"
+            if !B_HEAD_DOWN_POSITIONS.contains(&first_pos)
+                && !B_FREE_POSITIONS.contains(&first_pos) =>
+        {
+            ci.warnings.push(format!(
+                "expected head-down position with {}, but found {first_pos}",
+                acro.connection_grip
+            ));
         }
         "FP" | "FF" | "FF/" | "SiSb" | "F1S" | "SiF" | "1FH+1FP" | "1F1P" | "1F1F" | "FAb"
-        | "SiF+Pb" => {
-            if !head_up_positions.contains(&first_pos) {
-                ci.warnings.push(format!(
-                    "expected head-up position with {}, but found {first_pos}",
-                    acro.connection_grip
-                ));
-            }
+        | "SiF+Pb"
+            if !head_up_positions.contains(&first_pos) =>
+        {
+            ci.warnings.push(format!(
+                "expected head-up position with {}, but found {first_pos}",
+                acro.connection_grip
+            ));
         }
-        "LayF" | "S+" | "SiA" | "L/SiF+P" | "SF+TP" | "ShiShi+" => {
-            if !laying_positions.contains(&first_pos) {
-                ci.warnings.push(format!(
-                    "expected sit, stand, or lay position with {}, but found {first_pos}",
-                    acro.connection_grip
-                ));
-            }
+        "LayF" | "S+" | "SiA" | "L/SiF+P" | "SF+TP" | "ShiShi+"
+            if !laying_positions.contains(&first_pos) =>
+        {
+            ci.warnings.push(format!(
+                "expected sit, stand, or lay position with {}, but found {first_pos}",
+                acro.connection_grip
+            ));
         }
-        "BA" | "DBB" => {
-            if first_pos != "br" {
-                ci.errors.push(format!("{} requires bridge position", acro.connection_grip));
-            }
+        "BA" | "DBB" if first_pos != "br" => {
+            ci.errors.push(format!("{} requires bridge position", acro.connection_grip));
         }
-        "2pBb" => {
-            if first_pos != "qu" {
-                ci.errors.push(format!("2pBb requires queen position but found {first_pos}"));
-            }
+        "2pBb" if first_pos != "qu" => {
+            ci.errors.push(format!("2pBb requires queen position but found {first_pos}"));
         }
         // LiH | AP | SiS | Le | Tow | Li | Ch
         _ => {}
