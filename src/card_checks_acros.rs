@@ -840,11 +840,18 @@ fn check_group_c_positions(acro: &TeamAcrobatic) -> CardIssues {
     ]
     .concat();
 
-    if acro.construction.contains('^')
-        && (!all_b_positions.contains(&first_pos) || !A_POSITIONS.contains(&pos2))
+    if acro.construction.contains('^') {
+        if !all_b_positions.contains(&first_pos) || !A_POSITIONS.contains(&pos2) {
+            ci.errors.push(
+                "fly-above must have a balance position followed by an airborne position".into(),
+            );
+        }
+    } else if (all_b_positions.contains(&first_pos) && A_POSITIONS.contains(&pos2))
+        || (A_POSITIONS.contains(&first_pos) && all_b_positions.contains(&pos2))
     {
-        ci.errors
-            .push("fly-above must have a balance position followed by an airborne position".into());
+        ci.errors.push(
+            "Cannot have airborne and balance positions in Group C except for flyabove".into(),
+        );
     }
 
     if acro.construction == "Thr^Lh" && !(first_pos == "br" || first_pos == "ct") {
@@ -1523,7 +1530,7 @@ mod tests {
         let acros = [
             ("C-Thr>St-Forw-co", 0, 0),
             ("C-Thr>St-Forw-ln-Jump>", 0, 0),
-            ("C-Thr>St-Forw-ln/2co-Jump>", 1, 0),
+            ("C-Thr>St-Forw-ln/2co-Jump>", 2, 0),
             ("C-Thr>St-Forw-sd/2co-Jump", 0, 0),
             ("C-Thr>StH-Forw-sd/2bb-Jump", 0, 0),
             ("C-Thr>St-Forw-co-Jump>", 1, 0),
@@ -1533,11 +1540,12 @@ mod tests {
             ("C-Thr>St-Forw-ln", 0, 0),
             ("C-Thr>StH-Forw-ln", 0, 0),
             ("C-Thr>St-Forw-ln-Jump", 1, 0),
-            ("C-Thr>St-Forw-sd/2ja-Jump", 1, 0),
+            ("C-Thr>St-Forw-sd/2ja-Jump", 2, 0),
             ("C-Thr>St-Forw-ln/2ja-Jump>", 0, 0),
             ("C-Thr^St-Forw-ow/2ln-Jump>", 2, 0),
-            ("C-Thr>St-Forw-ow/2ln-Jump", 1, 0),
-            ("C-Thr>St-Forw-ow/2ln-Jump>", 1, 0),
+            ("C-Thr>St-Forw-ow/2ln-Jump", 2, 0),
+            ("C-Thr>St-Forw-ow/2ln-Jump>", 2, 0),
+            ("C-Thr>St-Back-mo/2tk", 1, 0),
             ("C-2Sup+-Up-spl", 1, 0),
             ("C-2Sup+-Up-sp", 0, 0),
             ("C-Thr>F-Side-ln", 1, 0),
