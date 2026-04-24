@@ -188,7 +188,7 @@ pub struct TeamAcrobatic {
     pub bonuses: Vec<String>,
 }
 
-fn is_rotation(group: AcroGroup, rotation: &str) -> Option<String> {
+fn is_rotation(group: AcroGroup, rotation: &str) -> bool {
     let r = Regex::new(match group {
         AcroGroup::Airborne => "^([cdhfst]|[CDH]$)", // or CDH but not things like Dbl
         AcroGroup::Balance => "^r",
@@ -197,14 +197,7 @@ fn is_rotation(group: AcroGroup, rotation: &str) -> Option<String> {
         AcroGroup::Platform => "^P[r|2S|DB|h|0.5h|1h|1.5h|2h]",
     })
     .unwrap();
-    if r.is_match(rotation) {
-        return Some(rotation.to_owned());
-    }
-    None
-}
-
-fn split_pos_bonus(part: &str) -> Vec<String> {
-    part.split('/').filter_map(|x| if x.is_empty() { None } else { Some(x.to_string()) }).collect()
+    r.is_match(rotation)
 }
 
 impl TeamAcrobatic {
@@ -220,14 +213,16 @@ impl TeamAcrobatic {
             Some("B") => AcroGroup::Balance,
             Some("C") => AcroGroup::Combined,
             Some("P") => AcroGroup::Platform,
-            group_name => return Err(format!("Unknown group '{}'", group_name.unwrap_or(""))),
+            other => {
+                return Err(format!("Unknown group '{}'", other.unwrap_or_default()));
+            }
         };
-        let construction = parts.next().unwrap_or("").to_owned();
+        let construction = parts.next().unwrap_or_default().to_owned();
         let mut direction = Option::<AcroDirection>::None;
         let mut connection_grip = String::new();
         match group {
             AcroGroup::Airborne | AcroGroup::Combined => {
-                direction = match parts.next().unwrap_or("").to_uppercase().as_str() {
+                direction = match parts.next().unwrap_or_default().to_uppercase().as_str() {
                     "UP" => Some(AcroDirection::Upwards),
                     "FORW" => Some(AcroDirection::Forwards),
                     "BACK" => Some(AcroDirection::Backwards),
@@ -237,14 +232,14 @@ impl TeamAcrobatic {
                         if group == AcroGroup::Combined {
                             Some(AcroDirection::Blind)
                         } else {
-                            return Err(format!("Cannot use Blind connection with {group:?}"));
+                            return Err(format!("Cannot use Blind direction with {group:?}"));
                         }
                     }
                     dir_name => return Err(format!("Unknown direction '{dir_name}'")),
                 };
             }
             AcroGroup::Balance | AcroGroup::Platform => {
-                parts.next().unwrap_or("").clone_into(&mut connection_grip);
+                parts.next().unwrap_or_default().clone_into(&mut connection_grip);
             }
         }
 
@@ -255,20 +250,25 @@ impl TeamAcrobatic {
         // acro is fine just because it uses "Kt" instead of "kt" and
         // a more specific test is only checking against the correct
         // name.
-        let positions = split_pos_bonus(parts.next().unwrap_or_default());
+        let positions = parts
+            .next()
+            .unwrap_or_default()
+            .split('/')
+            .filter_map(|x| if x.is_empty() { None } else { Some(x.to_owned()) })
+            .collect();
 
         let mut rotations = vec![];
         let mut bonuses = vec![];
         for rotation_or_bonuses in parts {
-            if is_rotation(group, rotation_or_bonuses).is_some() {
+            if is_rotation(group, rotation_or_bonuses) {
                 // group B has r+, while group C uses + for multiple rotations
                 if rotation_or_bonuses.ends_with('+') {
                     rotations.push(rotation_or_bonuses.to_owned());
                 } else {
-                    rotations.extend(rotation_or_bonuses.split('+').map(ToOwned::to_owned));
+                    rotations.extend(rotation_or_bonuses.split('+').map(str::to_owned));
                 }
             } else {
-                bonuses.extend(split_pos_bonus(rotation_or_bonuses));
+                bonuses.extend(rotation_or_bonuses.split('/').map(str::to_owned));
             }
         }
 
@@ -305,7 +305,7 @@ pub struct Category {
 impl fmt::Display for Category {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         let free_tech = if self.free { "Free" } else { "Tech" };
-        write!(f, "{} {} {}", self.ag.as_str(), self.event.as_str(), free_tech)
+        write!(f, "{} {} {free_tech}", self.ag.as_str(), self.event.as_str())
     }
 }
 
@@ -335,7 +335,7 @@ impl ops::Add for CardIssues {
     }
 }
 
-impl ops::AddAssign<Self> for CardIssues {
+impl ops::AddAssign for CardIssues {
     fn add_assign(&mut self, rhs: Self) {
         self.errors.extend(rhs.errors);
         self.warnings.extend(rhs.warnings);

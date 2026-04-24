@@ -36,15 +36,14 @@ fn parse_element(line: &str) -> Result<ElementKind, String> {
         return Ok(PairAcro(line.into()));
     }
 
-    Ok(Hybrid(line.split_whitespace().map(str::to_owned).collect::<Vec<_>>(), "1.0".into()))
+    Ok(Hybrid(line.split_whitespace().map(str::to_owned).collect(), "1.0".into()))
 }
 
 pub fn parse_text(ag: &str, free: bool, event: &str, input: &str) -> ParseResult {
     let category = Category { ag: AgeGroups::from_str(ag), free, event: Events::from_str(event) };
 
-    let lines = input.lines().collect::<Vec<_>>();
-    if lines.len() == 1 {
-        return match parse_element(lines[0]) {
+    if !input.contains('\n') {
+        return match parse_element(input) {
             Ok(element) => ParseResult::Element(category, element),
             Err(e) => ParseResult::Err(e),
         };
@@ -54,11 +53,7 @@ pub fn parse_text(ag: &str, free: bool, event: &str, input: &str) -> ParseResult
     if let Some(time) = get_expected_routine_time(&category) {
         card.end_time = *time;
     }
-    for (i, line) in lines.iter().enumerate() {
-        let line = line.trim();
-        if line.is_empty() {
-            continue;
-        }
+    for (i, line) in input.lines().map(str::trim).filter(|line| !line.is_empty()).enumerate() {
         match parse_element(line) {
             Ok(kind) => {
                 let start_second = u32::try_from(i).unwrap_or_default();
