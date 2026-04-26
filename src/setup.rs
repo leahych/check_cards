@@ -12,7 +12,7 @@ use web_sys::{
     Document, Event, HtmlInputElement, HtmlTableElement, HtmlTableSectionElement, js_sys,
 };
 
-const ACCEPT_LIST: [&str; 4] = [
+const ACCEPT_LIST: &[&str] = &[
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     "application/vnd.ms-excel",
     ".coachCard",
@@ -20,11 +20,9 @@ const ACCEPT_LIST: [&str; 4] = [
 ];
 
 fn is_supported_file(file: &gloo::file::File) -> bool {
-    if ACCEPT_LIST.contains(&file.raw_mime_type().as_str()) {
-        return true;
-    }
-
-    ACCEPT_LIST.into_iter().any(|accept| file.name().ends_with(accept))
+    ACCEPT_LIST
+        .iter()
+        .any(|accept| file.raw_mime_type().eq(accept) || file.name().ends_with(accept))
 }
 
 #[wasm_bindgen]
@@ -38,10 +36,7 @@ fn process_files(input_element: &HtmlInputElement) {
         Some(files) => gloo::file::FileList::from(files),
         None => return,
     };
-    for file in files.iter() {
-        if !is_supported_file(file) {
-            continue;
-        }
+    for file in files.iter().filter(|f| is_supported_file(f)) {
         let doc = input_element.owner_document().unwrap();
         let file = file.clone();
         js_sys::futures::spawn_local(async move {
@@ -86,7 +81,7 @@ fn add_card_issues(
     let thead = table.create_t_head().dyn_into::<HtmlTableSectionElement>()?;
 
     let th = document.create_element("th")?;
-    let name = name.rsplit_once('.').unwrap_or((name, "")).0;
+    let name = name.rsplit_once('.').map_or(name, |(l, _)| l);
     th.append_child(&document.create_text_node(name))?;
     let row = thead.insert_row()?;
     row.append_child(&th)?;
