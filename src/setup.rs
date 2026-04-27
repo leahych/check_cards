@@ -1,9 +1,9 @@
-use crate::CardIssues;
 use crate::ElementKind::TeamAcro;
 use crate::card_checks::{check_one_element, run_checks};
 use crate::card_checks_acros::{check_one_acro, run_acro_checks};
 use crate::iss_parser::parse_excel;
 use crate::text_parser::{ParseResult, parse_text};
+use crate::{CardIssue, ci_errs};
 use gloo::utils::document;
 use std::io::Cursor;
 use std::panic;
@@ -75,7 +75,7 @@ fn main() {
 fn add_card_issues(
     document: &Document,
     name: &str,
-    issues: &CardIssues,
+    issues: &[CardIssue],
 ) -> Result<HtmlTableElement, JsValue> {
     let table = document.create_element("table").unwrap().dyn_into::<HtmlTableElement>()?;
     let thead = table.create_t_head().dyn_into::<HtmlTableSectionElement>()?;
@@ -86,55 +86,46 @@ fn add_card_issues(
     let row = thead.insert_row()?;
     row.append_child(&th)?;
 
-    if issues.errors.is_empty() && issues.warnings.is_empty() {
+    if issues.is_empty() {
         let row = table.insert_row()?;
         row.append_child(&document.create_text_node("\u{2705} No problems found!"))?;
     }
 
-    for issue in &issues.errors {
+    for issue in issues {
         let row = table.insert_row()?;
-        row.append_child(&document.create_text_node(&("\u{26D4} ".to_owned() + issue)))?;
-    }
-
-    for issue in &issues.warnings {
-        let row = table.insert_row()?;
-        row.append_child(&document.create_text_node(&("\u{26A0} ".to_owned() + issue)))?;
+        row.append_child(&document.create_text_node(&(format!("{issue}"))))?;
     }
 
     Ok(table)
 }
 
 fn blob_to_issues(
-    name: &str,
+    fname: &str,
     file: Result<Vec<u8>, gloo::file::FileReadError>,
-) -> Vec<(String, CardIssues)> {
-    let mut issues = Vec::new();
+) -> Vec<(String, Vec<CardIssue>)> {
+    let mut issues: Vec<(String, Vec<CardIssue>)> = Vec::new();
     match file {
         Ok(buf) => {
             let mut c = Cursor::new(buf);
-            match parse_excel(name, &mut c) {
+            match parse_excel(fname, &mut c) {
                 Ok(cards) => {
-                    for (card_name, card) in cards {
-                        issues.push((card_name, run_checks(&card) + run_acro_checks(&card)));
+                    for (cname, card) in cards {
+                        issues.push((cname, [run_checks(&card), run_acro_checks(&card)].concat()));
                     }
                 }
                 Err(e) => {
-                    let mut ci = CardIssues::default();
-                    ci.errors.push(format!("could not parse file: {e}"));
-                    issues.push((name.to_string(), ci));
+                    issues.push((fname.into(), ci_errs(format!("could not parse file: {e}"))));
                 }
             }
         }
         Err(e) => {
-            let mut ci = CardIssues::default();
-            ci.errors.push(format!("could not read file: {e}"));
-            issues.push((name.to_string(), ci));
+            issues.push((fname.into(), ci_errs(format!("could not read file: {e}"))));
         }
     }
     issues
 }
 
-fn text_to_issues(ag: &str, free: bool, event: &str, input: &str) -> Vec<(String, CardIssues)> {
+fn text_to_issues(ag: &str, free: bool, event: &str, input: &str) -> Vec<(String, Vec<CardIssue>)> {
     let mut issues = Vec::new();
 
     let result = parse_text(ag, free, event, input);
@@ -147,12 +138,10 @@ fn text_to_issues(ag: &str, free: bool, event: &str, input: &str) -> Vec<(String
             },
         )),
         ParseResult::Card(card) => {
-            issues.push((String::new(), run_checks(&card) + run_acro_checks(&card)));
+            issues.push((String::new(), [run_checks(&card), run_acro_checks(&card)].concat()));
         }
         ParseResult::Err(e) => {
-            let mut ci = CardIssues::default();
-            ci.errors.push(format!("could not parse input: {e}"));
-            issues.push((String::new(), ci));
+            issues.push((String::new(), ci_errs(format!("could not parse input: {e}"))));
         }
     }
 
@@ -160,8 +149,7 @@ fn text_to_issues(ag: &str, free: bool, event: &str, input: &str) -> Vec<(String
 }
 
 fn clear_issues(document: &Document) {
-    let results = document.get_element_by_id("results");
-    if let Some(results) = results {
+    if let Some(results) = document.get_element_by_id("results") {
         let children = results.children();
         for i in 0..children.length() {
             if let Some(child) = children.get_with_index(i) {
@@ -171,9 +159,8 @@ fn clear_issues(document: &Document) {
     }
 }
 
-fn show_issues(document: &Document, issues: Vec<(String, CardIssues)>) {
-    let results = document.get_element_by_id("results");
-    if let Some(results) = results {
+fn show_issues(document: &Document, issues: Vec<(String, Vec<CardIssue>)>) {
+    if let Some(results) = document.get_element_by_id("results") {
         for (card_name, ci) in issues {
             let table = add_card_issues(document, &card_name, &ci);
             if let Ok(table) = table {
@@ -192,34 +179,31 @@ mod tests {
         let issues = blob_to_issues("", Err(gloo::file::FileReadError::NotReadable("".to_owned())));
         assert_eq!(issues.len(), 1);
         let ci = &issues[0].1;
-        assert_eq!(ci.errors.len(), 1);
-        assert_eq!(ci.warnings.len(), 0);
+        assert_eq!(ci.len(), 1);
 
         let issues = blob_to_issues("", Ok(vec![]));
         let ci = &issues[0].1;
-        assert_eq!(ci.errors.len(), 1);
-        assert_eq!(ci.warnings.len(), 0);
+        assert_eq!(ci.len(), 1);
 
         let data = std::fs::read("./tests/SENIOR-Team_Free-PRELIMS-OCC-.xlsx")
             .expect("Could not open file");
         let issues = blob_to_issues("", Ok(data));
         let ci = &issues[0].1;
-        assert_eq!(ci.errors.len(), 0);
-        assert_eq!(ci.warnings.len(), 0);
+        assert_eq!(ci.len(), 0);
     }
 
     #[test]
     fn test_text_to_issues() {
         let res = text_to_issues("12-U", true, "Solo", "A4a 2R1 S1");
         assert_eq!(res.len(), 1);
-        assert_eq!(res[0].1, CardIssues::default());
+        assert!(res[0].1.is_empty());
 
         let res = text_to_issues("12-U", true, "Team", "B-St-FS-sd");
         assert_eq!(res.len(), 1);
-        assert_eq!(res[0].1, CardIssues::default());
+        assert!(res[0].1.is_empty());
 
         let res = text_to_issues("12-U", true, "Solo", "A4a 2R1 S1\nF1a F2a\nT6a\nF1b F6a");
         assert_eq!(res.len(), 1);
-        assert_eq!(res[0].1, CardIssues::default());
+        assert!(res[0].1.is_empty());
     }
 }

@@ -6,13 +6,13 @@ mod text_parser;
 
 use crate::AgeGroups::{AG12U, JRSR, Youth};
 use crate::Events::{Acrobatic, Combo, Duet, MixedDuet, Solo, Team, Trio};
+use crate::IssueLevel::{Error, Warning};
 pub use crate::iss_parser::parse_excel;
 use chrono::NaiveTime;
-use core::ops;
 use regex_lite::Regex;
 use std::collections::HashMap;
 use std::fmt;
-use std::fmt::Formatter;
+use std::fmt::{Display, Formatter};
 
 #[derive(Copy, Clone, Debug, Default, Hash, PartialEq, Eq)]
 pub enum AgeGroups {
@@ -189,15 +189,15 @@ pub struct TeamAcrobatic {
 }
 
 fn is_rotation(group: AcroGroup, rotation: &str) -> bool {
-    let r = Regex::new(match group {
+    Regex::new(match group {
         AcroGroup::Airborne => "^([cdhfst]|[CDH]$)", // or CDH but not things like Dbl
         AcroGroup::Balance => "^r",
         AcroGroup::Combined => "^(C[cdfhrstP]|2F)",
         // consistency is the hobgoblin of little minds
         AcroGroup::Platform => "^P[r|2S|DB|h|0.5h|1h|1.5h|2h]",
     })
-    .unwrap();
-    r.is_match(rotation)
+    .unwrap()
+    .is_match(rotation)
 }
 
 impl TeamAcrobatic {
@@ -302,7 +302,7 @@ pub struct Category {
     pub event: Events,
 }
 
-impl fmt::Display for Category {
+impl Display for Category {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         let free_tech = if self.free { "Free" } else { "Tech" };
         write!(f, "{} {} {free_tech}", self.ag.as_str(), self.event.as_str())
@@ -318,28 +318,53 @@ pub struct CoachCard {
     pub iss_ver: Option<semver::Version>,
 }
 
-#[derive(Clone, Default, PartialEq, Eq, Debug)]
-pub struct CardIssues {
-    errors: Vec<String>,
-    warnings: Vec<String>,
+#[derive(Clone, Copy, Debug)]
+pub enum IssueLevel {
+    Warning,
+    Error,
 }
 
-impl ops::Add for CardIssues {
-    type Output = Self;
-
-    fn add(self, rhs: Self) -> Self {
-        Self {
-            errors: [self.errors, rhs.errors].concat(),
-            warnings: [self.warnings, rhs.warnings].concat(),
+impl Display for IssueLevel {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Warning => write!(f, "\u{26A0}"),
+            Self::Error => write!(f, "\u{26D4}"),
         }
     }
 }
 
-impl ops::AddAssign for CardIssues {
-    fn add_assign(&mut self, rhs: Self) {
-        self.errors.extend(rhs.errors);
-        self.warnings.extend(rhs.warnings);
+#[derive(Debug, Clone)]
+pub struct CardIssue {
+    pub level: IssueLevel,
+    pub text: String,
+}
+
+impl CardIssue {
+    fn new(level: IssueLevel, text: impl Into<String>) -> Self {
+        Self { level, text: text.into() }
     }
+}
+
+impl Display for CardIssue {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        write!(f, "{} {}", self.level, self.text)
+    }
+}
+
+pub fn ci_err(ci: &mut Vec<CardIssue>, text: impl Into<String>) {
+    ci.push(CardIssue::new(Error, text));
+}
+
+pub fn ci_errs(text: impl Into<String>) -> Vec<CardIssue> {
+    vec![CardIssue::new(Error, text)]
+}
+
+pub fn ci_warn(ci: &mut Vec<CardIssue>, text: impl Into<String>) {
+    ci.push(CardIssue::new(Warning, text));
+}
+
+pub fn ci_warns(text: impl Into<String>) -> Vec<CardIssue> {
+    vec![CardIssue::new(Warning, text)]
 }
 
 #[cfg(test)]

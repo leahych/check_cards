@@ -1,8 +1,8 @@
 use crate::AgeGroups::{AG12U, JRSR, Youth};
 use crate::Events::{Acrobatic, Combo, Duet, MixedDuet, Solo, Team, Trio};
 use crate::{
-    AgeGroups, CardIssues, Category, CoachCard, Element, ElementKind, Events, TeamAcrobatic,
-    get_expected_routine_time,
+    AgeGroups, CardIssue, Category, CoachCard, Element, ElementKind, Events, TeamAcrobatic, ci_err,
+    ci_errs, ci_warn, ci_warns, get_expected_routine_time,
 };
 use regex_lite::Regex;
 use std::collections::HashMap;
@@ -18,15 +18,15 @@ fn hybrids(v: &[Element]) -> impl Iterator<Item = (usize, &Vec<String>, &String)
 use crate::ElementKind::{ChoHy, Hybrid, PairAcro, SuConn, TRE, TeamAcro};
 
 const LATEST_ISS_VERSION: semver::Version = semver::Version::new(3, 0, 5);
-fn check_iss_version(card: &CoachCard) -> CardIssues {
-    let mut ci = CardIssues::default();
-    if let Some(iss_ver) = card.iss_ver.as_ref()
-        && iss_ver < &LATEST_ISS_VERSION
+fn check_iss_version(card: &CoachCard) -> Vec<CardIssue> {
+    if let Some(ver) = card.iss_ver.as_ref()
+        && ver < &LATEST_ISS_VERSION
     {
-        ci.warnings
-            .push(format!("Card produced with version {iss_ver}, latest is {LATEST_ISS_VERSION}"));
+        return ci_warns(format!(
+            "Card created with version {ver}, latest is {LATEST_ISS_VERSION}"
+        ));
     }
-    ci
+    Vec::new()
 }
 
 fn points_for_declaration<T: AsRef<str>>(declaration: T) -> usize {
@@ -41,13 +41,16 @@ fn points_for_declaration<T: AsRef<str>>(declaration: T) -> usize {
 }
 
 fn check_max_families<T: AsRef<str>>(decls: &[T], family_regex: &Regex) -> usize {
-    let matching_families = decls.iter().filter(|value| family_regex.is_match(value.as_ref()));
-    let points = matching_families.map(points_for_declaration);
-    points.reduce(|total, item| total + item).unwrap_or_default()
+    decls
+        .iter()
+        .filter(|value| family_regex.is_match(value.as_ref()))
+        .map(points_for_declaration)
+        .reduce(|total, item| total + item)
+        .unwrap_or_default()
 }
 
-fn check_hybrid_declaration_maxes(category: Category, decls: &[String]) -> CardIssues {
-    let mut ci = CardIssues::default();
+fn check_hybrid_declaration_maxes(category: Category, decls: &[String]) -> Vec<CardIssue> {
+    let mut ci = Vec::new();
 
     let max_families: &[(&str, &str)] = &[
         ("Airborne Weight", "^A"),
@@ -61,7 +64,7 @@ fn check_hybrid_declaration_maxes(category: Category, decls: &[String]) -> CardI
     for (name, rx_str) in max_families {
         let rx = Regex::new(rx_str).unwrap();
         if check_max_families(decls, &rx) > 50 {
-            ci.errors.push(format!("{name} can only be declared 5 times"));
+            ci_err(&mut ci, format!("{name} can only be declared 5 times"));
         }
     }
 
@@ -76,22 +79,25 @@ fn check_hybrid_declaration_maxes(category: Category, decls: &[String]) -> CardI
 
     for (decl, points) in decl_points {
         if points > 30 {
-            ci.errors.push(format!("{decl} is used more than 3 times"));
+            ci_err(&mut ci, format!("{decl} is used more than 3 times"));
         } else if points > 20
             && decl.starts_with('C')
             && (category.event == Duet || category.event == MixedDuet)
         {
-            ci.errors.push(format!("Cannot have more than 2 connections ({decl}) with the same technique in Duet/Mixed Duet"));
+            ci_err(
+                &mut ci,
+                format!("Max of 2 connections ({decl}) with the same technique in Duets"),
+            );
         }
     }
     ci
 }
 
 struct ElementLimit {
-    cho_hy: usize,
-    su_conn: usize,
+    chohy: usize,
+    suconn: usize,
     tre: usize,
-    acrobatic: usize,
+    acro: usize,
     hybrid: usize,
 }
 
@@ -103,107 +109,107 @@ fn element_maxes(category: &Category) -> Option<&ElementLimit> {
             // 12-U
             (
                 Category { ag: AG12U, event: Solo, free: true },
-                ElementLimit { cho_hy: 0, su_conn: 0, tre: 0, acrobatic: 0, hybrid: 4 },
+                ElementLimit { chohy: 0, suconn: 0, tre: 0, acro: 0, hybrid: 4 },
             ),
             (
                 Category { ag: AG12U, event: Duet, free: true },
-                ElementLimit { cho_hy: 0, su_conn: 0, tre: 0, acrobatic: 1, hybrid: 4 },
+                ElementLimit { chohy: 0, suconn: 0, tre: 0, acro: 1, hybrid: 4 },
             ),
             (
                 Category { ag: AG12U, event: MixedDuet, free: true },
-                ElementLimit { cho_hy: 0, su_conn: 3, tre: 0, acrobatic: 2, hybrid: 3 },
+                ElementLimit { chohy: 0, suconn: 3, tre: 0, acro: 2, hybrid: 3 },
             ),
             (
                 Category { ag: AG12U, event: Team, free: true },
-                ElementLimit { cho_hy: 0, su_conn: 0, tre: 0, acrobatic: 3, hybrid: 4 },
+                ElementLimit { chohy: 0, suconn: 0, tre: 0, acro: 3, hybrid: 4 },
             ),
             (
                 Category { ag: AG12U, event: Combo, free: true },
-                ElementLimit { cho_hy: 1, su_conn: 0, tre: 0, acrobatic: 3, hybrid: 4 },
+                ElementLimit { chohy: 1, suconn: 0, tre: 0, acro: 3, hybrid: 4 },
             ),
             // Youth free
             (
                 Category { ag: Youth, event: Solo, free: true },
-                ElementLimit { cho_hy: 0, su_conn: 0, tre: 0, acrobatic: 0, hybrid: 5 },
+                ElementLimit { chohy: 0, suconn: 0, tre: 0, acro: 0, hybrid: 5 },
             ),
             (
                 Category { ag: Youth, event: Duet, free: true },
-                ElementLimit { cho_hy: 0, su_conn: 0, tre: 0, acrobatic: 1, hybrid: 5 },
+                ElementLimit { chohy: 0, suconn: 0, tre: 0, acro: 1, hybrid: 5 },
             ),
             (
                 Category { ag: Youth, event: MixedDuet, free: true },
-                ElementLimit { cho_hy: 0, su_conn: 3, tre: 0, acrobatic: 2, hybrid: 3 },
+                ElementLimit { chohy: 0, suconn: 3, tre: 0, acro: 2, hybrid: 3 },
             ),
             (
                 Category { ag: Youth, event: Team, free: true },
-                ElementLimit { cho_hy: 0, su_conn: 0, tre: 0, acrobatic: 3, hybrid: 5 },
+                ElementLimit { chohy: 0, suconn: 0, tre: 0, acro: 3, hybrid: 5 },
             ),
             (
                 Category { ag: Youth, event: Combo, free: true },
-                ElementLimit { cho_hy: 1, su_conn: 0, tre: 0, acrobatic: 4, hybrid: 4 },
+                ElementLimit { chohy: 1, suconn: 0, tre: 0, acro: 4, hybrid: 4 },
             ),
             // Youth tech - USAAS experimental
             (
                 Category { ag: Youth, event: Solo, free: false },
-                ElementLimit { cho_hy: 0, su_conn: 0, tre: 5, acrobatic: 0, hybrid: 1 },
+                ElementLimit { chohy: 0, suconn: 0, tre: 5, acro: 0, hybrid: 1 },
             ),
             (
                 Category { ag: Youth, event: Duet, free: false },
-                ElementLimit { cho_hy: 0, su_conn: 0, tre: 5, acrobatic: 1, hybrid: 1 },
+                ElementLimit { chohy: 0, suconn: 0, tre: 5, acro: 1, hybrid: 1 },
             ),
             (
                 Category { ag: Youth, event: MixedDuet, free: false },
-                ElementLimit { cho_hy: 0, su_conn: 3, tre: 3, acrobatic: 2, hybrid: 2 },
+                ElementLimit { chohy: 0, suconn: 3, tre: 3, acro: 2, hybrid: 2 },
             ),
             (
                 Category { ag: Youth, event: Team, free: false },
-                ElementLimit { cho_hy: 0, su_conn: 0, tre: 5, acrobatic: 1, hybrid: 2 },
+                ElementLimit { chohy: 0, suconn: 0, tre: 5, acro: 1, hybrid: 2 },
             ),
             // JR/SR free
             (
                 Category { ag: JRSR, event: Solo, free: true },
-                ElementLimit { cho_hy: 0, su_conn: 0, tre: 0, acrobatic: 0, hybrid: 6 },
+                ElementLimit { chohy: 0, suconn: 0, tre: 0, acro: 0, hybrid: 6 },
             ),
             (
                 Category { ag: JRSR, event: Duet, free: true },
-                ElementLimit { cho_hy: 0, su_conn: 0, tre: 0, acrobatic: 2, hybrid: 6 },
+                ElementLimit { chohy: 0, suconn: 0, tre: 0, acro: 2, hybrid: 6 },
             ),
             (
                 Category { ag: JRSR, event: MixedDuet, free: true },
-                ElementLimit { cho_hy: 0, su_conn: 4, tre: 0, acrobatic: 3, hybrid: 4 },
+                ElementLimit { chohy: 0, suconn: 4, tre: 0, acro: 3, hybrid: 4 },
             ),
             (
                 Category { ag: JRSR, event: Trio, free: true },
-                ElementLimit { cho_hy: 0, su_conn: 0, tre: 0, acrobatic: 3, hybrid: 5 },
+                ElementLimit { chohy: 0, suconn: 0, tre: 0, acro: 3, hybrid: 5 },
             ),
             (
                 Category { ag: JRSR, event: Team, free: true },
-                ElementLimit { cho_hy: 0, su_conn: 0, tre: 0, acrobatic: 3, hybrid: 6 },
+                ElementLimit { chohy: 0, suconn: 0, tre: 0, acro: 3, hybrid: 6 },
             ),
             (
                 Category { ag: JRSR, event: Acrobatic, free: true },
-                ElementLimit { cho_hy: 0, su_conn: 0, tre: 0, acrobatic: 7, hybrid: 0 },
+                ElementLimit { chohy: 0, suconn: 0, tre: 0, acro: 7, hybrid: 0 },
             ),
             (
                 Category { ag: JRSR, event: Combo, free: true },
-                ElementLimit { cho_hy: 1, su_conn: 0, tre: 0, acrobatic: 4, hybrid: 5 },
+                ElementLimit { chohy: 1, suconn: 0, tre: 0, acro: 4, hybrid: 5 },
             ),
             // JR/SR tech
             (
                 Category { ag: JRSR, event: Solo, free: false },
-                ElementLimit { cho_hy: 0, su_conn: 0, tre: 5, acrobatic: 0, hybrid: 1 },
+                ElementLimit { chohy: 0, suconn: 0, tre: 5, acro: 0, hybrid: 1 },
             ),
             (
                 Category { ag: JRSR, event: Duet, free: false },
-                ElementLimit { cho_hy: 0, su_conn: 0, tre: 5, acrobatic: 1, hybrid: 1 },
+                ElementLimit { chohy: 0, suconn: 0, tre: 5, acro: 1, hybrid: 1 },
             ),
             (
                 Category { ag: JRSR, event: MixedDuet, free: false },
-                ElementLimit { cho_hy: 0, su_conn: 3, tre: 3, acrobatic: 2, hybrid: 2 },
+                ElementLimit { chohy: 0, suconn: 3, tre: 3, acro: 2, hybrid: 2 },
             ),
             (
                 Category { ag: JRSR, event: Team, free: false },
-                ElementLimit { cho_hy: 0, su_conn: 0, tre: 5, acrobatic: 1, hybrid: 2 },
+                ElementLimit { chohy: 0, suconn: 0, tre: 5, acro: 1, hybrid: 2 },
             ),
         ])
     });
@@ -211,112 +217,76 @@ fn element_maxes(category: &Category) -> Option<&ElementLimit> {
 }
 
 fn count_elements(elements: &[Element]) -> ElementLimit {
-    let mut el = ElementLimit { cho_hy: 0, su_conn: 0, tre: 0, acrobatic: 0, hybrid: 0 };
+    let mut el = ElementLimit { chohy: 0, suconn: 0, tre: 0, acro: 0, hybrid: 0 };
     for element in elements {
         match element.kind {
-            ChoHy => el.cho_hy += 1,
-            SuConn => el.su_conn += 1,
+            ChoHy => el.chohy += 1,
+            SuConn => el.suconn += 1,
             TRE(..) => el.tre += 1,
-            PairAcro(..) | TeamAcro(..) => el.acrobatic += 1,
+            PairAcro(..) | TeamAcro(..) => el.acro += 1,
             Hybrid(..) => el.hybrid += 1,
         }
     }
     el
 }
 
-fn check_routine_element_maxes(card: &CoachCard) -> CardIssues {
-    let mut ci = CardIssues::default();
-    element_maxes(&card.category).map_or_else(
-        || {
-            ci.warnings.push(format!("Could not determine element limits for {}", card.category));
-        },
-        |maxes| {
-            let num_elements = count_elements(&card.elements);
-            if num_elements.cho_hy != maxes.cho_hy {
-                ci.errors.push(format!(
-                    "{} Choreography Hybrids expected in {}, but {} found",
-                    maxes.cho_hy, card.category, num_elements.cho_hy
-                ));
-            }
-            if num_elements.su_conn != maxes.su_conn {
-                ci.errors.push(format!(
-                    "{} Surface Connections expected in {}, but {} found",
-                    maxes.su_conn, card.category, num_elements.su_conn
-                ));
-            }
-            if num_elements.tre != maxes.tre {
-                ci.errors.push(format!(
-                    "{} TREs expected in {}, but {} found",
-                    maxes.tre, card.category, num_elements.tre
-                ));
-            }
-            if num_elements.acrobatic != maxes.acrobatic {
-                ci.errors.push(format!(
-                    "{} Acrobatics expected in {}, but {} found",
-                    maxes.acrobatic, card.category, num_elements.acrobatic
-                ));
-            }
-            if num_elements.hybrid != maxes.hybrid {
-                ci.errors.push(format!(
-                    "{} Hybrids expected in {}, but {} found",
-                    maxes.hybrid, card.category, num_elements.hybrid
-                ));
-            }
-        },
-    );
-    ci
-}
-
-fn check_theme(card: &CoachCard) -> CardIssues {
-    let mut ci = CardIssues::default();
-    let theme_error = match card.category.event {
-        Acrobatic | Combo => card.theme.is_empty(),
-        _ => false,
-    };
-    if theme_error {
-        ci.errors.push("A theme is required for acrobatic and Combo routines".into());
+fn check_routine_element_maxes(card: &CoachCard) -> Vec<CardIssue> {
+    fn check_max(num: usize, max: usize, name: &str, ci: &mut Vec<CardIssue>) {
+        if num != max {
+            ci_err(ci, format!("{max} {name} expected, but {num} found"));
+        }
     }
-    ci
+
+    element_maxes(&card.category).map_or_else(
+        || ci_warns(format!("Could not determine element limits for {}", card.category)),
+        |max| {
+            let mut ci = Vec::new();
+            let num = count_elements(&card.elements);
+            check_max(num.chohy, max.chohy, "Choreography Hybrids", &mut ci);
+            check_max(num.suconn, max.suconn, "Surface Connections", &mut ci);
+            check_max(num.tre, max.tre, "TREs", &mut ci);
+            check_max(num.acro, max.acro, "Acrobatics", &mut ci);
+            check_max(num.hybrid, max.hybrid, "Hybrids", &mut ci);
+            ci
+        },
+    )
 }
 
-fn check_small_bonuses(category: Category, decls: &[String]) -> CardIssues {
-    let mut ci = CardIssues::default();
+fn check_theme(card: &CoachCard) -> Vec<CardIssue> {
+    match card.category.event {
+        Acrobatic | Combo if card.theme.is_empty() => {
+            ci_errs("Theme is required for Acrobatic and Combo routines")
+        }
+        _ => Vec::new(),
+    }
+}
+
+fn check_small_bonuses(category: Category, decls: &[String]) -> Vec<CardIssue> {
     let is_small = category.event != Combo && category.event != Team;
     let re = Regex::new(r"\dPC").unwrap();
     if is_small && decls.iter().any(|decl| re.is_match(decl)) {
-        ci.errors.push(format!("{} cannot have Pattern Change bonuses", category.event.as_str()));
+        return ci_errs(format!("{} cannot have Pattern Change bonuses", category.event.as_str()));
     }
-    ci
+    Vec::new()
 }
 
-fn check_team_acro(category: Category, _: &TeamAcrobatic, _: &String) -> CardIssues {
-    let mut ci = CardIssues::default();
+fn check_team_acro(category: Category, _: &TeamAcrobatic, _: &String) -> Vec<CardIssue> {
     match category.event {
-        Solo => ci.errors.push("Acrobatic elements are not allowed in a solo".into()),
-        Duet | MixedDuet | Trio => {
-            ci.errors.push("Invalid Acrobatic element, must be one of Jump, Lift or Throw".into());
-        }
-        Acrobatic | Combo | Team | Events::Unknown => {}
+        Solo => ci_errs("Acrobatic elements are not allowed in a solo"),
+        Duet | MixedDuet | Trio => ci_errs(format!("Invalid Acrobatic for {category}")),
+        Acrobatic | Combo | Team | Events::Unknown => Vec::new(),
     }
-    ci
 }
 
-fn check_pair_acro(category: Category, _: &String) -> CardIssues {
-    let mut ci = CardIssues::default();
+fn check_pair_acro(category: Category, acro: &String) -> Vec<CardIssue> {
     match category.event {
-        Solo => ci.errors.push("Acrobatic elements are not allowed in a solo".into()),
-        Duet | MixedDuet | Trio | Events::Unknown => {}
-        Acrobatic | Combo | Team => {
-            ci.errors.push(
-                "Invalid Acrobatic element, must be one of Airborne, Balance, Platform or Combined"
-                    .into(),
-            );
-        }
+        Solo => ci_errs("Acrobatic elements are not allowed in a solo"),
+        Duet | MixedDuet | Trio | Events::Unknown => Vec::new(),
+        Acrobatic | Combo | Team => ci_errs(format!("Invalid Acrobatic '{acro}'")),
     }
-    ci
 }
 
-fn check_valid_hybrid_declarations(_: Category, decls: &[String]) -> CardIssues {
+fn check_valid_hybrid_declarations(_: Category, decls: &[String]) -> Vec<CardIssue> {
     let valid_decl_regex = Regex::new(concat!(
         "^(",
         r"(S([B1-9]|10)|SCD?[B1-6])(\*0.[35])?",
@@ -330,21 +300,19 @@ fn check_valid_hybrid_declarations(_: Category, decls: &[String]) -> CardIssues 
     ))
     .unwrap();
 
-    let mut ci = CardIssues::default();
+    let mut ci = Vec::new();
     for decl in decls {
         if !valid_decl_regex.is_match(decl) {
-            ci.errors.push(format!("'{decl}' is not a valid difficulty declaration"));
+            ci_err(&mut ci, format!("'{decl}' is not a valid difficulty declaration"));
         }
     }
     ci
 }
 
-// TODO this might change to only one thrust/2 connection but other decls are ok
-fn check_mixed_duet_elements(card: &CoachCard) -> CardIssues {
-    let mut ci = CardIssues::default();
+fn check_mixed_duet_elements(card: &CoachCard) -> Vec<CardIssue> {
     let expected_cat = Category { ag: JRSR, event: MixedDuet, free: false };
     if card.category != expected_cat {
-        return ci;
+        return Vec::new();
     }
 
     let conn_regex = Regex::new(r"^C[\dB][A-z]?").unwrap();
@@ -369,31 +337,32 @@ fn check_mixed_duet_elements(card: &CoachCard) -> CardIssues {
     for (_, declarations, _) in con_thrust_hybrids {
         let mut connections = declarations.iter().filter(|decl| conn_regex.is_match(decl));
         if connections.next() != connections.next() {
-            return ci;
+            return Vec::new();
         }
     }
-    ci.errors.push("Mixed Duet Tech routines must have one hybrid with only one Thrust and two different Connections".into());
-    ci
+    ci_errs(
+        "Mixed Duet Tech routines must have one hybrid with only one Thrust and two different Connections",
+    )
 }
 
-fn check_factoring(category: Category, decls: &[String]) -> CardIssues {
-    let mut ci = CardIssues::default();
+fn check_factoring(category: Category, decls: &[String]) -> Vec<CardIssue> {
+    let mut ci = Vec::new();
     let mut prev_decl = "";
     for decl in decls {
         if category.event == Solo && decl.contains("*0.") {
-            ci.errors.push("cannot factor in a Solo`".into());
+            ci_err(&mut ci, "cannot factor in a Solo`");
         }
         if category.event == Duet || category.event == MixedDuet {
             if decl.contains("0.3") {
-                ci.errors.push(" cannot factor by 0.3 in a Duet".into());
+                ci_err(&mut ci, " cannot factor by 0.3 in Duets");
             } else if Regex::new(r"^C.*0\.").unwrap().is_match(decl) {
-                ci.errors.push("factoring connections in a Duet seems suspicious".into());
+                ci_err(&mut ci, "factoring connections in a Duet seems suspicious");
             }
         }
         // don't warn about C4+*0.5 C2*0.3 since that is valid for a
         // 7-person tech team doing a line of 4 and a line of 3.
         if !category.free && decl.contains("*0.") && decl != "C4+*0.5" && decl != "C2b*0.3" {
-            ci.warnings.push(format!("factoring in a Tech {:?} seems suspicious", category.event));
+            ci_warn(&mut ci, format!("factoring in a Tech {:?} seems suspicious", category.event));
         }
 
         let conn_factored_rx = Regex::new(r"^C[\dB][A-z]?\*0.5").unwrap();
@@ -401,14 +370,17 @@ fn check_factoring(category: Category, decls: &[String]) -> CardIssues {
         if (conn_factored_rx.is_match(decl) && conn_plus_factored_rx.is_match(prev_decl))
             || (conn_plus_factored_rx.is_match(decl) && conn_factored_rx.is_match(prev_decl))
         {
-            ci.warnings.push("if factoring a connection because 5-7 are swimming, one connection should be factored by 0.3".into());
+            ci_warn(
+                &mut ci,
+                "if factoring a connection because 5-7 are swimming, one connection should be factored by 0.3",
+            );
         }
         if (prev_decl.starts_with("C4*0.") && decl == "C4+*0.5")
             || (prev_decl == "C4+*0.5" && decl.starts_with("C4*0."))
         {
-            ci.warnings.push(
-                "if factoring a C4+ because 5-7 are swimming, is the smaller group still doing C4?"
-                    .into(),
+            ci_warn(
+                &mut ci,
+                "if factoring C4+ because 5-7 are swimming, is the smaller group still doing C4?",
             );
         }
 
@@ -418,14 +390,12 @@ fn check_factoring(category: Category, decls: &[String]) -> CardIssues {
             && prev_decl_parts.len() == 2
             && decl_parts[0] == prev_decl_parts[0]
         {
-            ci.warnings.push(
-                "if two groups are doing the same choreography in two groups, do not factor".into(),
-            );
+            ci_warn(&mut ci, "if performing same choreography in two groups, do not factor");
         }
 
         let cplus_less_half_rx = Regex::new(r"^C[\dB][A-z]?\+\*0.3").unwrap();
         if cplus_less_half_rx.is_match(decl) {
-            ci.warnings.push("factoring C+ by 0.3 requires 9-10 athletes".into());
+            ci_warn(&mut ci, "factoring C+ by 0.3 requires 9-10 athletes");
         }
 
         prev_decl = decl;
@@ -433,96 +403,100 @@ fn check_factoring(category: Category, decls: &[String]) -> CardIssues {
     ci
 }
 
-fn check_routine_times(card: &CoachCard) -> CardIssues {
-    let mut ci = CardIssues::default();
+fn check_routine_times(card: &CoachCard) -> Vec<CardIssue> {
+    let mut ci = Vec::new();
     let expected_time = get_expected_routine_time(&card.category);
     if let Some(expected_time) = expected_time {
         let min_time = *expected_time - Duration::new(5, 0);
         let max_time = *expected_time + Duration::new(5, 0);
         if card.end_time < min_time || card.end_time > max_time {
-            ci.errors.push(format!(
-                "The end time of the routine, {}, is not between {} and {} as expected for a {}",
-                card.end_time.format("%M:%S"),
-                min_time.format("%M:%S"),
-                max_time.format("%M:%S"),
-                card.category
-            ));
+            ci_err(
+                &mut ci,
+                format!(
+                    "The end time of the routine, {}, is not between {} and {} as expected for a {}",
+                    card.end_time.format("%M:%S"),
+                    min_time.format("%M:%S"),
+                    max_time.format("%M:%S"),
+                    card.category
+                ),
+            );
         }
     } else {
-        ci.warnings.push(format!("Could not determine routine time for {}", card.category));
+        ci_warn(&mut ci, format!("Could not determine routine time for {}", card.category));
     }
     ci
 }
 
-fn check_tres(category: Category, tre: &str, dd: &str) -> CardIssues {
-    let mut ci = CardIssues::default();
+fn check_tres(category: Category, tre: &str, dd: &str) -> Vec<CardIssue> {
     if category.free {
-        ci.errors.push("TRE in free routine?".into());
-    } else {
-        let valid_tres = match category.event {
-            Solo => HashMap::from([
-                ("TRE1a", "2.7"),
-                ("TRE1b", "2.1"),
-                ("TRE2a", "3"),
-                ("TRE2b", "2.7"),
-                ("TRE3", "3.2"),
-                ("TRE4a", "2.9"),
-                ("TRE4b", "2.6"),
-                ("TRE5a", "2.4"),
-                ("TRE5b", "2.1"),
-            ]),
-            Duet => HashMap::from([
-                ("TRE1a", "3"),
-                ("TRE1b", "2.5"),
-                ("TRE2a", "2.8"),
-                ("TRE2b", "2.4"),
-                ("TRE3", "3.1"),
-                ("TRE4a", "3.2"),
-                ("TRE4b", "2.7"),
-                ("TRE5a", "2.3"),
-                ("TRE5b", "2.1"),
-            ]),
-            MixedDuet => HashMap::from([
-                ("TRE1a", "2.7"),
-                ("TRE1b", "2.5"),
-                ("TRE2a", "2.4"),
-                ("TRE2b", "2.2"),
-                ("TRE3", "3"),
-            ]),
-            Team => HashMap::from([
-                ("TRE1a", "2.5"),
-                ("TRE1b", "2.3"),
-                ("TRE2a", "2.6"),
-                ("TRE2b", "2.3"),
-                ("TRE3a", "2.6"),
-                ("TRE3b", "2.3"),
-                ("TRE4", "2.9"),
-                ("TRE5a", "2.4"),
-                ("TRE5b", "2.1"),
-            ]),
-            Acrobatic | Combo | Trio | Events::Unknown => HashMap::new(),
-        };
-        match valid_tres.get(&tre) {
-            Some(expected_dd) => {
-                // when someone enters a card into a textbox, we leave the DD as blank
-                // in that case we don't want to warn about that since there is no way
-                // for the user to fix that.
-                if !dd.is_empty() && dd != *expected_dd {
-                    ci.errors.push(format!(
-                        "expected {tre} to have a DD of {expected_dd} but DD is {dd}"
-                    ));
-                }
+        return ci_errs("TRE in free routine?");
+    }
+
+    let mut ci = Vec::new();
+    let valid_tres = match category.event {
+        Solo => HashMap::from([
+            ("TRE1a", "2.7"),
+            ("TRE1b", "2.1"),
+            ("TRE2a", "3"),
+            ("TRE2b", "2.7"),
+            ("TRE3", "3.2"),
+            ("TRE4a", "2.9"),
+            ("TRE4b", "2.6"),
+            ("TRE5a", "2.4"),
+            ("TRE5b", "2.1"),
+        ]),
+        Duet => HashMap::from([
+            ("TRE1a", "3"),
+            ("TRE1b", "2.5"),
+            ("TRE2a", "2.8"),
+            ("TRE2b", "2.4"),
+            ("TRE3", "3.1"),
+            ("TRE4a", "3.2"),
+            ("TRE4b", "2.7"),
+            ("TRE5a", "2.3"),
+            ("TRE5b", "2.1"),
+        ]),
+        MixedDuet => HashMap::from([
+            ("TRE1a", "2.7"),
+            ("TRE1b", "2.5"),
+            ("TRE2a", "2.4"),
+            ("TRE2b", "2.2"),
+            ("TRE3", "3"),
+        ]),
+        Team => HashMap::from([
+            ("TRE1a", "2.5"),
+            ("TRE1b", "2.3"),
+            ("TRE2a", "2.6"),
+            ("TRE2b", "2.3"),
+            ("TRE3a", "2.6"),
+            ("TRE3b", "2.3"),
+            ("TRE4", "2.9"),
+            ("TRE5a", "2.4"),
+            ("TRE5b", "2.1"),
+        ]),
+        Acrobatic | Combo | Trio | Events::Unknown => HashMap::new(),
+    };
+    match valid_tres.get(&tre) {
+        Some(expected_dd) => {
+            // when someone enters a card into a textbox, we leave the DD as blank
+            // in that case we don't want to warn about that since there is no way
+            // for the user to fix that.
+            if !dd.is_empty() && dd != *expected_dd {
+                ci_err(
+                    &mut ci,
+                    format!("expected {tre} to have a DD of {expected_dd} but DD is {dd}"),
+                );
             }
-            None => {
-                ci.errors.push(format!("{tre} is not a valid TRE for {:?}", category.event));
-            }
+        }
+        None => {
+            ci_err(&mut ci, format!("{tre} is not a valid TRE for {:?}", category.event));
         }
     }
     ci
 }
 
-fn check_connections_in_non_team(category: Category, decls: &[String]) -> CardIssues {
-    let mut ci = CardIssues::default();
+fn check_connections_in_non_team(category: Category, decls: &[String]) -> Vec<CardIssue> {
+    let mut ci = Vec::new();
     if category.event == Combo || category.event == Team {
         return ci;
     }
@@ -531,16 +505,16 @@ fn check_connections_in_non_team(category: Category, decls: &[String]) -> CardIs
     let cplus_regex = Regex::new(r"^C[\dB][A-z]?\+").unwrap();
     for decl in decls {
         if cplus_regex.is_match(decl) {
-            ci.errors.push("C+ connections can only be used in team routines".into());
+            ci_err(&mut ci, "C+ connections can only be used in team routines");
         } else if category.event == Solo && c_regex.is_match(decl) {
-            ci.errors.push("connections can not be used in solos".into());
+            ci_err(&mut ci, "connections can not be used in solos");
         }
     }
     ci
 }
 
-fn check_routine_has_all_families(card: &CoachCard) -> CardIssues {
-    let mut ci = CardIssues::default();
+fn check_routine_has_all_families(card: &CoachCard) -> Vec<CardIssue> {
+    let mut ci = Vec::new();
     if !card.category.free || card.category.event == Acrobatic {
         return ci;
     }
@@ -574,15 +548,13 @@ fn check_routine_has_all_families(card: &CoachCard) -> CardIssues {
 
     let missing_families = has_family_map.into_iter().filter(|(_, v)| !*v).map(|(k, _)| k);
     for family in missing_families {
-        ci.errors.push(format!(
-            "Routine needs at least one hybrid with at least one unfactored {family} declared"
-        ));
+        ci_err(&mut ci, format!("missing one hybrid with one unfactored {family} declared"));
     }
     ci
 }
 
-fn check_overlapping_elements(card: &CoachCard) -> CardIssues {
-    let mut ci = CardIssues::default();
+fn check_overlapping_elements(card: &CoachCard) -> Vec<CardIssue> {
+    let mut ci = Vec::new();
     if card.category.event != Combo {
         return ci;
     }
@@ -592,72 +564,62 @@ fn check_overlapping_elements(card: &CoachCard) -> CardIssues {
         if let Some(prev_elem) = prev_elem
             && elem.start_time < prev_elem.stop_time
         {
-            ci.errors.push(format!(
-                "Element {}: starts before Element {} ends",
-                elem.number,
-                elem.number - 1
-            ));
+            ci_err(
+                &mut ci,
+                format!("Element {}: starts before Element {} ends", elem.number, elem.number - 1),
+            );
         }
         prev_elem = Some(elem);
     }
     ci
 }
 
-fn check_dd_limits(category: Category, dd: &str) -> CardIssues {
-    let mut ci = CardIssues::default();
-    if category.ag != AG12U {
-        return ci;
+fn check_dd_limits(category: Category, dd: &str) -> Vec<CardIssue> {
+    if category.ag == AG12U && dd.parse().unwrap_or(0.0) > 7.0 {
+        return ci_warns("USAAS 12U routines may not have hybrid with a DD greater than 7");
     }
-
-    if dd.parse().unwrap_or(0.0) > 7.0 {
-        ci.errors.push("USAAS 12U routines may not have hybrid with a DD greater than 7".into());
-    }
-    ci
+    Vec::new()
 }
 
-fn check_category(card: &CoachCard) -> CardIssues {
-    let mut ci = CardIssues::default();
+fn check_category(card: &CoachCard) -> Vec<CardIssue> {
+    let mut ci = Vec::new();
     if card.category.ag == AgeGroups::Unknown {
-        ci.errors.push("Could not determine Age Group for card".to_string());
+        ci_err(&mut ci, "Could not determine Age Group for card");
     }
     if card.category.event == Events::Unknown {
-        ci.errors.push("Could not determine Event for card".to_string());
+        ci_err(&mut ci, "Could not determine Event for card");
     }
-
-    if card.category.ag == Youth && !card.category.free {
-        ci.warnings.push(
-            "Youth Tech routines are an experimental event, was this routine category detected correctly?"
-                .to_string(),
-        );
-    }
-
     ci
 }
 
-fn check_hybrid_common_base_marks(category: Category, decls: &[String]) -> CardIssues {
+fn check_hybrid_common_base_marks(category: Category, decls: &[String]) -> Vec<CardIssue> {
     const PROBLEM_JOIN_CODES: &[&str] = &["A4b", "F10"]; // FUTURE add F9?
     const TECH_DUET_MIRROR_CODES: &[&str] = &["C1a", "C2a", "C4", "C6a", "C6b", "C7"];
     const KNIGHT_CODES: &[&str] = &["F3c", "F5a", "F5c", "F6b", "F6c", "F8a"];
-    let mut ci = CardIssues::default();
+    let mut ci = Vec::new();
     let mut prev_decl = "";
     for decl in decls {
         for code in PROBLEM_JOIN_CODES {
             if decl.starts_with(code) {
-                ci.warnings.push(format!(
-                    "{decl} has a very high risk of base marking, athletes must not be vertical at ¾ point"
-                ));
+                ci_warn(
+                    &mut ci,
+                    format!(
+                        "{decl} has a very high risk of base marking, athletes must not be vertical at ¾ point"
+                    ),
+                );
             }
         }
         if decl.starts_with("T9b") {
-            ci.warnings.push(
-                "T9b has a very high risk of base marking, it needs 8.5 height and a 1 second hold"
-                    .into(),
+            ci_warn(
+                &mut ci,
+                "T9b has a very high risk of base marking, it needs 8.5 height and a 1 second hold",
             );
         }
 
         if category.event == Trio && decl.starts_with("C4") {
-            ci.warnings.push(
-                "the two legs in a line variation of C4, requires C4+ and 4+ athletes".into(),
+            ci_warn(
+                &mut ci,
+                "the two legs in a line variation of C4, requires C4+ and 4+ athletes",
             );
         }
 
@@ -668,19 +630,19 @@ fn check_hybrid_common_base_marks(category: Category, decls: &[String]) -> CardI
             && TECH_DUET_MIRROR_CODES.contains(&decl.as_str())
             && !decl.contains('+')
         {
-            ci.warnings.push(format!("{decl} in Tech Duet, is this mirror action?"));
+            ci_warn(&mut ci, format!("{decl} in Tech Duet, is this mirror action?"));
         }
 
         // these next two checks aren't "common" errors, but this was a
         // convenient place to check for something that is probably a
         // mistake if we see the two decls back-to-back
         if decl.starts_with("A6") && prev_decl.starts_with("A1d") {
-            ci.warnings.push("A1d before A6, should this be A1a or A1c?".into());
+            ci_warn(&mut ci, "A1d before A6, should this be A1a or A1c?");
         }
 
         for code in KNIGHT_CODES {
             if decl.starts_with(code) && prev_decl.starts_with("F1a") {
-                ci.warnings.push(format!("F1a before {decl}, should this be F1b?"));
+                ci_warn(&mut ci, format!("F1a before {decl}, should this be F1b?"));
             }
         }
 
@@ -689,8 +651,8 @@ fn check_hybrid_common_base_marks(category: Category, decls: &[String]) -> CardI
     ci
 }
 
-fn check_hybrid_start_end(_: Category, decls: &[String]) -> CardIssues {
-    let mut ci = CardIssues::default();
+fn check_hybrid_start_end(_: Category, decls: &[String]) -> Vec<CardIssue> {
+    let mut ci = Vec::new();
 
     let decls: &[String] = if decls.last().is_some_and(|x| x.ends_with("PC")) {
         &decls[..decls.len() - 1]
@@ -701,22 +663,23 @@ fn check_hybrid_start_end(_: Category, decls: &[String]) -> CardIssues {
     let end_pos = decls.len().wrapping_sub(1);
     for (i, decl) in decls.iter().enumerate() {
         if decl.starts_with("FB") && i != 0 {
-            ci.errors.push(format!("{decl} must be at the start of a hybrid"));
+            ci_err(&mut ci, format!("{decl} must be at the start of a hybrid"));
         }
         if decl.starts_with("F2a") && i != end_pos {
-            ci.errors.push(format!("{decl} must be at the end of a hybrid"));
+            ci_err(&mut ci, format!("{decl} must be at the end of a hybrid"));
         }
         if decl.starts_with("F4a") && i != 0 {
-            ci.warnings.push(format!("{decl} is not at the start, is this correct?"));
+            ci_warn(&mut ci, format!("{decl} is not at the start, is this correct?"));
         }
     }
     ci
 }
 
-fn check_ascent_connection(_: Category, decls: &[String]) -> CardIssues {
-    let mut ci = CardIssues::default();
+fn check_ascent_connection(_: Category, decls: &[String]) -> Vec<CardIssue> {
+    let mut ci = Vec::new();
     let mut prev_decl = "";
     for decl in decls {
+        // TODO is A1c in writing? Manual only mentions A3a/A3b
         // A1c/C4 is for duet lift back-to-back
         // A3a is for from open pike to VP
         // A3b is for vert rise while connected
@@ -724,27 +687,37 @@ fn check_ascent_connection(_: Category, decls: &[String]) -> CardIssues {
             || (prev_decl == "A3a" && ["C3", "C3+", "C4+"].contains(&decl.as_str()))
             || (prev_decl == "A3b" && ["C3", "C3+", "C4", "C4+"].contains(&decl.as_str()))
         {
-            ci.warnings.push(format!("Ascents and Lifts cannot be declared simultaneously with a connection. If legs are connected during the {prev_decl}, there must be a disconnect or another action before the {decl}"));
+            ci_warn(
+                &mut ci,
+                format!(
+                    "Ascents and Lifts cannot be declared simultaneously with a connection. If legs are connected during the {prev_decl}, there must be a disconnect or another action before the {decl}"
+                ),
+            );
         }
         prev_decl = decl;
     }
     ci
 }
 
-fn check_flexibility_combinations(_: Category, decls: &[String]) -> CardIssues {
-    let mut ci = CardIssues::default();
+fn check_flexibility_combinations(_: Category, decls: &[String]) -> Vec<CardIssue> {
+    let mut ci = Vec::new();
     let mut prev_decl = "";
     for decl in decls {
         if (decl.starts_with("F2c") && prev_decl.starts_with("F1a"))
             || (decl.starts_with("F3c") && prev_decl.starts_with("F1b"))
             || (decl.starts_with("F1a") && prev_decl.starts_with("RO"))
         {
-            ci.warnings.push(format!("An additional action (of any sort) must be performed between {prev_decl} and {decl}"));
+            ci_warn(
+                &mut ci,
+                format!(
+                    "An additional action (of any sort) must be performed between {prev_decl} and {decl}"
+                ),
+            );
         }
         if decl.starts_with("F3a") {
-            ci.warnings.push(
-                "F3a means Right/Left split to opposite split, back to the initial split, 3 total splits"
-                    .into(),
+            ci_warn(
+                &mut ci,
+                "F3a means Right/Left split to opposite split, back to the initial split, 3 total splits",
             );
         }
 
@@ -755,76 +728,57 @@ fn check_flexibility_combinations(_: Category, decls: &[String]) -> CardIssues {
         // likely to be correct when there are multiple groups. If it
         // becomes an issue, I could make the check more complicated.
         if prev_decl == "F1b" && (decl == "F4e" || decl == "F4f") {
-            ci.warnings.push(format!("Claiming {prev_decl} {decl} involves going to a knight, and then back to a fishtail is this correct?"));
+            ci_warn(
+                &mut ci,
+                format!(
+                    "Claiming {prev_decl} {decl} involves going to a knight, and then back to a fishtail is this correct?"
+                ),
+            );
         }
         prev_decl = decl;
     }
     ci
 }
 
-pub fn check_one_element(category: Category, element: &ElementKind) -> CardIssues {
-    static HYBRID_CHECKS: &[fn(Category, &[String]) -> CardIssues] = &[
-        check_hybrid_declaration_maxes,
-        check_small_bonuses,
-        check_valid_hybrid_declarations,
-        check_factoring,
-        check_connections_in_non_team,
-        check_hybrid_common_base_marks,
-        check_hybrid_start_end,
-        check_ascent_connection,
-        check_flexibility_combinations,
-    ];
-    static PAIR_ACRO_CHECKS: &[fn(Category, &String) -> CardIssues] = &[check_pair_acro];
-    static TEAM_ACRO_CHECKS: &[fn(Category, &TeamAcrobatic, &String) -> CardIssues] =
-        &[check_team_acro];
-    static TRE_CHECKS: &[fn(Category, &str, &str) -> CardIssues] = &[check_tres];
-
-    let mut ci = CardIssues::default();
+pub fn check_one_element(category: Category, element: &ElementKind) -> Vec<CardIssue> {
     match &element {
-        TeamAcro(ta, dd) => {
-            for check in TEAM_ACRO_CHECKS {
-                ci += check(category, ta, dd);
-            }
-        }
-        PairAcro(decl) => {
-            for check in PAIR_ACRO_CHECKS {
-                ci += check(category, decl);
-            }
-        }
+        TeamAcro(ta, dd) => check_team_acro(category, ta, dd).into_iter().collect(),
+        PairAcro(decl) => check_pair_acro(category, decl).into_iter().collect(),
         Hybrid(decls, dd) => {
-            for check in HYBRID_CHECKS {
-                ci += check(category, decls);
-            }
-            ci += check_dd_limits(category, dd);
+            let mut ci: Vec<_> = [
+                check_hybrid_declaration_maxes,
+                check_small_bonuses,
+                check_valid_hybrid_declarations,
+                check_factoring,
+                check_connections_in_non_team,
+                check_hybrid_common_base_marks,
+                check_hybrid_start_end,
+                check_ascent_connection,
+                check_flexibility_combinations,
+            ]
+            .iter()
+            .flat_map(|check| check(category, decls))
+            .collect();
+            ci.extend(check_dd_limits(category, dd));
+            ci
         }
-        TRE(decl, dd) => {
-            for check in TRE_CHECKS {
-                ci += check(category, decl, dd);
-            }
-        }
-        ChoHy | SuConn => {}
+        TRE(decl, dd) => check_tres(category, decl, dd),
+        ChoHy | SuConn => Vec::new(),
     }
-    ci
 }
 
-fn check_elements(card: &CoachCard) -> CardIssues {
-    let mut ci = CardIssues::default();
+fn check_elements(card: &CoachCard) -> Vec<CardIssue> {
+    let mut ci = Vec::new();
     for elem in &card.elements {
-        let mut element_ci = check_one_element(card.category, &elem.kind);
-        let prefix = format!("Element {}: ", elem.number);
-        for err in &mut element_ci.errors {
-            err.insert_str(0, &prefix);
-        }
-        for warn in &mut element_ci.warnings {
-            warn.insert_str(0, &prefix);
-        }
-        ci += element_ci;
+        let _ = check_one_element(card.category, &elem.kind).iter().map(|i| {
+            ci.push(CardIssue::new(i.level, format!("Element {}: {}", elem.number, i.text)));
+        });
     }
     ci
 }
 
-pub fn run_checks(card: &CoachCard) -> CardIssues {
-    static CHECKS: &[fn(&CoachCard) -> CardIssues] = &[
+pub fn run_checks(card: &CoachCard) -> Vec<CardIssue> {
+    [
         check_iss_version,
         check_routine_element_maxes,
         check_theme,
@@ -834,12 +788,10 @@ pub fn run_checks(card: &CoachCard) -> CardIssues {
         check_overlapping_elements,
         check_category,
         check_elements,
-    ];
-    let mut ci = CardIssues::default();
-    for check in CHECKS {
-        ci += check(card);
-    }
-    ci
+    ]
+    .iter()
+    .flat_map(|check| check(card))
+    .collect()
 }
 
 #[cfg(test)]
@@ -929,42 +881,38 @@ mod tests {
         }
     }
 
-    fn run_test(name: &str, check_fn: fn(&CoachCard) -> CardIssues, card: &CoachCard) {
+    fn run_test(name: &str, check_fn: fn(&CoachCard) -> Vec<CardIssue>, card: &CoachCard) {
         // FUTURE update tests to use _err
-        let err_expected = if name.ends_with("_ok") || name.ends_with("_warn") { 0 } else { 1 };
-        let warn_expected = if name.ends_with("_warn") { 1 } else { 0 };
+        let expected = if name.ends_with("_ok") { 0 } else { 1 };
         let result = check_fn(card);
-        //println!("TEST {:?}", result.errors);
-        assert_eq!(result.errors.len(), err_expected);
-        assert_eq!(result.warnings.len(), warn_expected);
+        //println!("TEST {:?}", result);
+        assert_eq!(result.len(), expected);
     }
 
     fn run_hybrid_test(
         name: &str,
-        check_fn: fn(Category, &[String]) -> CardIssues,
+        check_fn: fn(Category, &[String]) -> Vec<CardIssue>,
         cat: Category,
         hybrid: &[&str],
     ) {
         // FUTURE update tests to use _err
-        let err_expected = if name.ends_with("_ok") || name.ends_with("_warn") { 0 } else { 1 };
-        let warn_expected = if name.ends_with("_warn") { 1 } else { 0 };
+        let expected = if name.ends_with("_ok") { 0 } else { 1 };
         let decls: Vec<String> = hybrid.into_iter().map(|s| s.to_string()).collect();
         let result = check_fn(cat, &decls);
         // println!("TEST {:?}", result.errors);
-        assert_eq!(result.errors.len(), err_expected);
-        assert_eq!(result.warnings.len(), warn_expected);
+        assert_eq!(result.len(), expected);
     }
 
     #[test]
     fn test_check_iss_version() {
         let not_set = check_iss_version(&CardBuilder::new().card);
-        assert_eq!(not_set.warnings.len(), 0);
+        assert_eq!(not_set.len(), 0);
         let old = check_iss_version(
             &CardBuilder::new().iss_ver(Some(semver::Version::new(0, 0, 1))).card,
         );
-        assert_eq!(old.warnings.len(), 1);
+        assert_eq!(old.len(), 1);
         let current = check_iss_version(&CardBuilder::new().iss_ver(Some(LATEST_ISS_VERSION)).card);
-        assert_eq!(current.warnings.len(), 0);
+        assert_eq!(current.len(), 0);
     }
 
     macro_rules! routine_tests {
@@ -1113,7 +1061,7 @@ mod tests {
             ("tre_in_combo_err", Category { ag: Youth, event: Combo, free: false }, "TRE4a", "", 1),
         ];
         for (case, cat, tre, dd, errs) in conditions {
-            assert_eq!(check_tres(cat, tre, dd).errors.len(), errs, "{}", case);
+            assert_eq!(check_tres(cat, tre, dd).len(), errs, "{}", case);
         }
     }
 
@@ -1139,18 +1087,17 @@ mod tests {
         duet_factored_flex: check_routine_has_all_families, Category{ag: AG12U, event: Duet, free: true}, &[&["TB", "SC1", "2R2"], &["A3b", "F4f*0.5", "CB"]],
         unknown_ag_err: check_category, Category{ag: AgeGroups::Unknown, event: Solo, free: true}, &[],
         unknown_event_err: check_category, Category{ag: JRSR, event: Events::Unknown, free: true}, &[],
-        youth_tech_warn: check_category, Category{ag: Youth, event: Team, free: false}, &[],
     }
 
     #[test]
     fn test_check_theme() {
         let combo_missing_err = check_theme(&CardBuilder::new().event_type(Combo).card);
-        assert_eq!(combo_missing_err.errors.len(), 1);
+        assert_eq!(combo_missing_err.len(), 1);
         let combo_ok =
             check_theme(&CardBuilder::new().event_type(Combo).theme("foo".to_string()).card);
-        assert_eq!(combo_ok.errors.len(), 0);
+        assert_eq!(combo_ok.len(), 0);
         let solo_missing_ok = check_theme(&CardBuilder::new().event_type(Solo).card);
-        assert_eq!(solo_missing_ok.errors.len(), 0);
+        assert_eq!(solo_missing_ok.len(), 0);
     }
 
     #[test]
@@ -1162,14 +1109,14 @@ mod tests {
                 .category(Category { ag: JRSR, event: Duet, free: false })
                 .card,
         );
-        assert_eq!(too_many_pair_acros.errors.len(), 1);
+        assert_eq!(too_many_pair_acros.len(), 1);
         let too_few_pair_acros = check_routine_element_maxes(
             &CardBuilder::new()
                 .hybrids(&[&["R1"], &["R1"], &["R1"], &["R1"], &["R1"], &["R1"]])
                 .category(Category { ag: JRSR, event: Duet, free: true })
                 .card,
         );
-        assert_eq!(too_few_pair_acros.errors.len(), 1);
+        assert_eq!(too_few_pair_acros.len(), 1);
         let ok_pair_acros = check_routine_element_maxes(
             &CardBuilder::new()
                 .pair_acros(&["Js1B", "L!fr1"])
@@ -1177,7 +1124,7 @@ mod tests {
                 .category(Category { ag: JRSR, event: Duet, free: true })
                 .card,
         );
-        assert_eq!(ok_pair_acros.errors.len(), 0);
+        assert_eq!(ok_pair_acros.len(), 0);
 
         let too_many_chohy = check_routine_element_maxes(
             &CardBuilder::new()
@@ -1186,7 +1133,7 @@ mod tests {
                 .category(Category { ag: AG12U, event: Combo, free: true })
                 .card,
         );
-        assert_eq!(too_many_chohy.errors.len(), 1);
+        assert_eq!(too_many_chohy.len(), 1);
 
         let too_many_suconn = check_routine_element_maxes(
             &CardBuilder::new()
@@ -1205,7 +1152,7 @@ mod tests {
                 .category(Category { ag: JRSR, event: MixedDuet, free: false })
                 .card,
         );
-        assert_eq!(too_many_suconn.errors.len(), 1);
+        assert_eq!(too_many_suconn.len(), 1);
 
         let too_many_tres = check_routine_element_maxes(
             &CardBuilder::new()
@@ -1224,7 +1171,7 @@ mod tests {
                 .category(Category { ag: JRSR, event: MixedDuet, free: false })
                 .card,
         );
-        assert_eq!(too_many_tres.errors.len(), 1);
+        assert_eq!(too_many_tres.len(), 1);
         let too_few_tres = check_routine_element_maxes(
             &CardBuilder::new()
                 .pair_acros(&["Js1B"])
@@ -1232,7 +1179,7 @@ mod tests {
                 .category(Category { ag: JRSR, event: Duet, free: false })
                 .card,
         );
-        assert_eq!(too_few_tres.errors.len(), 1);
+        assert_eq!(too_few_tres.len(), 1);
         let ok_tres = check_routine_element_maxes(
             &CardBuilder::new()
                 .pair_acros(&["Js1B"])
@@ -1240,7 +1187,7 @@ mod tests {
                 .category(Category { ag: JRSR, event: Duet, free: false })
                 .card,
         );
-        assert_eq!(ok_tres.errors.len(), 0);
+        assert_eq!(ok_tres.len(), 0);
 
         let too_many_team_acros = check_routine_element_maxes(
             &CardBuilder::new()
@@ -1257,7 +1204,7 @@ mod tests {
                 .category(Category { ag: JRSR, event: Acrobatic, free: true })
                 .card,
         );
-        assert_eq!(too_many_team_acros.errors.len(), 1);
+        assert_eq!(too_many_team_acros.len(), 1);
         let too_few_team_acros = check_routine_element_maxes(
             &CardBuilder::new()
                 .team_acros(&[
@@ -1271,7 +1218,7 @@ mod tests {
                 .category(Category { ag: JRSR, event: Acrobatic, free: true })
                 .card,
         );
-        assert_eq!(too_few_team_acros.errors.len(), 1);
+        assert_eq!(too_few_team_acros.len(), 1);
         let ok_team_acros = check_routine_element_maxes(
             &CardBuilder::new()
                 .team_acros(&[
@@ -1286,40 +1233,40 @@ mod tests {
                 .category(Category { ag: JRSR, event: Acrobatic, free: true })
                 .card,
         );
-        assert_eq!(ok_team_acros.errors.len(), 0);
+        assert_eq!(ok_team_acros.len(), 0);
     }
 
     #[test]
     fn test_check_acros_event() {
         let pair_acro_in_solo =
             check_pair_acro(Category { ag: AG12U, event: Solo, free: true }, &"Js1B".into());
-        assert_eq!(pair_acro_in_solo.errors.len(), 1);
+        assert_eq!(pair_acro_in_solo.len(), 1);
         let team_acro_in_solo = check_team_acro(
             Category { ag: AG12U, event: Solo, free: true },
             &TeamAcrobatic::from("A-Shou-Back-tk-s1").unwrap(),
             &"".into(),
         );
-        assert_eq!(team_acro_in_solo.errors.len(), 1);
+        assert_eq!(team_acro_in_solo.len(), 1);
 
         let pair_acro_in_duet =
             check_pair_acro(Category { ag: AG12U, event: Duet, free: true }, &"Js1B".into());
-        assert_eq!(pair_acro_in_duet.errors.len(), 0);
+        assert_eq!(pair_acro_in_duet.len(), 0);
         let team_acro_in_duet = check_team_acro(
             Category { ag: AG12U, event: Duet, free: true },
             &TeamAcrobatic::from("A-Shou-Back-tk-s1").unwrap(),
             &"".into(),
         );
-        assert_eq!(team_acro_in_duet.errors.len(), 1);
+        assert_eq!(team_acro_in_duet.len(), 1);
 
         let pair_acro_in_team =
             check_pair_acro(Category { ag: AG12U, event: Team, free: true }, &"Js1B".into());
-        assert_eq!(pair_acro_in_team.errors.len(), 1);
+        assert_eq!(pair_acro_in_team.len(), 1);
         let team_acro_in_team = check_team_acro(
             Category { ag: AG12U, event: Team, free: true },
             &TeamAcrobatic::from("A-Shou-Back-tk-s1").unwrap(),
             &"".into(),
         );
-        assert_eq!(team_acro_in_team.errors.len(), 0);
+        assert_eq!(team_acro_in_team.len(), 0);
     }
 
     #[test]
@@ -1329,7 +1276,7 @@ mod tests {
                 .category(Category { ag: AG12U, event: Acrobatic, free: false })
                 .card,
         );
-        assert_eq!(unknown_event.warnings.len(), 1);
+        assert_eq!(unknown_event.len(), 1);
 
         let under = check_routine_times(
             &CardBuilder::new()
@@ -1337,7 +1284,7 @@ mod tests {
                 .end_time(NaiveTime::from_hms_opt(0, 1, 15).unwrap())
                 .card,
         );
-        assert_eq!(under.errors.len(), 1);
+        assert_eq!(under.len(), 1);
 
         let over = check_routine_times(
             &CardBuilder::new()
@@ -1345,7 +1292,7 @@ mod tests {
                 .end_time(NaiveTime::from_hms_opt(0, 2, 15).unwrap())
                 .card,
         );
-        assert_eq!(over.errors.len(), 1);
+        assert_eq!(over.len(), 1);
 
         let within_time = check_routine_times(
             &CardBuilder::new()
@@ -1353,7 +1300,7 @@ mod tests {
                 .end_time(NaiveTime::from_hms_opt(0, 2, 03).unwrap())
                 .card,
         );
-        assert_eq!(within_time.errors.len(), 0);
+        assert_eq!(within_time.len(), 0);
     }
 
     #[test]
@@ -1370,7 +1317,7 @@ mod tests {
         base_card.elements[2].start_time = NaiveTime::from_hms_opt(0, 0, 3).unwrap();
         base_card.elements[2].stop_time = NaiveTime::from_hms_opt(0, 0, 4).unwrap();
         let overlapping_hybrids = check_overlapping_elements(&base_card);
-        assert_eq!(overlapping_hybrids.errors.len(), 1);
+        assert_eq!(overlapping_hybrids.len(), 1);
 
         base_card.elements[0].start_time = NaiveTime::from_hms_opt(0, 0, 0).unwrap();
         base_card.elements[0].stop_time = NaiveTime::from_hms_opt(0, 0, 1).unwrap();
@@ -1379,11 +1326,11 @@ mod tests {
         base_card.elements[2].start_time = NaiveTime::from_hms_opt(0, 0, 2).unwrap();
         base_card.elements[2].stop_time = NaiveTime::from_hms_opt(0, 0, 4).unwrap();
         let overlapping_hybrid_acro = check_overlapping_elements(&base_card);
-        assert_eq!(overlapping_hybrid_acro.errors.len(), 1);
+        assert_eq!(overlapping_hybrid_acro.len(), 1);
 
         base_card.category.event = Team;
         let overlapping_in_team_ok = check_overlapping_elements(&base_card);
-        assert_eq!(overlapping_in_team_ok.errors.len(), 0);
+        assert_eq!(overlapping_in_team_ok.len(), 0);
         base_card.category.event = Combo;
 
         base_card.elements[0].start_time = NaiveTime::from_hms_opt(0, 0, 0).unwrap();
@@ -1393,22 +1340,22 @@ mod tests {
         base_card.elements[2].start_time = NaiveTime::from_hms_opt(0, 0, 2).unwrap();
         base_card.elements[2].stop_time = NaiveTime::from_hms_opt(0, 0, 4).unwrap();
         let no_overlap = check_overlapping_elements(&base_card);
-        assert_eq!(no_overlap.errors.len(), 0);
+        assert_eq!(no_overlap.len(), 0);
     }
 
     #[test]
     fn test_check_dd_limits() {
         let above_limit_err =
             check_dd_limits(Category { ag: AG12U, event: Combo, free: true }, &"7.1");
-        assert_eq!(above_limit_err.errors.len(), 1);
+        assert_eq!(above_limit_err.len(), 1);
 
         let below_limit_ok =
             check_dd_limits(Category { ag: AG12U, event: Combo, free: true }, &"6.9");
-        assert_eq!(below_limit_ok.errors.len(), 0);
+        assert_eq!(below_limit_ok.len(), 0);
 
         let above_limit_youth_ok =
             check_dd_limits(Category { ag: Youth, event: Combo, free: true }, &"7.1");
-        assert_eq!(above_limit_youth_ok.errors.len(), 0);
+        assert_eq!(above_limit_youth_ok.len(), 0);
     }
 
     #[test]
@@ -1429,7 +1376,7 @@ mod tests {
         ];
         for (decls, warns) in hybrids {
             let ci = check_flexibility_combinations(TECH_MIXED, decls);
-            assert_eq!(warns, ci.warnings.len(), "hybrid {:?}: {:?}", decls, ci.warnings);
+            assert_eq!(warns, ci.len(), "hybrid {:?}: {:?}", decls, ci);
         }
     }
 }
