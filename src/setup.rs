@@ -41,7 +41,7 @@ fn process_files(input_element: &HtmlInputElement) {
         let file = file.clone();
         js_sys::futures::spawn_local(async move {
             let res = gloo::file::futures::read_as_bytes(&file).await;
-            let ci = blob_to_issues(file.name().as_str(), res);
+            let ci = blob_to_issues(&file.name(), res);
             show_issues(&doc, ci);
         });
     }
@@ -56,7 +56,7 @@ pub fn on_text_input_changed(ag: String, event: String, free: bool, input: Strin
     // before input changes again we'll get interleaved results
     if !input.trim().is_empty() {
         js_sys::futures::spawn_local(async move {
-            let ci = text_to_issues(ag.as_str(), free, event.as_str(), input.as_str());
+            let ci = text_to_issues(&ag, free, &event, &input);
             show_issues(&doc, ci);
         });
     }
@@ -133,7 +133,7 @@ fn text_to_issues(ag: &str, free: bool, event: &str, input: &str) -> Vec<(String
         ParseResult::Element(category, element) => issues.push((
             String::new(),
             match element {
-                TeamAcro(acro, dd) => check_one_acro(category, &acro, dd.as_str()),
+                TeamAcro(acro, dd) => check_one_acro(category, &acro, &dd),
                 _ => check_one_element(category, &element),
             },
         )),

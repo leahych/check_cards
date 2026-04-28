@@ -381,8 +381,8 @@ fn check_rotations(acro: &TeamAcrobatic) -> Vec<CardIssue> {
     }
 
     if acro.rotations.iter().any(|rotation| rotation.contains('o')) {
-        let first_pos = acro.positions.first().map_or("", |m| m.as_str());
-        let second_pos = acro.positions.get(1).map_or("", |m| m.as_str());
+        let first_pos = acro.positions.first().map_or("", |m| m);
+        let second_pos = acro.positions.get(1).map_or("", |m| m);
 
         if first_pos != "tk" && first_pos != "pk" {
             // something like a fly above could start with ow and then
@@ -603,7 +603,7 @@ fn check_bonuses(acro: &TeamAcrobatic) -> Vec<CardIssue> {
         }
     }
 
-    ci.extend(check_bonuses_allowed_constructions(acro.construction.as_str(), &acro.bonuses));
+    ci.extend(check_bonuses_allowed_constructions(&acro.construction, &acro.bonuses));
 
     if acro.bonuses.contains(&"Hold".into()) && !acro.rotations.is_empty() {
         ci_warn(&mut ci, "Hold and Rotation must not be simultaneous");
@@ -764,7 +764,7 @@ fn check_connection(acro: &TeamAcrobatic) -> Vec<CardIssue> {
             .concat();
 
     let mut ci = Vec::new();
-    let first_pos = acro.positions.first().map_or("", |v| v.as_str());
+    let first_pos = acro.positions.first().map_or("", |v| v);
     match acro.connection_grip.as_str() {
         "FS" | "F2A" if !TWO_FOOT_POSITIONS.contains(&first_pos) => {
             ci_warn(
@@ -847,7 +847,7 @@ fn check_connection(acro: &TeamAcrobatic) -> Vec<CardIssue> {
 fn check_group_c_positions(acro: &TeamAcrobatic) -> Vec<CardIssue> {
     let mut ci = Vec::new();
 
-    let first_pos = acro.positions.first().map_or("", |v| v.as_str());
+    let first_pos = acro.positions.first().map_or("", |v| v);
     let pos2 = acro.positions.get(1).map_or("", |s| s.strip_prefix('2').unwrap_or(""));
 
     let all_b_positions = [
@@ -946,7 +946,7 @@ fn check_positions(acro: &TeamAcrobatic) -> Vec<CardIssue> {
     ];
     let mut ci = Vec::new();
 
-    let first_pos = acro.positions.first().map_or("", |v| v.as_str());
+    let first_pos = acro.positions.first().map_or("", |v| v);
     let pos2 = acro.positions.get(1).map_or("", |s| s.strip_prefix('2').unwrap_or(""));
 
     if (B_ONE_LEG_POSITIONS.contains(&first_pos) || first_pos == "qu" || first_pos == "sn")

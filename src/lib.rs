@@ -81,11 +81,11 @@ impl AgeGroups {
 
     fn from_str(input: &str) -> Self {
         let txt = input.to_uppercase();
-        if is_12u(txt.as_str()) {
+        if is_12u(&txt) {
             return AG12U;
-        } else if is_youth(txt.as_str()) {
+        } else if is_youth(&txt) {
             return Youth;
-        } else if is_jrsr(txt.as_str()) {
+        } else if is_jrsr(&txt) {
             return JRSR;
         }
         Self::Unknown

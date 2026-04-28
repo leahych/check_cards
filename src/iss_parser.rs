@@ -16,9 +16,9 @@ fn parse_elements(sheet: Rows<Data>, team_event: bool) -> (Vec<Element>, NaiveTi
         let start_end_time_str = row_cols.next().map_or_else(String::new, ToString::to_string);
         let mut parts = start_end_time_str.split('-');
         let val = parts.next().map(|v| "0:".to_owned() + v).unwrap_or_default();
-        let start_time = NaiveTime::parse_from_str(val.as_str(), "%T").unwrap_or_default();
+        let start_time = NaiveTime::parse_from_str(&val, "%T").unwrap_or_default();
         let val = parts.next().map(|v| "0:".to_owned() + v).unwrap_or_default();
-        let stop_time = NaiveTime::parse_from_str(val.as_str(), "%T").unwrap_or_default();
+        let stop_time = NaiveTime::parse_from_str(&val, "%T").unwrap_or_default();
 
         end_time = NaiveTime::max(stop_time, end_time);
 
@@ -65,7 +65,7 @@ fn parse_elements(sheet: Rows<Data>, team_event: bool) -> (Vec<Element>, NaiveTi
                         })
                         .unwrap_or_default()
                         .replace('\n', "");
-                    if let Ok(acro) = TeamAcrobatic::from(code.as_str()) {
+                    if let Ok(acro) = TeamAcrobatic::from(&code) {
                         TeamAcro(acro, dd)
                     } else {
                         // TODO log
@@ -116,9 +116,9 @@ fn parse_report(sheet: &Range<Data>) -> Vec<(String, CoachCard)> {
         if first_col == "EVENT" {
             let event_txt =
                 cols.next().map_or_else(String::new, ToString::to_string).to_uppercase();
-            category.ag = AgeGroups::from_str(event_txt.as_str());
+            category.ag = AgeGroups::from_str(&event_txt);
             category.free = !event_txt.contains("TECH");
-            category.event = Events::from_str(event_txt.as_str());
+            category.event = Events::from_str(&event_txt);
         } else if first_col == "ROUTINE #" {
             let draw = cols.next().map_or_else(String::new, ToString::to_string);
             let routine_name = cols.next().map_or_else(String::new, ToString::to_string);
@@ -174,7 +174,7 @@ fn parse_iss_card(name: &str, sheet: &Range<Data>) -> Vec<(String, CoachCard)> {
             card.category.event = cols.next().map_or_else(Default::default, |col| {
                 let event_txt = col.to_string().to_uppercase();
                 card.category.free = !event_txt.contains("TECH");
-                let parsed_event = Events::from_str(event_txt.as_str());
+                let parsed_event = Events::from_str(&event_txt);
                 if parsed_event == Duet
                     && (card.theme.to_uppercase().contains(" TRIO")
                         || card.theme.to_uppercase().contains("TRIO ")
