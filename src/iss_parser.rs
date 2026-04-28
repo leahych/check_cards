@@ -167,12 +167,11 @@ fn parse_iss_card(name: &str, sheet: &Range<Data>) -> Vec<(String, CoachCard)> {
             card.theme = cols.next().map_or_else(String::new, ToString::to_string);
         }
         if row_name.starts_with("Age Group") {
-            card.category.ag = cols.next().map_or_else(AgeGroups::default, |col| {
-                AgeGroups::from_str(col.to_string().as_str())
-            });
+            card.category.ag =
+                cols.next().map_or_else(Default::default, |c| AgeGroups::from_str(&c.to_string()));
         }
         if row_name.starts_with("Event") {
-            card.category.event = cols.next().map_or_else(Events::default, |col| {
+            card.category.event = cols.next().map_or_else(Default::default, |col| {
                 let event_txt = col.to_string().to_uppercase();
                 card.category.free = !event_txt.contains("TECH");
                 let parsed_event = Events::from_str(event_txt.as_str());

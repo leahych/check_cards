@@ -806,7 +806,7 @@ mod tests {
 
     impl CardBuilder {
         fn new() -> CardBuilder {
-            CardBuilder { card: CoachCard::default() }
+            CardBuilder { card: Default::default() }
         }
 
         fn hybrids(mut self, hybrids: &[&[&str]]) -> Self {
@@ -823,8 +823,8 @@ mod tests {
                 };
                 self.card.elements.push(Element {
                     number: self.card.elements.len() + 1,
-                    start_time: NaiveTime::default(),
-                    stop_time: NaiveTime::default(),
+                    start_time: Default::default(),
+                    stop_time: Default::default(),
                     kind,
                 })
             }
@@ -835,8 +835,8 @@ mod tests {
             for acro in acros.into_iter() {
                 self.card.elements.push(Element {
                     number: self.card.elements.len() + 1,
-                    start_time: NaiveTime::default(),
-                    stop_time: NaiveTime::default(),
+                    start_time: Default::default(),
+                    stop_time: Default::default(),
                     kind: PairAcro(acro.to_string()),
                 });
             }
@@ -847,8 +847,8 @@ mod tests {
             for acro in acros.into_iter() {
                 self.card.elements.push(Element {
                     number: self.card.elements.len() + 1,
-                    start_time: NaiveTime::default(),
-                    stop_time: NaiveTime::default(),
+                    start_time: Default::default(),
+                    stop_time: Default::default(),
                     kind: TeamAcro(TeamAcrobatic::from(acro).unwrap(), "1.0".into()),
                 });
             }
