@@ -1180,47 +1180,27 @@ pub fn run_acro_checks(card: &CoachCard) -> Vec<CardIssue> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::Element;
-    use chrono::NaiveTime;
+    use crate::{Element, ElementKind};
 
-    // TODO share this as test-only code
-    struct CardBuilder {
-        card: CoachCard,
+    fn elements(acros: &[&str], to_element: fn(&str) -> ElementKind) -> Vec<Element> {
+        let mut ret = Vec::new();
+        for (i, acro) in acros.iter().enumerate() {
+            ret.push(Element {
+                number: i + 1,
+                start_time: Default::default(),
+                stop_time: Default::default(),
+                kind: to_element(acro),
+            });
+        }
+        ret
     }
 
-    impl CardBuilder {
-        fn new() -> CardBuilder {
-            CardBuilder { card: CoachCard::default() }
-        }
+    fn pair_acros(acros: &[&str]) -> Vec<Element> {
+        elements(acros, |acro| PairAcro(acro.into()))
+    }
 
-        fn pair_acros(mut self, acros: &[&str]) -> Self {
-            for acro in acros.into_iter() {
-                self.card.elements.push(Element {
-                    number: self.card.elements.len() + 1,
-                    start_time: NaiveTime::default(),
-                    stop_time: NaiveTime::default(),
-                    kind: PairAcro(acro.to_string()),
-                });
-            }
-            self
-        }
-
-        fn team_acros(mut self, acros: &[&str]) -> Self {
-            for acro in acros.into_iter() {
-                self.card.elements.push(Element {
-                    number: self.card.elements.len() + 1,
-                    start_time: NaiveTime::default(),
-                    stop_time: NaiveTime::default(),
-                    kind: TeamAcro(TeamAcrobatic::from(acro).unwrap(), "1.0".into()),
-                });
-            }
-            self
-        }
-
-        fn category(mut self, category: Category) -> Self {
-            self.card.category = category;
-            self
-        }
+    fn team_acros(acros: &[&str]) -> Vec<Element> {
+        elements(acros, |acro| TeamAcro(TeamAcrobatic::from(acro).unwrap(), "1.0".into()))
     }
 
     #[test]
@@ -1240,7 +1220,7 @@ mod tests {
             ("group_p_no_dups", &["P-Knees-SP+K-bb/2ow-Pos3", "P-2S-FA+PF-ne/2ey-Trav"], 0),
         ];
         for (name, acros, expected) in tests {
-            let card = &CardBuilder::new().team_acros(acros).card;
+            let card = &CoachCard { elements: team_acros(acros), ..Default::default() };
             assert_eq!(check_team_duplicate_acros(card).len(), *expected, "{name}");
         }
     }
@@ -1264,8 +1244,8 @@ mod tests {
             ("missing_p", acat, &[ex_a, ex_b, ex_c], 1),
             ("too_many_a", acat, &[ex_a, ex_a, ex_a, ex_b, ex_c, ex_p], 1),
         ];
-        for (name, cat, acros, expected) in tests.into_iter() {
-            let card = &CardBuilder::new().category(*cat).team_acros(acros).card;
+        for (name, cat, a, expected) in tests.into_iter() {
+            let card = &CoachCard { category: *cat, elements: team_acros(a), ..Default::default() };
             assert_eq!(check_groups_for_acro_routine(card).len(), *expected, "{name}");
         }
     }
@@ -1456,15 +1436,15 @@ mod tests {
 
     #[test]
     fn test_check_duplicate_pair_acros() {
-        let cat = Category { event: Duet, ..Default::default() };
-        let same_acros = check_duplicate_pair_acros(
-            &CardBuilder::new().category(cat).pair_acros(&[&"W!fr1", &"W!fr1"]).card,
-        );
-        assert_eq!(same_acros.len(), 1);
-        let different_acros = check_duplicate_pair_acros(
-            &CardBuilder::new().category(cat).pair_acros(&[&"W!fr0.5", &"W!fr1"]).card,
-        );
-        assert_eq!(different_acros.len(), 0);
+        let category = Category { event: Duet, ..Default::default() };
+
+        let same = pair_acros(&[&"W!fr1", &"W!fr1"]);
+        let card = CoachCard { category, elements: same, ..Default::default() };
+        assert_eq!(check_duplicate_pair_acros(&card).len(), 1);
+
+        let diff = pair_acros(&[&"W!fr0.5", &"W!fr1"]);
+        let card = CoachCard { category, elements: diff, ..Default::default() };
+        assert_eq!(check_duplicate_pair_acros(&card).len(), 0);
     }
 
     #[test]
@@ -1482,30 +1462,26 @@ mod tests {
             (Duet, "Jfs1B", 0),
         ];
         for (event, acro, expected) in tests {
-            let card = &CardBuilder::new()
-                .category(Category { event: *event, ..Default::default() })
-                .pair_acros(&[acro])
-                .card;
-            assert_eq!(check_pair_acro_common_base_marks(card).len(), *expected, "{acro}")
+            let category = Category { event: *event, ..Default::default() };
+            let card = CoachCard { category, elements: pair_acros(&[acro]), ..Default::default() };
+            assert_eq!(check_pair_acro_common_base_marks(&card).len(), *expected, "{acro}")
         }
     }
 
     #[test]
     fn test_check_pair_validity() {
-        let cat = Category { event: Duet, ..Default::default() };
-        let card = CardBuilder::new().category(cat).pair_acros(&["L!F"]).card;
+        let category = Category { event: Duet, ..Default::default() };
+        let card = CoachCard { category, elements: pair_acros(&["L!F"]), ..Default::default() };
         assert_eq!(check_pair_acro_validity(&card).len(), 1);
-        let card = CardBuilder::new().category(cat).pair_acros(&["L!f"]).card;
+        let card = CoachCard { category, elements: pair_acros(&["L!f"]), ..Default::default() };
         assert_eq!(check_pair_acro_validity(&card).len(), 0);
     }
 
     #[test]
     fn test_run_checks() {
-        let duet_card = CardBuilder::new()
-            .category(Category { ag: AG12U, event: Duet, free: true })
-            .pair_acros(&["W!s1F", "J"])
-            .card;
-        assert_eq!(run_acro_checks(&duet_card).len(), 0);
+        let category = Category { event: Duet, ..Default::default() };
+        let duet = CoachCard { category, elements: pair_acros(&["L", "J"]), ..Default::default() };
+        assert_eq!(run_acro_checks(&duet).len(), 0);
 
         let solo = &CoachCard {
             category: Category { event: Solo, ..Default::default() },
