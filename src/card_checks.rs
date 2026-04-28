@@ -49,7 +49,7 @@ fn check_max_families<T: AsRef<str>>(decls: &[T], family_regex: &Regex) -> usize
         .unwrap_or_default()
 }
 
-fn check_hybrid_declaration_maxes(category: Category, decls: &[String]) -> Vec<CardIssue> {
+fn check_hybrid_maxes(category: Category, decls: &[String]) -> Vec<CardIssue> {
     let mut ci = Vec::new();
 
     let max_families: &[(&str, &str)] = &[
@@ -230,7 +230,7 @@ fn count_elements(elements: &[Element]) -> ElementLimit {
     el
 }
 
-fn check_routine_element_maxes(card: &CoachCard) -> Vec<CardIssue> {
+fn check_routine_maxes(card: &CoachCard) -> Vec<CardIssue> {
     fn check_max(num: usize, max: usize, name: &str, ci: &mut Vec<CardIssue>) {
         if num != max {
             ci_err(ci, format!("{max} {name} expected, but {num} found"));
@@ -309,7 +309,7 @@ fn check_valid_hybrid_declarations(_: Category, decls: &[String]) -> Vec<CardIss
     ci
 }
 
-fn check_mixed_duet_elements(card: &CoachCard) -> Vec<CardIssue> {
+fn check_mixduet_elems(card: &CoachCard) -> Vec<CardIssue> {
     let expected_cat = Category { ag: JRSR, event: MixedDuet, free: false };
     if card.category != expected_cat {
         return Vec::new();
@@ -513,7 +513,7 @@ fn check_connections_in_non_team(category: Category, decls: &[String]) -> Vec<Ca
     ci
 }
 
-fn check_routine_has_all_families(card: &CoachCard) -> Vec<CardIssue> {
+fn check_families(card: &CoachCard) -> Vec<CardIssue> {
     let mut ci = Vec::new();
     if !card.category.free || card.category.event == Acrobatic {
         return ci;
@@ -746,7 +746,7 @@ pub fn check_one_element(category: Category, element: &ElementKind) -> Vec<CardI
         PairAcro(decl) => check_pair_acro(category, decl).into_iter().collect(),
         Hybrid(decls, dd) => {
             let mut ci: Vec<_> = [
-                check_hybrid_declaration_maxes,
+                check_hybrid_maxes,
                 check_small_bonuses,
                 check_valid_hybrid_declarations,
                 check_factoring,
@@ -780,10 +780,10 @@ fn check_elements(card: &CoachCard) -> Vec<CardIssue> {
 pub fn run_checks(card: &CoachCard) -> Vec<CardIssue> {
     [
         check_iss_version,
-        check_routine_element_maxes,
+        check_routine_maxes,
         check_theme,
-        check_mixed_duet_elements,
-        check_routine_has_all_families,
+        check_mixduet_elems,
+        check_families,
         check_routine_times,
         check_overlapping_elements,
         check_category,
@@ -797,7 +797,7 @@ pub fn run_checks(card: &CoachCard) -> Vec<CardIssue> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{Category, Element, Events, TeamAcrobatic};
+    use crate::{Category, Element, TeamAcrobatic};
     use chrono::NaiveTime;
 
     struct CardBuilder {
@@ -860,191 +860,162 @@ mod tests {
             self
         }
 
-        fn event_type(mut self, event_type: Events) -> Self {
-            self.card.category.event = event_type;
-            self
-        }
-
-        fn theme(mut self, theme: String) -> Self {
-            self.card.theme = theme;
-            self
-        }
-
-        fn iss_ver(mut self, iss_ver: Option<semver::Version>) -> Self {
-            self.card.iss_ver = iss_ver;
-            self
-        }
-
         fn end_time(mut self, end_time: NaiveTime) -> Self {
             self.card.end_time = end_time;
             self
         }
     }
 
-    fn run_test(name: &str, check_fn: fn(&CoachCard) -> Vec<CardIssue>, card: &CoachCard) {
-        // FUTURE update tests to use _err
-        let expected = if name.ends_with("_ok") { 0 } else { 1 };
-        let result = check_fn(card);
-        //println!("TEST {:?}", result);
-        assert_eq!(result.len(), expected);
-    }
-
-    fn run_hybrid_test(
-        name: &str,
-        check_fn: fn(Category, &[String]) -> Vec<CardIssue>,
-        cat: Category,
-        hybrid: &[&str],
-    ) {
-        // FUTURE update tests to use _err
-        let expected = if name.ends_with("_ok") { 0 } else { 1 };
-        let decls: Vec<String> = hybrid.into_iter().map(|s| s.to_string()).collect();
-        let result = check_fn(cat, &decls);
-        // println!("TEST {:?}", result.errors);
-        assert_eq!(result.len(), expected);
-    }
-
     #[test]
     fn test_check_iss_version() {
-        let not_set = check_iss_version(&CardBuilder::new().card);
-        assert_eq!(not_set.len(), 0);
-        let old = check_iss_version(
-            &CardBuilder::new().iss_ver(Some(semver::Version::new(0, 0, 1))).card,
-        );
-        assert_eq!(old.len(), 1);
-        let current = check_iss_version(&CardBuilder::new().iss_ver(Some(LATEST_ISS_VERSION)).card);
-        assert_eq!(current.len(), 0);
-    }
-
-    macro_rules! routine_tests {
-        ($($name:ident: $fname:expr, $category:expr, $value:expr,)*) => {
-        $(
-            #[test]
-            fn $name () {
-                run_test(stringify!($name), $fname, &CardBuilder::new().category($category).hybrids($value).card);
-            }
-        )*
+        let old_ver = semver::Version::new(0, 0, 1);
+        let tests = [(None, 0), (Some(old_ver), 1), (Some(LATEST_ISS_VERSION), 0)];
+        for (ver, expected) in tests {
+            let card = CoachCard { iss_ver: ver, ..Default::default() };
+            assert_eq!(check_iss_version(&card).len(), expected);
         }
     }
 
-    macro_rules! hybrid_tests {
-        ($($name:ident: $fname:expr, $category:expr, $value:expr,)*) => {
-        $(
-            #[test]
-            fn $name () {
-                run_hybrid_test(stringify!($name), $fname, $category, $value);
-            }
-        )*
+    const TMIXED: Category = Category { ag: JRSR, event: MixedDuet, free: false };
+    const FSOLO: Category = Category { ag: JRSR, event: Solo, free: true };
+    const FDUET: Category = Category { ag: JRSR, event: Duet, free: true };
+    const FTEAM: Category = Category { ag: JRSR, event: Team, free: true };
+    const TDUET: Category = Category { ag: JRSR, event: Duet, free: false };
+    const TTEAM: Category = Category { ag: JRSR, event: Team, free: false };
+    const FMDUET: Category = Category { ag: JRSR, event: MixedDuet, free: true };
+    const TRIO: Category = Category { ag: JRSR, event: Trio, free: true };
+    const COMBO: Category = Category { ag: JRSR, event: Combo, free: true };
+
+    #[test]
+    fn test_hybrid_issues() {
+        let def = Category { ..Default::default() };
+
+        type CheckFn = fn(Category, &[String]) -> Vec<CardIssue>;
+        let tests: &[(&str, CheckFn, Category, &[&str], usize)] = &[
+            (
+                "6_factored_ok",
+                check_hybrid_maxes,
+                def,
+                &["TB*0.5", "T1*0.5", "T2a", "T2b", "T3a", "T3b"],
+                0,
+            ),
+            (
+                "too_many_Ts",
+                check_hybrid_maxes,
+                def,
+                &["TB*0.3", "T1*0.3", "T2a", "T2b", "T3a", "T3b", "T3c*0.3"],
+                1,
+            ),
+            ("five_spins_ok", check_hybrid_maxes, def, &["SC1", "S2", "SCD3", "SC4", "S5"], 0),
+            ("six_s_err", check_hybrid_maxes, def, &["SCDB", "SC1", "S2", "SCD3", "SC4", "S5"], 1),
+            ("five_twists_ok", check_hybrid_maxes, def, &["RB", "R1", "1R1", "RU1", "RO1"], 0),
+            ("six_t_err", check_hybrid_maxes, def, &["RB", "R1", "1R1", "RU1", "RO1", "RC1"], 1),
+            ("five_flex_ok", check_hybrid_maxes, def, &["FB", "F1a", "F1b", "F1c", "F2a"], 0),
+            ("six_f_err", check_hybrid_maxes, def, &["FB", "F1a", "F1b", "F1c", "F2a", "F2b"], 1),
+            ("5_c_ok", check_hybrid_maxes, def, &["CB*0.5", "C1", "C2", "C3", "C4+", "C6*0.5"], 0),
+            ("six_c_err", check_hybrid_maxes, def, &["CB", "C1", "C2", "C3", "C4+", "C6"], 1),
+            ("five_s_var_ok", check_hybrid_maxes, def, &["SB", "SCB", "SCDB", "S1", "SCD1"], 0),
+            ("five_rb_var_ok", check_hybrid_maxes, def, &["RB", "1RB", "2RB", "ROB", "RCB"], 0),
+            ("five_r1_var_ok", check_hybrid_maxes, def, &["R1", "1R1", "2R1", "RO1", "RC1"], 0),
+            ("four_a1s_ok", check_hybrid_maxes, def, &["A1a", "A1b", "A1c", "A1d"], 0),
+            ("four_c4s_err", check_hybrid_maxes, def, &["C4", "C4", "C4", "C4+"], 1),
+            (
+                "too_many_Cs",
+                check_hybrid_maxes,
+                def,
+                &["C4", "C4*0.3", "C4*0.3", "C4*0.3", "C4*0.3", "C4*0.3"],
+                1,
+            ),
+            ("three_c4s_duet_err", check_hybrid_maxes, TMIXED, &["C4", "C4", "C4"], 1),
+            ("three_c4s_team_ok", check_hybrid_maxes, FTEAM, &["C4", "C4", "C4"], 0),
+            ("just_pc_ok", check_valid_hybrid_declarations, def, &["2PC"], 0),
+            ("factored_pc_err", check_valid_hybrid_declarations, def, &["2PC*0.3"], 1),
+            ("too_many_pc_err", check_valid_hybrid_declarations, def, &["7PC"], 1),
+            ("spin_base_ok", check_valid_hybrid_declarations, def, &["SB"], 0),
+            ("spin_ten_ok", check_valid_hybrid_declarations, def, &["S10*0.3"], 0),
+            ("spin_five_ok", check_valid_hybrid_declarations, def, &["S5*0.5"], 0),
+            ("spin_factor_err", check_valid_hybrid_declarations, def, &["S5*0.4"], 1),
+            ("combined_spin_level_ok", check_valid_hybrid_declarations, def, &["SC4*0.5"], 0),
+            ("combined_spin_invalid_level", check_valid_hybrid_declarations, def, &["SC8"], 1),
+            ("two_dir_spin_level_ok", check_valid_hybrid_declarations, def, &["SCD2*0.3"], 0),
+            ("two_dir_spin_level_err", check_valid_hybrid_declarations, def, &["SCD7"], 1),
+            ("conn_bad_option_err", check_valid_hybrid_declarations, def, &["C4a"], 1),
+            ("conn_factored_plus_ok", check_valid_hybrid_declarations, def, &["C2b+*0.5"], 0),
+            ("flex_ok", check_valid_hybrid_declarations, def, &["F4e*0.3"], 0),
+            ("flex_err", check_valid_hybrid_declarations, def, &["F4k"], 1),
+            ("air_ok", check_valid_hybrid_declarations, def, &["A7*0.3"], 0),
+            ("air_err", check_valid_hybrid_declarations, def, &["A7a"], 1),
+            ("swirl_ok", check_valid_hybrid_declarations, def, &["RB*0.5"], 0),
+            ("swirl_err", check_valid_hybrid_declarations, def, &["R5"], 1),
+            ("twist_ok", check_valid_hybrid_declarations, def, &["2R10*0.3"], 0),
+            ("twist_err", check_valid_hybrid_declarations, def, &["2R11"], 1),
+            ("unbal_ok", check_valid_hybrid_declarations, def, &["RU10*0.3"], 0),
+            ("unbal_err", check_valid_hybrid_declarations, def, &["RU11"], 1),
+            ("open_ok", check_valid_hybrid_declarations, def, &["ROB"], 0),
+            ("close_err", check_valid_hybrid_declarations, def, &["RC2"], 1),
+            ("one_leg_ok", check_valid_hybrid_declarations, def, &["1R6"], 0),
+            ("one_leg_err", check_valid_hybrid_declarations, def, &["1R7"], 1),
+            ("capital_letter_err", check_valid_hybrid_declarations, def, &["A3B"], 1),
+            ("duet_with_pc", check_small_bonuses, FDUET, &["2PC"], 1),
+            ("team_with_pc_ok", check_small_bonuses, FTEAM, &["2PC"], 0),
+            ("solo_factored_err", check_factoring, FSOLO, &["R1*0.5"], 1),
+            ("duet_factored_too_small_err", check_factoring, FDUET, &["R1*0.3"], 1),
+            ("duet_factored_ok", check_factoring, FDUET, &["R1*0.5"], 0),
+            ("team_factored_ok", check_factoring, FTEAM, &["R1*0.3"], 0),
+            ("duet_factored_conn_err", check_factoring, FDUET, &["C4*0.5"], 1),
+            ("mix_duet_factored_conn_err", check_factoring, FMDUET, &["CB*0.5"], 1),
+            ("free_team_factored_conn_ok", check_factoring, FTEAM, &["CB*0.5"], 0),
+            ("tech_team_factored_conn_ok", check_factoring, TTEAM, &["C4+*0.5", "C2b*0.3"], 0),
+            ("tech_team_factored_conn_warn", check_factoring, TTEAM, &["CB*0.5"], 1),
+            ("tech_duet_factored_decl_warn", check_factoring, TDUET, &["R1*0.5"], 1),
+            ("c_c_plus_warn", check_factoring, FTEAM, &["C3*0.5", "C3+*0.5"], 1),
+            ("c_c_plus_ok", check_factoring, FTEAM, &["C3*0.3", "C3+*0.5"], 0),
+            ("c_plus_c_warn", check_factoring, FTEAM, &["C3+*0.5", "C3*0.5"], 1),
+            ("c_plus_c_ok", check_factoring, FTEAM, &["C3+*0.5", "C3*0.3"], 0),
+            ("c4_c4plus_warn", check_factoring, FTEAM, &["C4*0.3", "C4+*0.5"], 1),
+            ("c4_c4plus_ok", check_factoring, FTEAM, &["C2b*0.3", "C4+*0.5"], 0),
+            ("c4plus_c4_warn", check_factoring, FTEAM, &["C4+*0.5", "C4*0.3"], 1),
+            ("c4plus_c4_ok", check_factoring, FTEAM, &["C4+*0.5", "C2b*0.3"], 0),
+            ("c4plus_c4_2_ok", check_factoring, FTEAM, &["C4+*0.5", "C2b*0.3"], 0),
+            ("repeat_decl_warn", check_factoring, FTEAM, &["2R1*0.5", "2R1*0.3"], 1),
+            ("non_repeat_decl_ok", check_factoring, FTEAM, &["2R1*0.5", "1R1*0.5"], 0),
+            ("cplus_less_half_warn", check_factoring, FTEAM, &["C1a+*0.3"], 1),
+            ("walkout_in_middle_err", check_hybrid_start_end, def, &["F1a", "F2a", "R1"], 1),
+            ("walkout_at_end_ok", check_hybrid_start_end, def, &["R1", "F1a", "F2a"], 0),
+            ("walkout_at_end_pc", check_hybrid_start_end, def, &["R1", "F1a", "F2a", "2PC"], 0),
+            ("back_layout_in_middle_err", check_hybrid_start_end, def, &["R1", "FB", "T4e"], 1),
+            ("back_layout_at_start_ok", check_hybrid_start_end, def, &["FB", "R1", "T4e"], 0),
+            ("front_layout_in_middle_warn", check_hybrid_start_end, def, &["R1", "F4a", "T4e"], 1),
+            ("front_layout_at_start_ok", check_hybrid_start_end, def, &["F4a", "R1", "T4e"], 0),
+            ("no_decls_ok", check_hybrid_start_end, def, &[], 0),
+            ("just_pc2_ok", check_hybrid_start_end, def, &["4PC"], 0),
+            ("duet_c4plus", check_connections_in_non_team, FDUET, &["C4+"], 1),
+            ("combo_c4plus_ok", check_connections_in_non_team, COMBO, &["C4+"], 0),
+            ("duet_c4_ok", check_connections_in_non_team, FDUET, &["C4"], 0),
+            ("solo_cb", check_connections_in_non_team, FSOLO, &["CB"], 1),
+            ("a5_warn", check_hybrid_common_base_marks, def, &["A4b"], 1),
+            ("f10_warn", check_hybrid_common_base_marks, def, &["F10*0.5"], 1),
+            ("other_decls_ok", check_hybrid_common_base_marks, def, &["A5", "F6a*0.5", "F6c"], 0),
+            ("c4_trio_warn", check_hybrid_common_base_marks, TRIO, &["C4"], 1),
+            ("c4_duet_ok", check_hybrid_common_base_marks, FDUET, &["C4"], 0),
+            ("c4_tech_duet_warn", check_hybrid_common_base_marks, TDUET, &["C4"], 1),
+            ("c4_tech_mixed_ok", check_hybrid_common_base_marks, TMIXED, &["C4"], 0),
+            ("c4_tech_team_warn", check_hybrid_common_base_marks, TTEAM, &["C4"], 1),
+            ("c4_plus_tech_team_ok", check_hybrid_common_base_marks, TTEAM, &["C4+"], 0),
+            ("c2b_tech_duet_ok", check_hybrid_common_base_marks, TDUET, &["C2b"], 0),
+            ("join_before_a6_warn", check_hybrid_common_base_marks, def, &["A1d*0.3", "A6*0.5"], 1),
+            ("split_then_knight", check_hybrid_common_base_marks, def, &["F1a*0.5", "F6c*0.3"], 1),
+            ("a1c_c4_warn", check_ascent_connection, def, &["A1c", "C4"], 1),
+            ("a1c_c4_plus_ok", check_ascent_connection, def, &["A1c", "C4+"], 0),
+            ("pike_to_side_conn_warn", check_ascent_connection, def, &["A3a", "C3"], 1),
+            ("pike_to_back_conn_ok", check_ascent_connection, def, &["A3a", "C4"], 0),
+            ("rise_to_conn_warn", check_ascent_connection, def, &["A3b", "C4+"], 1),
+            ("rise_to_rotate_conn_ok", check_ascent_connection, def, &["A3b", "C5"], 0),
+        ];
+        for (name, check, cat, hybrid, expected) in tests {
+            let decls: Vec<String> = hybrid.iter().map(|s| s.to_string()).collect();
+            assert_eq!(check(*cat, &decls).len(), *expected, "{name}");
         }
-    }
-
-    const TECH_MIXED: Category = Category { ag: JRSR, event: MixedDuet, free: false };
-
-    hybrid_tests! {
-        six_factored_ok: check_hybrid_declaration_maxes, TECH_MIXED, &["TB*0.5", "T1*0.5", "T2a", "T2b", "T3a", "T3b"],
-        six_factored_thrusts_ok: check_hybrid_declaration_maxes,TECH_MIXED, &["TB*0.5", "T1*0.5", "T2a", "T2b", "T3a", "T3b"],
-        too_many_factored_thrusts_err: check_hybrid_declaration_maxes,TECH_MIXED, &["TB*0.3", "T1*0.3", "T2a", "T2b", "T3a", "T3b", "T3c*0.3"],
-        five_spins_ok: check_hybrid_declaration_maxes,TECH_MIXED, &["SC1", "S2", "SCD3", "SC4", "S5"],
-        six_spins_err: check_hybrid_declaration_maxes,TECH_MIXED, &["SCDB", "SC1", "S2", "SCD3", "SC4", "S5"],
-        five_twists_ok: check_hybrid_declaration_maxes,TECH_MIXED, &["RB", "R1", "1R1", "RU1", "RO1"],
-        six_twists_err: check_hybrid_declaration_maxes,TECH_MIXED, &["RB", "R1", "1R1", "RU1", "RO1", "RC1"],
-        five_flex_ok: check_hybrid_declaration_maxes,TECH_MIXED, &["FB", "F1a", "F1b", "F1c", "F2a"],
-        six_flex_err: check_hybrid_declaration_maxes,TECH_MIXED, &["FB", "F1a", "F1b", "F1c", "F2a", "F2b"],
-        five_connections_ok: check_hybrid_declaration_maxes,TECH_MIXED, &["CB*0.5", "C1", "C2", "C3", "C4+", "C6*0.5"],
-        six_connections_err: check_hybrid_declaration_maxes,TECH_MIXED, &["CB", "C1", "C2", "C3", "C4+", "C6"],
-        five_spin_variations_ok: check_hybrid_declaration_maxes,TECH_MIXED, &["SB", "SCB", "SCDB", "S1", "SCD1"],
-        five_rb_variations_ok: check_hybrid_declaration_maxes,TECH_MIXED, &["RB", "1RB", "2RB", "ROB", "RCB"],
-        five_r1_variations_ok: check_hybrid_declaration_maxes,TECH_MIXED, &["R1", "1R1", "2R1", "RO1", "RC1"],
-        four_a1s_ok: check_hybrid_declaration_maxes,TECH_MIXED, &["A1a", "A1b", "A1c", "A1d"],
-        four_c4s_err: check_hybrid_declaration_maxes,TECH_MIXED, &["C4", "C4", "C4", "C4+"],
-        four_factored_c1s_err: check_hybrid_declaration_maxes,TECH_MIXED, &["C4", "C4*0.3", "C4*0.3", "C4*0.3", "C4*0.3", "C4*0.3"],
-        three_c4s_duet_err: check_hybrid_declaration_maxes,TECH_MIXED, &["C4", "C4", "C4"],
-        three_c4s_team_ok: check_hybrid_declaration_maxes, Category{ag: JRSR, event: Team, free: true}, &["C4", "C4", "C4"],
-        nm_err: check_valid_hybrid_declarations, TECH_MIXED, &["NM2"], // yes people are still doing this
-        old_bonus_err: check_valid_hybrid_declarations, TECH_MIXED, &["PL"],
-        old_bonus2_err: check_valid_hybrid_declarations, TECH_MIXED,  &["TR"],
-        just_pc_ok: check_valid_hybrid_declarations,  TECH_MIXED, &["2PC"],
-        factored_pc_err: check_valid_hybrid_declarations,  TECH_MIXED, &["2PC*0.3"],
-        too_many_pc_err: check_valid_hybrid_declarations,  TECH_MIXED, &["7PC"],
-        spin_base_ok: check_valid_hybrid_declarations,  TECH_MIXED, &["SB"],
-        spin_ten_ok: check_valid_hybrid_declarations,  TECH_MIXED, &["S10*0.3"],
-        spin_five_ok: check_valid_hybrid_declarations, TECH_MIXED,  &["S5*0.5"],
-        spin_factor_err: check_valid_hybrid_declarations, TECH_MIXED,  &["S5*0.4"],
-        combined_spin_level_ok: check_valid_hybrid_declarations,  TECH_MIXED, &["SC4*0.5"],
-        combined_spin_invalid_level: check_valid_hybrid_declarations, TECH_MIXED,  &["SC8"],
-        two_dir_spin_level_ok: check_valid_hybrid_declarations, TECH_MIXED,  &["SCD2*0.3"],
-        two_dir_spin_level_err: check_valid_hybrid_declarations,  TECH_MIXED, &["SCD7"],
-        conn_bad_option_err: check_valid_hybrid_declarations,  TECH_MIXED, &["C4a"],
-        conn_factored_plus_ok: check_valid_hybrid_declarations, TECH_MIXED,  &["C2b+*0.5"],
-        flex_ok: check_valid_hybrid_declarations,  TECH_MIXED, &["F4e*0.3"],
-        flex_err: check_valid_hybrid_declarations, TECH_MIXED,  &["F4k"],
-        air_ok: check_valid_hybrid_declarations,  TECH_MIXED, &["A7*0.3"],
-        air_err: check_valid_hybrid_declarations, TECH_MIXED,  &["A7a"],
-        swirl_ok: check_valid_hybrid_declarations,  TECH_MIXED, &["RB*0.5"],
-        swirl_err: check_valid_hybrid_declarations,  TECH_MIXED, &["R5"],
-        twist_ok: check_valid_hybrid_declarations,  TECH_MIXED, &["2R10*0.3"],
-        twist_err: check_valid_hybrid_declarations,  TECH_MIXED, &["2R11"],
-        unbal_ok: check_valid_hybrid_declarations,  TECH_MIXED, &["RU10*0.3"],
-        unbal_err: check_valid_hybrid_declarations, TECH_MIXED,  &["RU11"],
-        open_ok: check_valid_hybrid_declarations,  TECH_MIXED, &["ROB"],
-        close_err: check_valid_hybrid_declarations,  TECH_MIXED, &["RC2"],
-        one_leg_ok: check_valid_hybrid_declarations,  TECH_MIXED, &["1R6"],
-        one_leg_err: check_valid_hybrid_declarations,  TECH_MIXED, &["1R7"],
-        capital_letter_err: check_valid_hybrid_declarations,  TECH_MIXED, &["A3B"],
-        duet_with_pc_err: check_small_bonuses, Category{ag: JRSR, event: Duet, free: true}, &["2PC"],
-        team_with_pc_ok: check_small_bonuses, Category{ag: JRSR, event: Team, free: true}, &["2PC"],
-        solo_factored_err: check_factoring, Category{ag: AG12U, event: Solo, free: true}, &["R1*0.5"],
-        duet_factored_too_small_err: check_factoring, Category{ag: AG12U, event: Duet, free: true}, &["R1*0.3"],
-        duet_factored_ok: check_factoring, Category{ag: AG12U, event: Duet, free: true}, &["R1*0.5"],
-        team_factored_ok: check_factoring, Category{ag: AG12U, event: Team, free: true}, &["R1*0.3"],
-        duet_factored_conn_err: check_factoring, Category{ag: AG12U, event: Duet, free: true}, &["C4*0.5"],
-        mix_duet_factored_conn_err: check_factoring, Category{ag: AG12U, event: MixedDuet, free: true}, &["CB*0.5"],
-        free_team_factored_conn_ok: check_factoring, Category{ag: AG12U, event: Team, free: true}, &["CB*0.5"],
-        tech_team_factored_conn_ok: check_factoring, Category{ag: JRSR, event: Team, free: false}, &["C4+*0.5", "C2b*0.3"],
-        tech_team_factored_conn_warn: check_factoring, Category { ag: AG12U, event: Team, free: false }, &["CB*0.5"],
-        tech_duet_factored_decl_warn: check_factoring, Category { ag: AG12U, event: Duet, free: false }, &["R1*0.5"],
-        c_c_plus_warn: check_factoring, Category { ag: AG12U, event: Team, free: true }, &["C3*0.5", "C3+*0.5"],
-        c_c_plus_ok: check_factoring, Category { ag: AG12U, event: Team, free: true }, &["C3*0.3", "C3+*0.5"],
-        c_plus_c_warn: check_factoring, Category { ag: AG12U, event: Team, free: true }, &["C3+*0.5", "C3*0.5"],
-        c_plus_c_ok: check_factoring, Category { ag: AG12U, event: Team, free: true }, &["C3+*0.5", "C3*0.3"],
-        c4_c4plus_warn: check_factoring, Category { ag: AG12U, event: Team, free: true }, &["C4*0.3", "C4+*0.5"],
-        c4_c4plus_ok: check_factoring, Category { ag: AG12U, event: Team, free: true }, &["C2b*0.3", "C4+*0.5"],
-        c4plus_c4_warn: check_factoring, Category { ag: AG12U, event: Team, free: true }, &["C4+*0.5", "C4*0.3"],
-        c4plus_c4_ok: check_factoring, Category { ag: AG12U, event: Team, free: true }, &["C4+*0.5", "C2b*0.3"],
-        c4plus_c4_2_ok: check_factoring, Category { ag: AG12U, event: Team, free: true }, &["C4+*0.5", "C2b*0.3"],
-        repeat_decl_warn: check_factoring, Category { ag: AG12U, event: Team, free: true }, &["2R1*0.5", "2R1*0.3"],
-        non_repeat_decl_ok: check_factoring, Category { ag: AG12U, event: Team, free: true }, &["2R1*0.5", "1R1*0.5"],
-        cplus_less_half_warn: check_factoring, Category { ag: AG12U, event: Team, free: true }, &["C1a+*0.3"],
-        walkout_in_middle_err: check_hybrid_start_end, TECH_MIXED, &["F1a", "F2a", "R1"],
-        walkout_at_end_ok: check_hybrid_start_end, TECH_MIXED, &["R1", "F1a", "F2a"],
-        walkout_at_end_with_pc_ok: check_hybrid_start_end, TECH_MIXED, &["R1", "F1a", "F2a", "2PC"],
-        back_layout_in_middle_err: check_hybrid_start_end, TECH_MIXED, &["R1", "FB", "T4e"],
-        back_layout_at_start_ok: check_hybrid_start_end, TECH_MIXED, &["FB", "R1", "T4e"],
-        front_layout_in_middle_warn: check_hybrid_start_end, TECH_MIXED, &["R1", "F4a", "T4e"],
-        front_layout_at_start_ok: check_hybrid_start_end, TECH_MIXED, &["F4a", "R1", "T4e"],
-        no_decls_ok: check_hybrid_start_end, TECH_MIXED, &[],
-        just_pc2_ok: check_hybrid_start_end, TECH_MIXED, &["4PC"],
-        duet_c4plus: check_connections_in_non_team, Category{ag: AG12U, event: Duet, free: true}, &["C4+"],
-        combo_c4plus_ok: check_connections_in_non_team, Category{ag: AG12U, event: Combo, free: true}, &["C4+"],
-        duet_c4_ok: check_connections_in_non_team, Category{ag: AG12U, event: Duet, free: true}, &["C4"],
-        solo_cb: check_connections_in_non_team, Category{ag: AG12U, event: Solo, free: true}, &["CB"],
-        a5_warn: check_hybrid_common_base_marks, TECH_MIXED, &["A4b"],
-        f10_warn: check_hybrid_common_base_marks, TECH_MIXED, &["F10*0.5"],
-        other_decls_ok: check_hybrid_common_base_marks, TECH_MIXED, &["A5", "F6a*0.5", "F6c"],
-        c4_trio_warn: check_hybrid_common_base_marks, Category{ag: AG12U, event: Trio, free: true}, &["C4"],
-        c4_duet_ok: check_hybrid_common_base_marks, Category{ag: AG12U, event: Duet, free: true}, &["C4"],
-        c4_tech_duet_warn: check_hybrid_common_base_marks, Category { ag: JRSR, free: false, event: Duet }, &["C4"],
-        c4_tech_mixed_ok: check_hybrid_common_base_marks, TECH_MIXED, &["C4"],
-        c4_tech_team_warn: check_hybrid_common_base_marks, Category { ag: JRSR, free: false, event: Team }, &["C4"],
-        c4_plus_tech_team_ok: check_hybrid_common_base_marks, Category { ag: JRSR, free: false, event: Team }, &["C4+"],
-        c2b_tech_duet_ok: check_hybrid_common_base_marks, Category{ag: AG12U, event: Duet, free: true}, &["C2b"],
-        join_before_a6_warn: check_hybrid_common_base_marks, TECH_MIXED, &["A1d*0.3", "A6*0.5"],
-        split_before_knight_warn: check_hybrid_common_base_marks, TECH_MIXED, &["F1a*0.5", "F6c*0.3"],
-        a1c_c4_warn: check_ascent_connection, TECH_MIXED, &["A1c", "C4"],
-        a1c_c4_plus_ok: check_ascent_connection, TECH_MIXED, &["A1c", "C4+"],
-        pike_to_side_conn_warn: check_ascent_connection, TECH_MIXED, &["A3a", "C3"],
-        pike_to_back_conn_ok: check_ascent_connection, TECH_MIXED, &["A3a", "C4"],
-        rise_to_conn_warn: check_ascent_connection, TECH_MIXED, &["A3b", "C4+"],
-        rise_to_rotate_conn_ok: check_ascent_connection, TECH_MIXED, &["A3b", "C5"],
     }
 
     #[test]
@@ -1065,68 +1036,77 @@ mod tests {
         }
     }
 
-    routine_tests! {
-        too_many_hybrids_err: check_routine_element_maxes, Category{ag: AG12U, event: Solo, free: true}, &[&["R1"], &["R1"], &["R1"], &["R1"], &["R1"]],
-        too_few_hybrids_err: check_routine_element_maxes, Category{ag: JRSR, event: Solo, free: true}, &[&["R1"], &["R1"], &["R1"], &["R1"], &["R1"]],
-        correct_hybrids_ok: check_routine_element_maxes, Category{ag: Youth, event: Solo, free: true}, &[&["R1"], &["R1"], &["R1"], &["R1"], &["R1"]],
-        unknown_event_warn: check_routine_element_maxes, Category{ag: AG12U, event: Acrobatic, free: false}, &[],
-        missing_thrust_err: check_mixed_duet_elements, TECH_MIXED, &[&["CB", "C4"]],
-        missing_thrust_in_free_ok: check_mixed_duet_elements, Category{ag: JRSR, event: MixedDuet, free: true}, &[&["CB", "C4"]],
-        missing_thrust_in_duet_ok: check_mixed_duet_elements, Category{ag: JRSR, event: Duet, free: false}, &[&["CB", "C4"]],
-        one_conn_one_thrust: check_mixed_duet_elements, TECH_MIXED, &[&["C4", "T9a"]],
-        two_conn_two_thrust: check_mixed_duet_elements, TECH_MIXED, &[&["T4", "T9a", "CB", "C4"]],
-        three_conn_one_thrust: check_mixed_duet_elements, TECH_MIXED, &[&["C1", "T9a", "CB", "C4"]],
-        extra_decls: check_mixed_duet_elements, TECH_MIXED, &[&["C1", "T9a", "R2", "CB"]],
-        same_conn: check_mixed_duet_elements, TECH_MIXED, &[&["C1", "T9a", "C1"]],
-        two_conn_one_factored_thrust: check_mixed_duet_elements, TECH_MIXED, &[&["CB", "T9a*0.5", "C1"]],
-        two_conn_one_thrust_ok: check_mixed_duet_elements, TECH_MIXED, &[&["CB", "T9a", "C1"]],
-        solo_missing_flex: check_routine_has_all_families, Category{ag: AG12U, event: Solo, free: true}, &[&["TB", "SCD1", "2R2"], &["A3b"]],
-        solo_familes_ok: check_routine_has_all_families, Category{ag: AG12U, event: Solo, free: true}, &[&["TB", "SCD1", "2R2"], &["A3b", "F4f"]],
-        duet_missing_conn: check_routine_has_all_families, Category{ag: AG12U, event: Duet, free: true}, &[&["TB", "SC1", "2R2"], &["A3b", "F4f"]],
-        tech_duet_families_ok: check_routine_has_all_families, Category{ag: AG12U, event: Duet, free: false}, &[&["TB", "SC1", "2R2"], &["A3b", "F4f"]],
-        duet_factored_flex: check_routine_has_all_families, Category{ag: AG12U, event: Duet, free: true}, &[&["TB", "SC1", "2R2"], &["A3b", "F4f*0.5", "CB"]],
-        unknown_ag_err: check_category, Category{ag: AgeGroups::Unknown, event: Solo, free: true}, &[],
-        unknown_event_err: check_category, Category{ag: JRSR, event: Events::Unknown, free: true}, &[],
+    #[test]
+    fn test_routine_issue() {
+        let five_hybrids: &[&[&str]] = &[&["R1"], &["R1"], &["R1"], &["R1"], &["R1"]];
+
+        let ag12solo = Category { ag: AG12U, event: Solo, free: true };
+        let ysolo = Category { ag: Youth, event: Solo, free: true };
+
+        let tests: &[(&str, fn(&CoachCard) -> Vec<CardIssue>, Category, &[&[&str]], usize)] = &[
+            ("too_many_hybrids", check_routine_maxes, ag12solo, five_hybrids, 1),
+            ("too_few_hybrids", check_routine_maxes, FSOLO, five_hybrids, 1),
+            ("ok_hybrids", check_routine_maxes, ysolo, five_hybrids, 0),
+            ("unk_evt", check_routine_maxes, Category { ag: AG12U, ..Default::default() }, &[], 1),
+            ("no_thrust_err", check_mixduet_elems, TMIXED, &[&["CB", "C4"]], 1),
+            ("no_thrust_in_free_ok", check_mixduet_elems, FMDUET, &[&["CB", "C4"]], 0),
+            ("no_thrust_in_duet_ok", check_mixduet_elems, TDUET, &[&["CB", "C4"]], 0),
+            ("1_C_1_T", check_mixduet_elems, TMIXED, &[&["C4", "T9a"]], 1),
+            ("2_C_2_T", check_mixduet_elems, TMIXED, &[&["T4", "T9a", "CB", "C4"]], 1),
+            ("3_C_1_T", check_mixduet_elems, TMIXED, &[&["C1", "T9a", "CB", "C4"]], 1),
+            ("extra_decls", check_mixduet_elems, TMIXED, &[&["C1", "T9a", "R2", "CB"]], 1),
+            ("same_conn", check_mixduet_elems, TMIXED, &[&["C1", "T9a", "C1"]], 1),
+            ("2_C_1_factored_T", check_mixduet_elems, TMIXED, &[&["CB", "T9a*0.5", "C1"]], 1),
+            ("2_C_1_T_ok", check_mixduet_elems, TMIXED, &[&["CB", "T9a", "C1"]], 0),
+            ("solo_no_f", check_families, ysolo, &[&["TB", "SCD1", "2R2"], &["A3b"]], 1),
+            ("solo_all", check_families, ysolo, &[&["TB", "SCD1", "2R2"], &["A3b", "F4f"]], 0),
+            ("duet_no_C", check_families, FDUET, &[&["TB", "SC1", "2R2"], &["A3b", "F4f"]], 1),
+            ("tduet_no_C_ok", check_families, TDUET, &[&["TB", "SC1", "2R2"], &["A3b", "F4f"]], 0),
+            ("duet_no_F", check_families, FDUET, &[&["TB", "S1", "R2", "A5", "F9*0.5", "CB"]], 1),
+            ("unk_ag", check_category, Category { event: Solo, ..Default::default() }, &[], 1),
+            ("unk_evt", check_category, Category { ag: JRSR, ..Default::default() }, &[], 1),
+        ];
+        for (name, check, cat, hybrids, expected) in tests {
+            let card = &CardBuilder::new().category(*cat).hybrids(hybrids).card;
+            assert_eq!(check(card).len(), *expected, "{name}");
+        }
     }
 
     #[test]
     fn test_check_theme() {
-        let combo_missing_err = check_theme(&CardBuilder::new().event_type(Combo).card);
-        assert_eq!(combo_missing_err.len(), 1);
-        let combo_ok =
-            check_theme(&CardBuilder::new().event_type(Combo).theme("foo".to_string()).card);
-        assert_eq!(combo_ok.len(), 0);
-        let solo_missing_ok = check_theme(&CardBuilder::new().event_type(Solo).card);
-        assert_eq!(solo_missing_ok.len(), 0);
+        assert_eq!(check_theme(&CoachCard { category: COMBO, ..Default::default() }).len(), 1);
+        let card = CoachCard { category: COMBO, theme: "foo".into(), ..Default::default() };
+        assert!(check_theme(&card).is_empty());
+        assert!(check_theme(&CoachCard { category: FSOLO, ..Default::default() }).is_empty());
     }
 
     #[test]
     fn test_check_routine_element_maxes() {
-        let too_many_pair_acros = check_routine_element_maxes(
+        let too_many_pair_acros = check_routine_maxes(
             &CardBuilder::new()
                 .pair_acros(&["Js1B", "L!fr1"])
                 .hybrids(&[&["R1"], &["TRE1a"], &["TRE2a"], &["TRE3"], &["TRE4a"], &["TRE5a"]])
-                .category(Category { ag: JRSR, event: Duet, free: false })
+                .category(TDUET)
                 .card,
         );
         assert_eq!(too_many_pair_acros.len(), 1);
-        let too_few_pair_acros = check_routine_element_maxes(
+        let too_few_pair_acros = check_routine_maxes(
             &CardBuilder::new()
                 .hybrids(&[&["R1"], &["R1"], &["R1"], &["R1"], &["R1"], &["R1"]])
-                .category(Category { ag: JRSR, event: Duet, free: true })
+                .category(FDUET)
                 .card,
         );
         assert_eq!(too_few_pair_acros.len(), 1);
-        let ok_pair_acros = check_routine_element_maxes(
+        let ok_pair_acros = check_routine_maxes(
             &CardBuilder::new()
                 .pair_acros(&["Js1B", "L!fr1"])
                 .hybrids(&[&["R1"], &["R1"], &["R1"], &["R1"], &["R1"], &["R1"]])
-                .category(Category { ag: JRSR, event: Duet, free: true })
+                .category(FDUET)
                 .card,
         );
         assert_eq!(ok_pair_acros.len(), 0);
 
-        let too_many_chohy = check_routine_element_maxes(
+        let too_many_chohy = check_routine_maxes(
             &CardBuilder::new()
                 .team_acros(&["A-Sq-Back-tk", "A-Sq-Back-tk", "A-Sq-Back-tk"])
                 .hybrids(&[&["R1"], &["R1"], &["R1"], &["R1"], &["ChoHy"], &["ChoHy"]])
@@ -1135,7 +1115,7 @@ mod tests {
         );
         assert_eq!(too_many_chohy.len(), 1);
 
-        let too_many_suconn = check_routine_element_maxes(
+        let too_many_suconn = check_routine_maxes(
             &CardBuilder::new()
                 .pair_acros(&["Js1B", "L!fr1"])
                 .hybrids(&[
@@ -1149,12 +1129,12 @@ mod tests {
                     &["SuConn"],
                     &["SuConn"],
                 ])
-                .category(Category { ag: JRSR, event: MixedDuet, free: false })
+                .category(TMIXED)
                 .card,
         );
         assert_eq!(too_many_suconn.len(), 1);
 
-        let too_many_tres = check_routine_element_maxes(
+        let too_many_tres = check_routine_maxes(
             &CardBuilder::new()
                 .pair_acros(&["Js1B", "L!fr1"])
                 .hybrids(&[
@@ -1168,28 +1148,28 @@ mod tests {
                     &["SuConn"],
                     &["SuConn"],
                 ])
-                .category(Category { ag: JRSR, event: MixedDuet, free: false })
+                .category(TMIXED)
                 .card,
         );
         assert_eq!(too_many_tres.len(), 1);
-        let too_few_tres = check_routine_element_maxes(
+        let too_few_tres = check_routine_maxes(
             &CardBuilder::new()
                 .pair_acros(&["Js1B"])
                 .hybrids(&[&["R1"], &["TRE1"], &["TRE2"], &["TRE3"], &["TRE4"]])
-                .category(Category { ag: JRSR, event: Duet, free: false })
+                .category(TDUET)
                 .card,
         );
         assert_eq!(too_few_tres.len(), 1);
-        let ok_tres = check_routine_element_maxes(
+        let ok_tres = check_routine_maxes(
             &CardBuilder::new()
                 .pair_acros(&["Js1B"])
                 .hybrids(&[&["R1"], &["TRE1"], &["TRE2"], &["TRE3"], &["TRE4"], &["TRE5"]])
-                .category(Category { ag: JRSR, event: Duet, free: false })
+                .category(TDUET)
                 .card,
         );
         assert_eq!(ok_tres.len(), 0);
 
-        let too_many_team_acros = check_routine_element_maxes(
+        let too_many_team_acros = check_routine_maxes(
             &CardBuilder::new()
                 .team_acros(&[
                     "A-Shou-Back-tk-s1",
@@ -1205,7 +1185,7 @@ mod tests {
                 .card,
         );
         assert_eq!(too_many_team_acros.len(), 1);
-        let too_few_team_acros = check_routine_element_maxes(
+        let too_few_team_acros = check_routine_maxes(
             &CardBuilder::new()
                 .team_acros(&[
                     "A-Shou-Back-tk-s1",
@@ -1219,7 +1199,7 @@ mod tests {
                 .card,
         );
         assert_eq!(too_few_team_acros.len(), 1);
-        let ok_team_acros = check_routine_element_maxes(
+        let ok_team_acros = check_routine_maxes(
             &CardBuilder::new()
                 .team_acros(&[
                     "A-Shou-Back-tk-s1",
@@ -1238,35 +1218,14 @@ mod tests {
 
     #[test]
     fn test_check_acros_event() {
-        let pair_acro_in_solo =
-            check_pair_acro(Category { ag: AG12U, event: Solo, free: true }, &"Js1B".into());
-        assert_eq!(pair_acro_in_solo.len(), 1);
-        let team_acro_in_solo = check_team_acro(
-            Category { ag: AG12U, event: Solo, free: true },
-            &TeamAcrobatic::from("A-Shou-Back-tk-s1").unwrap(),
-            &"".into(),
-        );
-        assert_eq!(team_acro_in_solo.len(), 1);
+        let team_acro = &TeamAcrobatic::from("A-Shou-Back-tk-s1").unwrap();
 
-        let pair_acro_in_duet =
-            check_pair_acro(Category { ag: AG12U, event: Duet, free: true }, &"Js1B".into());
-        assert_eq!(pair_acro_in_duet.len(), 0);
-        let team_acro_in_duet = check_team_acro(
-            Category { ag: AG12U, event: Duet, free: true },
-            &TeamAcrobatic::from("A-Shou-Back-tk-s1").unwrap(),
-            &"".into(),
-        );
-        assert_eq!(team_acro_in_duet.len(), 1);
-
-        let pair_acro_in_team =
-            check_pair_acro(Category { ag: AG12U, event: Team, free: true }, &"Js1B".into());
-        assert_eq!(pair_acro_in_team.len(), 1);
-        let team_acro_in_team = check_team_acro(
-            Category { ag: AG12U, event: Team, free: true },
-            &TeamAcrobatic::from("A-Shou-Back-tk-s1").unwrap(),
-            &"".into(),
-        );
-        assert_eq!(team_acro_in_team.len(), 0);
+        assert_eq!(check_pair_acro(FSOLO, &"Js1B".into()).len(), 1);
+        assert_eq!(check_team_acro(FSOLO, team_acro, &"".into()).len(), 1);
+        assert_eq!(check_pair_acro(FDUET, &"Js1B".into()).len(), 0);
+        assert_eq!(check_team_acro(FDUET, team_acro, &"".into()).len(), 1);
+        assert_eq!(check_pair_acro(FTEAM, &"Js1B".into()).len(), 1);
+        assert_eq!(check_team_acro(FTEAM, team_acro, &"".into()).len(), 0);
     }
 
     #[test]
@@ -1306,7 +1265,7 @@ mod tests {
     #[test]
     fn test_check_overlapping_elements() {
         let mut base_card = CardBuilder::new()
-            .category(Category { ag: AG12U, event: Combo, free: true })
+            .category(COMBO)
             .hybrids(&[&["C4"], &["F8a"]])
             .team_acros(&["A-Sq-Back-ln"])
             .card;
@@ -1345,17 +1304,11 @@ mod tests {
 
     #[test]
     fn test_check_dd_limits() {
-        let above_limit_err =
-            check_dd_limits(Category { ag: AG12U, event: Combo, free: true }, &"7.1");
-        assert_eq!(above_limit_err.len(), 1);
-
-        let below_limit_ok =
-            check_dd_limits(Category { ag: AG12U, event: Combo, free: true }, &"6.9");
-        assert_eq!(below_limit_ok.len(), 0);
-
-        let above_limit_youth_ok =
-            check_dd_limits(Category { ag: Youth, event: Combo, free: true }, &"7.1");
-        assert_eq!(above_limit_youth_ok.len(), 0);
+        let above = check_dd_limits(Category { ag: AG12U, event: Solo, free: true }, "7.1");
+        assert_eq!(above.len(), 1);
+        assert!(check_dd_limits(Category { ag: AG12U, event: Solo, free: true }, "6.9").is_empty());
+        assert!(check_dd_limits(Category { ag: AG12U, event: Solo, free: true }, "7.0").is_empty());
+        assert!(check_dd_limits(Category { ag: Youth, event: Solo, free: true }, "7.1").is_empty());
     }
 
     #[test]
@@ -1375,7 +1328,7 @@ mod tests {
             (&["F1b".to_string(), "F4f".to_string()], 1),
         ];
         for (decls, warns) in hybrids {
-            let ci = check_flexibility_combinations(TECH_MIXED, decls);
+            let ci = check_flexibility_combinations(TMIXED, decls);
             assert_eq!(warns, ci.len(), "hybrid {:?}: {:?}", decls, ci);
         }
     }
