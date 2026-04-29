@@ -503,11 +503,11 @@ fn check_families(card: &CoachCard) -> Vec<CardIssue> {
     }
 
     let mut regex_map = vec![
-        ("Thrust", Regex::new(r"^T[\dB][A-z]?").unwrap()),
+        ("Thrust", Regex::new(r"^T[\dB][A-z]?$").unwrap()),
         ("Spin", Regex::new(r"^S(C|CD)?[\dB][A-z]?$").unwrap()),
         ("Twist", Regex::new(r"^[12]?R[DUCO]?[\dB][A-z]?$").unwrap()),
         ("Airborne Weight", Regex::new(r"^A[\dB][A-z]?$").unwrap()),
-        ("Flexiblity", Regex::new(r"^F[\dB][A-z]?$").unwrap()),
+        ("Flexibility", Regex::new(r"^F[\dB][A-z]?$").unwrap()),
     ];
     if card.category.event != Solo {
         regex_map.push(("Connection", Regex::new(r"^C[\dB][A-z]?\+?$").unwrap()));
@@ -531,7 +531,7 @@ fn check_families(card: &CoachCard) -> Vec<CardIssue> {
 
     let missing_families = has_family_map.into_iter().filter(|(_, v)| !*v).map(|(k, _)| k);
     for family in missing_families {
-        ci_err(&mut ci, format!("missing one hybrid with one unfactored {family} declared"));
+        ci_err(&mut ci, format!("need at least one hybrid with one unfactored {family}"));
     }
     ci
 }
@@ -1042,6 +1042,9 @@ mod tests {
             ("2_C_1_factored_T", check_mixduet_elems, TMIXED, &[&["CB", "T9a*0.5", "C1"]], 1),
             ("2_C_1_T_ok", check_mixduet_elems, TMIXED, &[&["CB", "T9a", "C1"]], 0),
             ("solo_no_f", check_families, ysolo, &[&["TB", "SCD1", "2R2"], &["A3b"]], 1),
+            ("solo_no_r", check_families, ysolo, &[&["FB", "SCD1", "TB"], &["A3b"]], 1),
+            ("solo_no_s", check_families, ysolo, &[&["FB", "TB", "2R2"], &["A3b"]], 1),
+            ("solo_no_t", check_families, ysolo, &[&["FB", "SCD1", "2R2"], &["A3b"]], 1),
             ("solo_all", check_families, ysolo, &[&["TB", "SCD1", "2R2"], &["A3b", "F4f"]], 0),
             ("duet_no_C", check_families, FDUET, &[&["TB", "SC1", "2R2"], &["A3b", "F4f"]], 1),
             ("tduet_no_C_ok", check_families, TDUET, &[&["TB", "SC1", "2R2"], &["A3b", "F4f"]], 0),
