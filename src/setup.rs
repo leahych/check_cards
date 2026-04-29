@@ -31,8 +31,7 @@ pub fn on_file_input_changed(event: &Event) {
 }
 
 fn process_files(input_element: &HtmlInputElement) {
-    let files = input_element.files();
-    let files = match files {
+    let files = match input_element.files() {
         Some(files) => gloo::file::FileList::from(files),
         None => return,
     };
