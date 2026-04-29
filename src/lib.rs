@@ -461,11 +461,6 @@ pub fn get_expected_routine_time(category: &Category) -> Option<&NaiveTime> {
             (Category { ag: Youth, event: MixedDuet, free: true }, routine_time(2, 30)),
             (Category { ag: Youth, event: Team, free: true }, routine_time(3, 0)),
             (Category { ag: Youth, event: Combo, free: true }, routine_time(3, 0)),
-            // Youth tech - USAAS experimental
-            (Category { ag: Youth, event: Solo, free: false }, routine_time(2, 0)),
-            (Category { ag: Youth, event: Duet, free: false }, routine_time(2, 20)),
-            (Category { ag: Youth, event: MixedDuet, free: false }, routine_time(2, 20)),
-            (Category { ag: Youth, event: Team, free: false }, routine_time(2, 50)),
             // JR/SR free
             (Category { ag: JRSR, event: Solo, free: true }, routine_time(2, 15)),
             (Category { ag: JRSR, event: Duet, free: true }, routine_time(2, 45)),

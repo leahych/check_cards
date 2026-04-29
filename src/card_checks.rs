@@ -148,23 +148,6 @@ fn element_maxes(category: &Category) -> Option<&ElementLimit> {
                 Category { ag: Youth, event: Combo, free: true },
                 ElementLimit { chohy: 1, suconn: 0, tre: 0, acro: 4, hybrid: 4 },
             ),
-            // Youth tech - USAAS experimental
-            (
-                Category { ag: Youth, event: Solo, free: false },
-                ElementLimit { chohy: 0, suconn: 0, tre: 5, acro: 0, hybrid: 1 },
-            ),
-            (
-                Category { ag: Youth, event: Duet, free: false },
-                ElementLimit { chohy: 0, suconn: 0, tre: 5, acro: 1, hybrid: 1 },
-            ),
-            (
-                Category { ag: Youth, event: MixedDuet, free: false },
-                ElementLimit { chohy: 0, suconn: 3, tre: 3, acro: 2, hybrid: 2 },
-            ),
-            (
-                Category { ag: Youth, event: Team, free: false },
-                ElementLimit { chohy: 0, suconn: 0, tre: 5, acro: 1, hybrid: 2 },
-            ),
             // JR/SR free
             (
                 Category { ag: JRSR, event: Solo, free: true },
