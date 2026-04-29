@@ -1200,7 +1200,7 @@ mod tests {
     }
 
     fn team_acros(acros: &[&str]) -> Vec<Element> {
-        elements(acros, |acro| TeamAcro(TeamAcrobatic::from(acro).unwrap(), "1.0".into()))
+        elements(acros, |acro| TeamAcro(acro.parse().unwrap(), "1.0".into()))
     }
 
     #[test]
@@ -1422,13 +1422,13 @@ mod tests {
             ("airborne_ln_as_takeoff", check_positions, "A-Sq-Back-ln/2tk-s1", 1),
         ];
         for (name, check, acro, expected) in tests {
-            assert_eq!(check(&TeamAcrobatic::from(acro).unwrap()).len(), *expected, "{name}");
+            assert_eq!(check(&acro.parse().unwrap()).len(), *expected, "{name}");
         }
     }
 
     #[test]
     fn test_check_age_restrictions() {
-        let acro = TeamAcrobatic::from("C-Thr>StH-Forw-ln-1F>1F").unwrap();
+        let acro = "C-Thr>StH-Forw-ln-1F>1F".parse().unwrap();
         assert_eq!(check_age_restrictions(AG12U, &acro).len(), 1);
         assert_eq!(check_age_restrictions(Youth, &acro).len(), 1);
         assert_eq!(check_age_restrictions(JRSR, &acro).len(), 0);
@@ -1519,7 +1519,7 @@ mod tests {
         ];
         let cat = Category::default();
         for (s, expected_num_issues) in acros {
-            let ci = check_one_acro(cat, &TeamAcrobatic::from(s).unwrap(), "1.0");
+            let ci = check_one_acro(cat, &s.parse().unwrap(), "1.0");
             assert_eq!(expected_num_issues, ci.len(), "acro {}: {:?}", s, ci);
         }
     }

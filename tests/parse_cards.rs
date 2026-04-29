@@ -203,10 +203,7 @@ fn test_parse_iss_report() {
                         number: 1,
                         start_time: NaiveTime::from_hms_opt(0, 0, 15).unwrap(),
                         stop_time: NaiveTime::from_hms_opt(0, 0, 17).unwrap(),
-                        kind: TeamAcro(
-                            TeamAcrobatic::from("A-Sq-Back-tk-t1").unwrap(),
-                            "".to_string()
-                        ),
+                        kind: TeamAcro("A-Sq-Back-tk-t1".parse().unwrap(), "".into()),
                     },
                     Element {
                         number: 2,
@@ -218,10 +215,7 @@ fn test_parse_iss_report() {
                         number: 3,
                         start_time: NaiveTime::from_hms_opt(0, 0, 53).unwrap(),
                         stop_time: NaiveTime::from_hms_opt(0, 1, 3).unwrap(),
-                        kind: TeamAcro(
-                            TeamAcrobatic::from("P-P-HA-wi/2ow-Pos3/Trav").unwrap(),
-                            "".to_string()
-                        ),
+                        kind: TeamAcro("P-P-HA-wi/2ow-Pos3/Trav".parse().unwrap(), "".into()),
                     },
                     Element {
                         number: 4,
@@ -245,10 +239,7 @@ fn test_parse_iss_report() {
                         number: 6,
                         start_time: NaiveTime::from_hms_opt(0, 2, 4).unwrap(),
                         stop_time: NaiveTime::from_hms_opt(0, 2, 7).unwrap(),
-                        kind: TeamAcro(
-                            TeamAcrobatic::from("C-Thr>St-Forw-co-Jump").unwrap(),
-                            "".to_string()
-                        ),
+                        kind: TeamAcro("C-Thr>St-Forw-co-Jump".parse().unwrap(), "".into()),
                     },
                     Element {
                         number: 7,
@@ -281,10 +272,7 @@ fn test_parse_iss_report() {
                         number: 10,
                         start_time: NaiveTime::from_hms_opt(0, 3, 32).unwrap(),
                         stop_time: NaiveTime::from_hms_opt(0, 3, 34).unwrap(),
-                        kind: TeamAcro(
-                            TeamAcrobatic::from("B-StH-ShF-bb/2spl").unwrap(),
-                            "".to_string()
-                        ),
+                        kind: TeamAcro("B-StH-ShF-bb/2spl".parse().unwrap(), "".into()),
                     },
                 ],
                 theme: "foo".to_string(),
@@ -305,10 +293,7 @@ fn test_parse_iss_report() {
                         number: 1,
                         start_time: NaiveTime::from_hms_opt(0, 0, 9).unwrap(),
                         stop_time: NaiveTime::from_hms_opt(0, 0, 13).unwrap(),
-                        kind: TeamAcro(
-                            TeamAcrobatic::from("C-Thr>F-Forw-ln").unwrap(),
-                            "".to_string()
-                        ),
+                        kind: TeamAcro("C-Thr>F-Forw-ln".parse().unwrap(), "".into()),
                     },
                     Element {
                         number: 2,
@@ -329,10 +314,7 @@ fn test_parse_iss_report() {
                         number: 4,
                         start_time: NaiveTime::from_hms_opt(0, 1, 41).unwrap(),
                         stop_time: NaiveTime::from_hms_opt(0, 1, 55).unwrap(),
-                        kind: TeamAcro(
-                            TeamAcrobatic::from("P-2S-F2A-sd-Climb/Fall").unwrap(),
-                            "".to_string()
-                        ),
+                        kind: TeamAcro("P-2S-F2A-sd-Climb/Fall".parse().unwrap(), "".into()),
                     },
                     Element {
                         number: 5,
@@ -347,16 +329,13 @@ fn test_parse_iss_report() {
                         number: 6,
                         start_time: NaiveTime::from_hms_opt(0, 2, 30).unwrap(),
                         stop_time: NaiveTime::from_hms_opt(0, 2, 34).unwrap(),
-                        kind: TeamAcro(
-                            TeamAcrobatic::from("A-Thr-Up-ln-t1").unwrap(),
-                            "".to_string()
-                        ),
+                        kind: TeamAcro("A-Thr-Up-ln-t1".parse().unwrap(), "".into()),
                     },
                     Element {
                         number: 7,
                         start_time: NaiveTime::from_hms_opt(0, 2, 35).unwrap(),
                         stop_time: NaiveTime::from_hms_opt(0, 2, 38).unwrap(),
-                        kind: TeamAcro(TeamAcrobatic::from("B-St-FS-sd").unwrap(), "".to_string()),
+                        kind: TeamAcro("B-St-FS-sd".parse().unwrap(), "".into()),
                     },
                     Element {
                         number: 8,

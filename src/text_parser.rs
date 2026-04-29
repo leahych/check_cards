@@ -1,8 +1,5 @@
 use crate::ElementKind::{ChoHy, Hybrid, PairAcro, SuConn, TRE, TeamAcro};
-use crate::{
-    AgeGroups, Category, CoachCard, Element, ElementKind, Events, TeamAcrobatic,
-    get_expected_routine_time,
-};
+use crate::{Category, CoachCard, Element, ElementKind, get_expected_routine_time};
 use chrono::NaiveTime;
 
 #[derive(Debug, Eq, PartialEq)]
@@ -26,7 +23,7 @@ fn parse_element(line: &str) -> Result<ElementKind, String> {
     }
 
     if ["A-", "B-", "C-", "P-"].iter().any(|s| line.starts_with(*s)) {
-        return match TeamAcrobatic::from(line) {
+        return match line.parse() {
             Ok(acro) => Ok(TeamAcro(acro, "1.0".into())),
             Err(e) => Err(e),
         };
@@ -39,8 +36,8 @@ fn parse_element(line: &str) -> Result<ElementKind, String> {
     Ok(Hybrid(line.split_whitespace().map(str::to_owned).collect(), "1.0".into()))
 }
 
-pub fn parse_text(ag: &str, free: bool, event: &str, input: &str) -> ParseResult {
-    let category = Category { ag: AgeGroups::from_str(ag), free, event: Events::from_str(event) };
+pub fn parse_text(ag: &str, free: bool, evt: &str, input: &str) -> ParseResult {
+    let category = Category { ag: ag.parse().unwrap(), free, event: evt.parse().unwrap() };
 
     if !input.contains('\n') {
         return match parse_element(input) {

@@ -797,7 +797,7 @@ pub fn run_checks(card: &CoachCard) -> Vec<CardIssue> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{Category, Element, TeamAcrobatic};
+    use crate::{Category, Element};
     use chrono::NaiveTime;
 
     struct CardBuilder {
@@ -849,7 +849,7 @@ mod tests {
                     number: self.card.elements.len() + 1,
                     start_time: Default::default(),
                     stop_time: Default::default(),
-                    kind: TeamAcro(TeamAcrobatic::from(acro).unwrap(), "1.0".into()),
+                    kind: TeamAcro(acro.parse().unwrap(), "1.0".into()),
                 });
             }
             self
@@ -1218,7 +1218,7 @@ mod tests {
 
     #[test]
     fn test_check_acros_event() {
-        let team_acro = &TeamAcrobatic::from("A-Shou-Back-tk-s1").unwrap();
+        let team_acro = &"A-Shou-Back-tk-s1".parse().unwrap();
 
         assert_eq!(check_pair_acro(FSOLO, &"Js1B".into()).len(), 1);
         assert_eq!(check_team_acro(FSOLO, team_acro, &"".into()).len(), 1);

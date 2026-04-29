@@ -12,7 +12,7 @@ use chrono::NaiveTime;
 use regex_lite::Regex;
 use std::collections::HashMap;
 use std::fmt;
-use std::fmt::{Display, Formatter};
+use std::str::FromStr;
 
 #[derive(Copy, Clone, Debug, Default, Hash, PartialEq, Eq)]
 pub enum AgeGroups {
@@ -38,35 +38,15 @@ fn is_youth(txt: &str) -> bool {
 }
 
 fn is_jrsr(txt: &str) -> bool {
-    if txt.contains("JR") {
-        return true;
-    }
-    if txt.contains("JUNIOR") {
-        return true;
-    }
-    if txt.contains("SR") {
-        return true;
-    }
-    if txt.contains("SENIOR") {
-        return true;
-    }
-    if txt.contains("15") && txt.contains("17") {
-        return true;
-    }
-    if txt.contains("16") && txt.contains("17") {
-        return true;
-    }
-    if txt.contains("16") && txt.contains("19") {
-        return true;
-    }
-    if txt.contains("18") && txt.contains("19") {
-        return true;
-    }
-    if txt.contains("COLLEGIATE") {
-        return true;
-    }
-
-    false
+    txt.contains("JR")
+        || txt.contains("JUNIOR")
+        || txt.contains("SR")
+        || txt.contains("SENIOR")
+        || txt.contains("15") && txt.contains("17")
+        || (txt.contains("16") && txt.contains("17"))
+        || (txt.contains("16") && txt.contains("19"))
+        || (txt.contains("18") && txt.contains("19"))
+        || txt.contains("COLLEGIATE")
 }
 
 impl AgeGroups {
@@ -78,17 +58,21 @@ impl AgeGroups {
             Self::Unknown => "Unknown",
         }
     }
+}
 
-    fn from_str(input: &str) -> Self {
+impl FromStr for AgeGroups {
+    type Err = String;
+
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
         let txt = input.to_uppercase();
         if is_12u(&txt) {
-            return AG12U;
+            return Ok(AG12U);
         } else if is_youth(&txt) {
-            return Youth;
+            return Ok(Youth);
         } else if is_jrsr(&txt) {
-            return JRSR;
+            return Ok(JRSR);
         }
-        Self::Unknown
+        Ok(Self::Unknown)
     }
 }
 
@@ -122,31 +106,34 @@ impl Events {
     const fn is_team_event(self) -> bool {
         matches!(self, Team | Acrobatic | Combo)
     }
+}
 
-    fn from_str(input: &str) -> Self {
+impl FromStr for Events {
+    type Err = String;
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
         let input = input.to_uppercase();
         if input.contains("ACRO") {
-            return Acrobatic;
+            return Ok(Acrobatic);
         }
         if input.contains("COMB") {
-            return Combo;
+            return Ok(Combo);
         }
         if input.contains("TEAM") {
-            return Team;
+            return Ok(Team);
         }
         if input.contains("MIXED") {
-            return MixedDuet;
+            return Ok(MixedDuet);
         }
         if input.contains("DUET") {
-            return Duet;
+            return Ok(Duet);
         }
         if input.contains("TRIO") {
-            return Trio;
+            return Ok(Trio);
         }
         if input.contains("SOLO") {
-            return Solo;
+            return Ok(Solo);
         }
-        Self::Unknown
+        Ok(Self::Unknown)
     }
 }
 
@@ -165,6 +152,20 @@ impl AcroGroup {
     }
 }
 
+impl FromStr for AcroGroup {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "A" => Ok(Self::Airborne),
+            "B" => Ok(Self::Balance),
+            "C" => Ok(Self::Combined),
+            "P" => Ok(Self::Platform),
+            other => Err(format!("Unknown group '{other}'"))?,
+        }
+    }
+}
+
 #[derive(Copy, Clone, Debug, Hash, PartialEq, Eq)]
 pub enum AcroDirection {
     Upwards,
@@ -173,6 +174,21 @@ pub enum AcroDirection {
     Sideways,
     Reverse,
     Blind, // only for group C
+}
+
+impl FromStr for AcroDirection {
+    type Err = String;
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        match input {
+            "Up" => Ok(Self::Upwards),
+            "Forw" => Ok(Self::Forwards),
+            "Back" => Ok(Self::Backwards),
+            "Side" => Ok(Self::Sideways),
+            "Rev" => Ok(Self::Reverse),
+            "Bln" => Ok(Self::Blind),
+            dir_name => Err(format!("Unknown direction '{dir_name}'")),
+        }
+    }
 }
 
 // TODO should this be an enum and split this into
@@ -200,47 +216,26 @@ fn is_rotation(group: AcroGroup, rotation: &str) -> bool {
     .is_match(rotation)
 }
 
-impl TeamAcrobatic {
-    pub fn from(code: &str) -> Result<Self, String> {
+impl FromStr for TeamAcrobatic {
+    type Err = String;
+
+    fn from_str(code: &str) -> Result<Self, Self::Err> {
         // "-" is to separate parts, except in one place just to screw
         // with you, we'll just rename it internally to make parsing
         // easier since we don't display it anywhere
         let code = code.replace("C-Roll", "CRoll");
-
         let mut parts = code.split('-');
-        let group = match parts.next() {
-            Some("A") => AcroGroup::Airborne,
-            Some("B") => AcroGroup::Balance,
-            Some("C") => AcroGroup::Combined,
-            Some("P") => AcroGroup::Platform,
-            other => {
-                return Err(format!("Unknown group '{}'", other.unwrap_or_default()));
-            }
-        };
+
+        let group = parts.next().unwrap_or_default().parse::<AcroGroup>()?;
         let construction = parts.next().unwrap_or_default().to_owned();
-        let mut direction = Option::<AcroDirection>::None;
-        let mut connection_grip = String::new();
-        match group {
-            AcroGroup::Airborne | AcroGroup::Combined => {
-                direction = match parts.next().unwrap_or_default().to_uppercase().as_str() {
-                    "UP" => Some(AcroDirection::Upwards),
-                    "FORW" => Some(AcroDirection::Forwards),
-                    "BACK" => Some(AcroDirection::Backwards),
-                    "SIDE" => Some(AcroDirection::Sideways),
-                    "REV" => Some(AcroDirection::Reverse),
-                    "BLN" => {
-                        if group == AcroGroup::Combined {
-                            Some(AcroDirection::Blind)
-                        } else {
-                            return Err(format!("Cannot use Blind direction with {group:?}"));
-                        }
-                    }
-                    dir_name => return Err(format!("Unknown direction '{dir_name}'")),
-                };
-            }
-            AcroGroup::Balance | AcroGroup::Platform => {
-                parts.next().unwrap_or_default().clone_into(&mut connection_grip);
-            }
+        let dir_grip = parts.next().unwrap_or_default();
+        let (direction, connection_grip) = match group {
+            AcroGroup::Airborne | AcroGroup::Combined => (Some(dir_grip.parse()?), String::new()),
+            AcroGroup::Balance | AcroGroup::Platform => (None, dir_grip.into()),
+        };
+
+        if group != AcroGroup::Combined && direction == Some(AcroDirection::Blind) {
+            return Err(format!("Cannot use Blind direction with {group:?}"));
         }
 
         // at one point this went through and did to_lowercase on all
@@ -286,7 +281,6 @@ pub enum ElementKind {
     SuConn,
 }
 
-// TODO switch to this
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Element {
     pub number: usize,
@@ -302,8 +296,8 @@ pub struct Category {
     pub event: Events,
 }
 
-impl Display for Category {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+impl fmt::Display for Category {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let free_tech = if self.free { "Free" } else { "Tech" };
         write!(f, "{} {} {free_tech}", self.ag.as_str(), self.event.as_str())
     }
@@ -324,11 +318,11 @@ pub enum IssueLevel {
     Error,
 }
 
-impl Display for IssueLevel {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+impl fmt::Display for IssueLevel {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Warning => write!(f, "\u{26A0}"),
-            Self::Error => write!(f, "\u{26D4}"),
+            Warning => write!(f, "\u{26A0}"),
+            Error => write!(f, "\u{26D4}"),
         }
     }
 }
@@ -345,8 +339,8 @@ impl CardIssue {
     }
 }
 
-impl Display for CardIssue {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+impl fmt::Display for CardIssue {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{} {}", self.level, self.text)
     }
 }
@@ -375,11 +369,11 @@ mod tests {
 
     #[test]
     fn test_parse_team_acro() {
-        assert!(TeamAcrobatic::from("Q-Sq-Forw-ln").is_err());
-        assert!(TeamAcrobatic::from("A-Sq-Bln-ln").is_err());
-        assert!(TeamAcrobatic::from("A-Sq-Down-ln").is_err());
+        assert!("Q-Sq-Forw-ln".parse::<TeamAcrobatic>().is_err());
+        assert!("A-Sq-Bln-ln".parse::<TeamAcrobatic>().is_err());
+        assert!("A-Sq-Down-ln".parse::<TeamAcrobatic>().is_err());
         assert_eq!(
-            TeamAcrobatic::from("A-Sq-Back-ln-D"),
+            "A-Sq-Back-ln-D".parse(),
             Ok(TeamAcrobatic {
                 group: Airborne,
                 construction: "Sq".to_string(),
@@ -391,7 +385,7 @@ mod tests {
             })
         );
         assert_eq!(
-            TeamAcrobatic::from("A-Sq-Back-ln-dt0.5"),
+            "A-Sq-Back-ln-dt0.5".parse(),
             Ok(TeamAcrobatic {
                 group: Airborne,
                 construction: "Sq".to_string(),
@@ -403,7 +397,7 @@ mod tests {
             })
         );
         assert_eq!(
-            TeamAcrobatic::from("A-Sq-Back-ln-Dbl"),
+            "A-Sq-Back-ln-Dbl".parse(),
             Ok(TeamAcrobatic {
                 group: Airborne,
                 construction: "Sq".to_string(),
@@ -418,32 +412,32 @@ mod tests {
 
     #[test]
     fn test_age_groups_from() {
-        assert_eq!(AgeGroups::from_str("12u"), AG12U);
-        assert_eq!(AgeGroups::from_str("Youth"), Youth);
-        assert_eq!(AgeGroups::from_str("13-15"), Youth);
-        assert_eq!(AgeGroups::from_str("1517"), JRSR);
-        assert_eq!(AgeGroups::from_str("1617"), JRSR);
-        assert_eq!(AgeGroups::from_str("16-19"), JRSR);
-        assert_eq!(AgeGroups::from_str("18-19"), JRSR);
-        assert_eq!(AgeGroups::from_str("collegiate"), JRSR);
-        assert_eq!(AgeGroups::from_str("jr"), JRSR);
-        assert_eq!(AgeGroups::from_str("Junior"), JRSR);
-        assert_eq!(AgeGroups::from_str("sr"), JRSR);
-        assert_eq!(AgeGroups::from_str("Senior"), JRSR);
-        assert_eq!(AgeGroups::from_str(""), AgeGroups::Unknown);
+        assert_eq!("12u".parse(), Ok(AG12U));
+        assert_eq!("Youth".parse(), Ok(Youth));
+        assert_eq!("13-15".parse(), Ok(Youth));
+        assert_eq!("1517".parse(), Ok(JRSR));
+        assert_eq!("1617".parse(), Ok(JRSR));
+        assert_eq!("16-19".parse(), Ok(JRSR));
+        assert_eq!("18-19".parse(), Ok(JRSR));
+        assert_eq!("collegiate".parse(), Ok(JRSR));
+        assert_eq!("jr".parse(), Ok(JRSR));
+        assert_eq!("Junior".parse(), Ok(JRSR));
+        assert_eq!("sr".parse(), Ok(JRSR));
+        assert_eq!("Senior".parse(), Ok(JRSR));
+        assert_eq!("".parse(), Ok(AgeGroups::Unknown));
     }
 
     #[test]
     fn test_event_from() {
-        assert_eq!(Events::from_str("acro"), Acrobatic);
-        assert_eq!(Events::from_str("Acrobatic"), Acrobatic);
-        assert_eq!(Events::from_str("combination"), Combo);
-        assert_eq!(Events::from_str("combo"), Combo);
-        assert_eq!(Events::from_str("duet"), Duet);
-        assert_eq!(Events::from_str("MixedDuet"), MixedDuet);
-        assert_eq!(Events::from_str("solo"), Solo);
-        assert_eq!(Events::from_str("trio"), Trio);
-        assert_eq!(Events::from_str(""), Events::Unknown);
+        assert_eq!("acro".parse(), Ok(Acrobatic));
+        assert_eq!("Acrobatic".parse(), Ok(Acrobatic));
+        assert_eq!("combination".parse(), Ok(Combo));
+        assert_eq!("combo".parse(), Ok(Combo));
+        assert_eq!("duet".parse(), Ok(Duet));
+        assert_eq!("MixedDuet".parse(), Ok(MixedDuet));
+        assert_eq!("solo".parse(), Ok(Solo));
+        assert_eq!("trio".parse(), Ok(Trio));
+        assert_eq!("".parse(), Ok(Events::Unknown));
     }
 }
 

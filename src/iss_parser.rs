@@ -1,6 +1,6 @@
 use crate::ElementKind::{ChoHy, Hybrid, PairAcro, SuConn, TRE, TeamAcro};
 use crate::Events::{Duet, Trio};
-use crate::{AgeGroups, Category, CoachCard, Element, Events, TeamAcrobatic};
+use crate::{Category, CoachCard, Element};
 use calamine::{Data, DataType, Range, Reader, Rows, Xls, Xlsx};
 use chrono::NaiveTime;
 use std::io::{Read, Seek};
@@ -65,7 +65,7 @@ fn parse_elements(sheet: Rows<Data>, team_event: bool) -> (Vec<Element>, NaiveTi
                         })
                         .unwrap_or_default()
                         .replace('\n', "");
-                    if let Ok(acro) = TeamAcrobatic::from(&code) {
+                    if let Ok(acro) = code.parse() {
                         TeamAcro(acro, dd)
                     } else {
                         // TODO log
@@ -116,9 +116,9 @@ fn parse_report(sheet: &Range<Data>) -> Vec<(String, CoachCard)> {
         if first_col == "EVENT" {
             let event_txt =
                 cols.next().map_or_else(String::new, ToString::to_string).to_uppercase();
-            category.ag = AgeGroups::from_str(&event_txt);
+            category.ag = event_txt.parse().unwrap_or_default();
             category.free = !event_txt.contains("TECH");
-            category.event = Events::from_str(&event_txt);
+            category.event = event_txt.parse().unwrap_or_default();
         } else if first_col == "ROUTINE #" {
             let draw = cols.next().map_or_else(String::new, ToString::to_string);
             let routine_name = cols.next().map_or_else(String::new, ToString::to_string);
@@ -168,13 +168,13 @@ fn parse_iss_card(name: &str, sheet: &Range<Data>) -> Vec<(String, CoachCard)> {
         }
         if row_name.starts_with("Age Group") {
             card.category.ag =
-                cols.next().map_or_else(Default::default, |c| AgeGroups::from_str(&c.to_string()));
+                cols.next().map_or_else(Default::default, |c| c.to_string().parse().unwrap());
         }
         if row_name.starts_with("Event") {
             card.category.event = cols.next().map_or_else(Default::default, |col| {
                 let event_txt = col.to_string().to_uppercase();
                 card.category.free = !event_txt.contains("TECH");
-                let parsed_event = Events::from_str(&event_txt);
+                let parsed_event = event_txt.parse().unwrap_or_default();
                 if parsed_event == Duet
                     && (card.theme.to_uppercase().contains(" TRIO")
                         || card.theme.to_uppercase().contains("TRIO ")
