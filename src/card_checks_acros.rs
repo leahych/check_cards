@@ -1170,9 +1170,9 @@ pub fn run_acro_checks(card: &CoachCard) -> Vec<CardIssue> {
 
     let mut ci = checks.iter().flat_map(|check| check(card)).collect::<Vec<_>>();
     for (num, acro, dd) in team_acros(&card.elements) {
-        let _ = check_one_acro(card.category, acro, dd).iter().map(|i| {
-            ci.push(CardIssue::new(i.level, format!("Element {}: {}", num, i.text)));
-        });
+        for i in check_one_acro(card.category, acro, dd) {
+            ci.push(CardIssue::new(i.level, format!("Element {num}: {}", i.text)));
+        }
     }
     ci
 }
@@ -1479,9 +1479,14 @@ mod tests {
 
     #[test]
     fn test_run_checks() {
+        let category = Category { event: Team, ..Default::default() };
+        let team =
+            CoachCard { category, elements: team_acros(&["A-Sq-Up-tk-s1"]), ..Default::default() };
+        assert_eq!(run_acro_checks(&team).len(), 1);
+
         let category = Category { event: Duet, ..Default::default() };
-        let duet = CoachCard { category, elements: pair_acros(&["L", "J"]), ..Default::default() };
-        assert_eq!(run_acro_checks(&duet).len(), 0);
+        let duet = CoachCard { category, elements: pair_acros(&["L", "L"]), ..Default::default() };
+        assert_eq!(run_acro_checks(&duet).len(), 1);
 
         let solo = &CoachCard {
             category: Category { event: Solo, ..Default::default() },

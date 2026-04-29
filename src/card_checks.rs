@@ -753,9 +753,9 @@ pub fn check_one_element(category: Category, element: &ElementKind) -> Vec<CardI
 fn check_elements(card: &CoachCard) -> Vec<CardIssue> {
     let mut ci = Vec::new();
     for elem in &card.elements {
-        let _ = check_one_element(card.category, &elem.kind).iter().map(|i| {
+        for i in check_one_element(card.category, &elem.kind) {
             ci.push(CardIssue::new(i.level, format!("Element {}: {}", elem.number, i.text)));
-        });
+        }
     }
     ci
 }
