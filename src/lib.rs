@@ -199,9 +199,9 @@ pub struct TeamAcrobatic {
     pub construction: String,
     pub direction: Option<AcroDirection>,
     pub connection_grip: String,
-    pub positions: Vec<String>,
-    pub rotations: Vec<String>,
-    pub bonuses: Vec<String>,
+    pub positions: Box<[String]>,
+    pub rotations: Box<[String]>,
+    pub bonuses: Box<[String]>,
 }
 
 fn is_rotation(group: AcroGroup, rotation: &str) -> bool {
@@ -267,7 +267,15 @@ impl FromStr for TeamAcrobatic {
             }
         }
 
-        Ok(Self { group, construction, direction, connection_grip, positions, rotations, bonuses })
+        Ok(Self {
+            group,
+            construction,
+            direction,
+            connection_grip,
+            positions,
+            rotations: rotations.into_boxed_slice(),
+            bonuses: bonuses.into_boxed_slice(),
+        })
     }
 }
 
@@ -276,7 +284,7 @@ pub enum ElementKind {
     TeamAcro(TeamAcrobatic, String),
     PairAcro(String),
     ChoHy,
-    Hybrid(Vec<String>, String),
+    Hybrid(Box<[String]>, String),
     TRE(String, String),
     SuConn,
 }
@@ -306,7 +314,7 @@ impl fmt::Display for Category {
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct CoachCard {
     pub category: Category,
-    pub elements: Vec<Element>,
+    pub elements: Box<[Element]>,
     pub theme: String,
     pub end_time: NaiveTime,
     pub iss_ver: Option<semver::Version>,
@@ -349,16 +357,16 @@ pub fn ci_err(ci: &mut Vec<CardIssue>, text: impl Into<String>) {
     ci.push(CardIssue::new(Error, text));
 }
 
-pub fn ci_errs(text: impl Into<String>) -> Vec<CardIssue> {
-    vec![CardIssue::new(Error, text)]
+pub fn ci_errs(text: impl Into<String>) -> Box<[CardIssue]> {
+    vec![CardIssue::new(Error, text)].into_boxed_slice()
 }
 
 pub fn ci_warn(ci: &mut Vec<CardIssue>, text: impl Into<String>) {
     ci.push(CardIssue::new(Warning, text));
 }
 
-pub fn ci_warns(text: impl Into<String>) -> Vec<CardIssue> {
-    vec![CardIssue::new(Warning, text)]
+pub fn ci_warns(text: impl Into<String>) -> Box<[CardIssue]> {
+    vec![CardIssue::new(Warning, text)].into_boxed_slice()
 }
 
 const fn routine_time(min: u32, secs: u32) -> NaiveTime {
@@ -418,9 +426,9 @@ mod tests {
                 construction: "Sq".to_string(),
                 direction: Some(Backwards),
                 connection_grip: String::new(),
-                positions: vec!["ln".to_string()],
-                rotations: vec!["D".to_string()],
-                bonuses: vec![],
+                positions: vec!["ln".to_string()].into_boxed_slice(),
+                rotations: vec!["D".to_string()].into_boxed_slice(),
+                bonuses: vec![].into_boxed_slice(),
             })
         );
         assert_eq!(
@@ -430,9 +438,9 @@ mod tests {
                 construction: "Sq".to_string(),
                 direction: Some(Backwards),
                 connection_grip: String::new(),
-                positions: vec!["ln".to_string()],
-                rotations: vec!["dt0.5".to_string()],
-                bonuses: vec![],
+                positions: vec!["ln".to_string()].into_boxed_slice(),
+                rotations: vec!["dt0.5".to_string()].into_boxed_slice(),
+                bonuses: vec![].into_boxed_slice(),
             })
         );
         assert_eq!(
@@ -442,9 +450,9 @@ mod tests {
                 construction: "Sq".to_string(),
                 direction: Some(Backwards),
                 connection_grip: String::new(),
-                positions: vec!["ln".to_string()],
-                rotations: vec![],
-                bonuses: vec!["Dbl".to_string()],
+                positions: vec!["ln".to_string()].into_boxed_slice(),
+                rotations: vec![].into_boxed_slice(),
+                bonuses: vec!["Dbl".to_string()].into_boxed_slice(),
             })
         );
     }

@@ -5,7 +5,7 @@ use calamine::{Data, DataType, Range, Reader, Rows, Xls, Xlsx};
 use chrono::NaiveTime;
 use std::io::{Read, Seek};
 
-fn parse_elements(sheet: Rows<Data>, team_event: bool) -> (Vec<Element>, NaiveTime) {
+fn parse_elements(sheet: Rows<Data>, team_event: bool) -> (Box<[Element]>, NaiveTime) {
     let mut elements = vec![];
     let mut end_time = NaiveTime::default();
 
@@ -101,7 +101,7 @@ fn parse_elements(sheet: Rows<Data>, team_event: bool) -> (Vec<Element>, NaiveTi
         };
         elements.push(Element { number, start_time, stop_time, kind });
     }
-    (elements, end_time)
+    (elements.into_boxed_slice(), end_time)
 }
 
 fn parse_report(sheet: &Range<Data>) -> Vec<(String, CoachCard)> {

@@ -64,10 +64,10 @@ fn check_dd_limits(category: Category, group: AcroGroup, dd: &str) -> Vec<CardIs
     ci
 }
 
-fn check_groups_for_acro_routine(card: &CoachCard) -> Vec<CardIssue> {
+fn check_groups_for_acro_routine(card: &CoachCard) -> Box<[CardIssue]> {
     let mut ci = Vec::new();
     if card.category.event != Acrobatic {
-        return ci;
+        return ci.into_boxed_slice();
     }
 
     let mut group_counts = HashMap::<AcroGroup, usize>::new();
@@ -88,10 +88,10 @@ fn check_groups_for_acro_routine(card: &CoachCard) -> Vec<CardIssue> {
             ci_err(&mut ci, format!("Missing {group:?} acrobatic"));
         }
     }
-    ci
+    ci.into_boxed_slice()
 }
 
-fn check_duplicate_pair_acros(card: &CoachCard) -> Vec<CardIssue> {
+fn check_duplicate_pair_acros(card: &CoachCard) -> Box<[CardIssue]> {
     let mut ci = Vec::new();
     let mut prev_acros = HashSet::new();
     for (num, acro) in pair_acros(&card.elements) {
@@ -100,10 +100,10 @@ fn check_duplicate_pair_acros(card: &CoachCard) -> Vec<CardIssue> {
         }
         prev_acros.insert(acro);
     }
-    ci
+    ci.into_boxed_slice()
 }
 
-fn check_duplicate_elements<'a, F: Fn(&TeamAcrobatic) -> Vec<String>>(
+fn check_duplicate_elements<'a, F: Fn(&TeamAcrobatic) -> Box<[String]>>(
     acros: impl Iterator<Item = &'a (usize, &'a TeamAcrobatic, &'a String)>,
     map_function: F,
 ) -> Vec<CardIssue> {
@@ -127,7 +127,7 @@ fn check_duplicate_elements<'a, F: Fn(&TeamAcrobatic) -> Vec<String>>(
     ci
 }
 
-fn check_team_duplicate_acros(card: &CoachCard) -> Vec<CardIssue> {
+fn check_team_duplicate_acros(card: &CoachCard) -> Box<[CardIssue]> {
     let fg = |g: AcroGroup| team_acros(&card.elements).filter(move |(_, acro, _)| acro.group == g);
     let group_a: Vec<(usize, &TeamAcrobatic, &String)> = fg(Airborne).collect();
     let group_b: Vec<(usize, &TeamAcrobatic, &String)> = fg(Balance).collect();
@@ -137,8 +137,8 @@ fn check_team_duplicate_acros(card: &CoachCard) -> Vec<CardIssue> {
     let positions = |a: &TeamAcrobatic| {
         a.positions.iter().map(|p| p.strip_prefix('2').unwrap_or(p).to_string()).collect()
     };
-    let constructions = |acro: &TeamAcrobatic| vec![acro.construction.clone()];
-    let connections = |acro: &TeamAcrobatic| vec![acro.connection_grip.clone()];
+    let constructions = |acro: &TeamAcrobatic| vec![acro.construction.clone()].into_boxed_slice();
+    let connections = |acro: &TeamAcrobatic| vec![acro.connection_grip.clone()].into_boxed_slice();
     let bonuses = |acro: &TeamAcrobatic| acro.bonuses.clone();
 
     let mut ci = check_duplicate_elements(group_a.iter(), positions);
@@ -149,7 +149,7 @@ fn check_team_duplicate_acros(card: &CoachCard) -> Vec<CardIssue> {
     ci.extend(check_duplicate_elements(group_p.iter(), connections));
     ci.extend(check_duplicate_elements(group_p.iter(), positions));
     ci.extend(check_duplicate_elements(group_p.iter(), bonuses));
-    ci
+    ci.into_boxed_slice()
 }
 
 fn check_num_athletes(acro: &TeamAcrobatic) -> Vec<CardIssue> {
@@ -420,12 +420,14 @@ fn check_rotations(acro: &TeamAcrobatic) -> Vec<CardIssue> {
     ci.extend(check_rotation_construction(acro));
 
     // FUTURE look at cleaning this up
-    let unlikely_twist_pos =
-        &[vec!["tk".to_string()], vec!["pk".to_string()], vec!["rg".to_string()]];
+    let unlikely_twist_pos = ["tk", "pk", "rg"];
     let just_twist_regex = Regex::new(r"^t(0.5|1|1.5|2|2.5|3)$").unwrap();
 
     for rotation in &acro.rotations {
-        if just_twist_regex.is_match(rotation) && unlikely_twist_pos.contains(&acro.positions) {
+        if just_twist_regex.is_match(rotation)
+            && acro.positions.len() == 1
+            && unlikely_twist_pos.contains(&acro.positions[0].as_str())
+        {
             ci_warn(
                 &mut ci,
                 format!(
@@ -457,10 +459,7 @@ fn are_bonuses_exclusive(bonus1: &str, bonus2: &str) -> bool {
     eb.iter().any(|exclusive| exclusive.contains(&bonus1) && exclusive.contains(&bonus2))
 }
 
-fn check_bonuses_allowed_constructions(
-    construction: &str,
-    bonuses: &Vec<String>,
-) -> Vec<CardIssue> {
+fn check_bonuses_allowed_constructions(construction: &str, bonuses: &[String]) -> Vec<CardIssue> {
     const P_ALLOWED: &[&str] = &["2S", "Flower", "Hand"];
     static HM: std::sync::OnceLock<HashMap<&str, &[&str]>> = std::sync::OnceLock::new();
 
@@ -1044,10 +1043,10 @@ fn check_positions(acro: &TeamAcrobatic) -> Vec<CardIssue> {
     ci
 }
 
-fn check_pair_acro_common_base_marks(card: &CoachCard) -> Vec<CardIssue> {
+fn check_pair_acro_common_base_marks(card: &CoachCard) -> Box<[CardIssue]> {
     let mut ci = Vec::new();
     if card.category.event != Duet && card.category.event != MixedDuet {
-        return ci;
+        return ci.into_boxed_slice();
     }
 
     for (num, acro) in pair_acros(&card.elements) {
@@ -1070,10 +1069,10 @@ fn check_pair_acro_common_base_marks(card: &CoachCard) -> Vec<CardIssue> {
             );
         }
     }
-    ci
+    ci.into_boxed_slice()
 }
 
-fn check_pair_acro_validity(card: &CoachCard) -> Vec<CardIssue> {
+fn check_pair_acro_validity(card: &CoachCard) -> Box<[CardIssue]> {
     const PAIR_ACROS: &[&str] = &[
         "L»",
         "L!»",
@@ -1134,10 +1133,10 @@ fn check_pair_acro_validity(card: &CoachCard) -> Vec<CardIssue> {
             ci_err(&mut ci, format!("Element {num}: {acro} is not a valid pair acro"));
         }
     }
-    ci
+    ci.into_boxed_slice()
 }
 
-pub fn check_one_acro(category: Category, acro: &TeamAcrobatic, dd: &str) -> Vec<CardIssue> {
+pub fn check_one_acro(category: Category, acro: &TeamAcrobatic, dd: &str) -> Box<[CardIssue]> {
     let mut element_ci = check_age_restrictions(category.ag, acro);
     element_ci.extend(check_dd_limits(category, acro.group, dd));
     element_ci.extend(
@@ -1154,11 +1153,11 @@ pub fn check_one_acro(category: Category, acro: &TeamAcrobatic, dd: &str) -> Vec
         .iter()
         .flat_map(|check| check(acro)),
     );
-    element_ci
+    element_ci.into_boxed_slice()
 }
 
-pub fn run_acro_checks(card: &CoachCard) -> Vec<CardIssue> {
-    let checks: &[fn(&CoachCard) -> Vec<CardIssue>] = match card.category.event {
+pub fn run_acro_checks(card: &CoachCard) -> Box<[CardIssue]> {
+    let checks: &[fn(&CoachCard) -> Box<[CardIssue]>] = match card.category.event {
         Solo | Events::Unknown => &[],
         Duet | MixedDuet | Trio => &[
             check_pair_acro_validity,
@@ -1174,7 +1173,7 @@ pub fn run_acro_checks(card: &CoachCard) -> Vec<CardIssue> {
             ci.push(CardIssue::new(i.level, format!("Element {num}: {}", i.text)));
         }
     }
-    ci
+    ci.into_boxed_slice()
 }
 
 #[cfg(test)]
@@ -1183,7 +1182,7 @@ mod tests {
     use super::*;
     use crate::{Element, ElementKind};
 
-    fn elements(acros: &[&str], to_element: fn(&str) -> ElementKind) -> Vec<Element> {
+    fn elements(acros: &[&str], to_element: fn(&str) -> ElementKind) -> Box<[Element]> {
         let mut ret = Vec::new();
         for (i, acro) in acros.iter().enumerate() {
             ret.push(Element {
@@ -1193,14 +1192,14 @@ mod tests {
                 kind: to_element(acro),
             });
         }
-        ret
+        ret.into_boxed_slice()
     }
 
-    fn pair_acros(acros: &[&str]) -> Vec<Element> {
+    fn pair_acros(acros: &[&str]) -> Box<[Element]> {
         elements(acros, |acro| PairAcro(acro.into()))
     }
 
-    fn team_acros(acros: &[&str]) -> Vec<Element> {
+    fn team_acros(acros: &[&str]) -> Box<[Element]> {
         elements(acros, |acro| TeamAcro(acro.parse().unwrap(), "1.0".into()))
     }
 

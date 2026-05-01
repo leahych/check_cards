@@ -8,7 +8,7 @@ use regex_lite::Regex;
 use std::collections::HashMap;
 use std::time::Duration;
 
-fn hybrids(v: &[Element]) -> impl Iterator<Item = (usize, &Vec<String>, &String)> {
+fn hybrids(v: &[Element]) -> impl Iterator<Item = (usize, &Box<[String]>, &String)> {
     v.iter().filter_map(|e| match &e.kind {
         Hybrid(decl, dd) => Some((e.number, decl, dd)),
         _ => None,
@@ -18,7 +18,7 @@ fn hybrids(v: &[Element]) -> impl Iterator<Item = (usize, &Vec<String>, &String)
 use crate::ElementKind::{ChoHy, Hybrid, PairAcro, SuConn, TRE, TeamAcro};
 
 const LATEST_ISS_VERSION: semver::Version = semver::Version::new(3, 0, 5);
-fn check_iss_version(card: &CoachCard) -> Vec<CardIssue> {
+fn check_iss_version(card: &CoachCard) -> Box<[CardIssue]> {
     if let Some(ver) = card.iss_ver.as_ref()
         && ver < &LATEST_ISS_VERSION
     {
@@ -26,7 +26,7 @@ fn check_iss_version(card: &CoachCard) -> Vec<CardIssue> {
             "Card created with version {ver}, latest is {LATEST_ISS_VERSION}"
         ));
     }
-    Vec::new()
+    Vec::new().into_boxed_slice()
 }
 
 fn points_for_declaration<T: AsRef<str>>(declaration: T) -> usize {
@@ -49,7 +49,7 @@ fn check_max_families<T: AsRef<str>>(decls: &[T], family_regex: &Regex) -> usize
         .unwrap_or_default()
 }
 
-fn check_hybrid_maxes(category: Category, decls: &[String]) -> Vec<CardIssue> {
+fn check_hybrid_maxes(category: Category, decls: &[String]) -> Box<[CardIssue]> {
     let mut ci = Vec::new();
 
     let max_families: &[(&str, &str)] = &[
@@ -90,7 +90,7 @@ fn check_hybrid_maxes(category: Category, decls: &[String]) -> Vec<CardIssue> {
             );
         }
     }
-    ci
+    ci.into_boxed_slice()
 }
 
 struct ElementLimit {
@@ -213,7 +213,7 @@ fn count_elements(elements: &[Element]) -> ElementLimit {
     el
 }
 
-fn check_routine_maxes(card: &CoachCard) -> Vec<CardIssue> {
+fn check_routine_maxes(card: &CoachCard) -> Box<[CardIssue]> {
     fn check_max(num: usize, max: usize, name: &str, ci: &mut Vec<CardIssue>) {
         if num != max {
             ci_err(ci, format!("{max} {name} expected, but {num} found"));
@@ -230,46 +230,46 @@ fn check_routine_maxes(card: &CoachCard) -> Vec<CardIssue> {
             check_max(num.tre, max.tre, "TREs", &mut ci);
             check_max(num.acro, max.acro, "Acrobatics", &mut ci);
             check_max(num.hybrid, max.hybrid, "Hybrids", &mut ci);
-            ci
+            ci.into_boxed_slice()
         },
     )
 }
 
-fn check_theme(card: &CoachCard) -> Vec<CardIssue> {
+fn check_theme(card: &CoachCard) -> Box<[CardIssue]> {
     match card.category.event {
         Acrobatic | Combo if card.theme.is_empty() => {
             ci_errs("Theme is required for Acrobatic and Combo routines")
         }
-        _ => Vec::new(),
+        _ => Vec::new().into_boxed_slice(),
     }
 }
 
-fn check_small_bonuses(category: Category, decls: &[String]) -> Vec<CardIssue> {
+fn check_small_bonuses(category: Category, decls: &[String]) -> Box<[CardIssue]> {
     let is_small = category.event != Combo && category.event != Team;
     let re = Regex::new(r"\dPC").unwrap();
     if is_small && decls.iter().any(|decl| re.is_match(decl)) {
         return ci_errs(format!("{} cannot have Pattern Change bonuses", category.event.as_str()));
     }
-    Vec::new()
+    Vec::new().into_boxed_slice()
 }
 
-fn check_team_acro(category: Category, _: &TeamAcrobatic, _: &String) -> Vec<CardIssue> {
+fn check_team_acro(category: Category, _: &TeamAcrobatic, _: &String) -> Box<[CardIssue]> {
     match category.event {
         Solo => ci_errs("Acrobatic elements are not allowed in a solo"),
         Duet | MixedDuet | Trio => ci_errs(format!("Invalid Acrobatic for {category}")),
-        Acrobatic | Combo | Team | Events::Unknown => Vec::new(),
+        Acrobatic | Combo | Team | Events::Unknown => Vec::new().into_boxed_slice(),
     }
 }
 
-fn check_pair_acro(category: Category, acro: &String) -> Vec<CardIssue> {
+fn check_pair_acro(category: Category, acro: &String) -> Box<[CardIssue]> {
     match category.event {
         Solo => ci_errs("Acrobatic elements are not allowed in a solo"),
-        Duet | MixedDuet | Trio | Events::Unknown => Vec::new(),
+        Duet | MixedDuet | Trio | Events::Unknown => Vec::new().into_boxed_slice(),
         Acrobatic | Combo | Team => ci_errs(format!("Invalid Acrobatic '{acro}'")),
     }
 }
 
-fn check_valid_hybrid_declarations(_: Category, decls: &[String]) -> Vec<CardIssue> {
+fn check_valid_hybrid_declarations(_: Category, decls: &[String]) -> Box<[CardIssue]> {
     let valid_decl_regex = Regex::new(concat!(
         "^(",
         r"(S([B1-9]|10)|SCD?[B1-6])(\*0.[35])?",
@@ -289,13 +289,13 @@ fn check_valid_hybrid_declarations(_: Category, decls: &[String]) -> Vec<CardIss
             ci_err(&mut ci, format!("'{decl}' is not a valid difficulty declaration"));
         }
     }
-    ci
+    ci.into_boxed_slice()
 }
 
-fn check_mixduet_elems(card: &CoachCard) -> Vec<CardIssue> {
+fn check_mixduet_elems(card: &CoachCard) -> Box<[CardIssue]> {
     let expected_cat = Category { ag: JRSR, event: MixedDuet, free: false };
     if card.category != expected_cat {
-        return Vec::new();
+        return Vec::new().into_boxed_slice();
     }
 
     let conn_regex = Regex::new(r"^C[\dB][A-z]?").unwrap();
@@ -320,7 +320,7 @@ fn check_mixduet_elems(card: &CoachCard) -> Vec<CardIssue> {
     for (_, declarations, _) in con_thrust_hybrids {
         let mut connections = declarations.iter().filter(|decl| conn_regex.is_match(decl));
         if connections.next() != connections.next() {
-            return Vec::new();
+            return Vec::new().into_boxed_slice();
         }
     }
     ci_errs(
@@ -328,7 +328,7 @@ fn check_mixduet_elems(card: &CoachCard) -> Vec<CardIssue> {
     )
 }
 
-fn check_factoring(category: Category, decls: &[String]) -> Vec<CardIssue> {
+fn check_factoring(category: Category, decls: &[String]) -> Box<[CardIssue]> {
     let mut ci = Vec::new();
     let mut prev_decl = "";
     for decl in decls {
@@ -383,10 +383,10 @@ fn check_factoring(category: Category, decls: &[String]) -> Vec<CardIssue> {
 
         prev_decl = decl;
     }
-    ci
+    ci.into_boxed_slice()
 }
 
-fn check_routine_times(card: &CoachCard) -> Vec<CardIssue> {
+fn check_routine_times(card: &CoachCard) -> Box<[CardIssue]> {
     let mut ci = Vec::new();
     let expected_time = get_expected_routine_time(&card.category);
     if let Some(expected_time) = expected_time {
@@ -407,10 +407,10 @@ fn check_routine_times(card: &CoachCard) -> Vec<CardIssue> {
     } else {
         ci_warn(&mut ci, format!("Could not determine routine time for {}", card.category));
     }
-    ci
+    ci.into_boxed_slice()
 }
 
-fn check_tres(category: Category, tre: &str, dd: &str) -> Vec<CardIssue> {
+fn check_tres(category: Category, tre: &str, dd: &str) -> Box<[CardIssue]> {
     if category.free {
         return ci_errs("TRE in free routine?");
     }
@@ -475,13 +475,13 @@ fn check_tres(category: Category, tre: &str, dd: &str) -> Vec<CardIssue> {
             ci_err(&mut ci, format!("{tre} is not a valid TRE for {:?}", category.event));
         }
     }
-    ci
+    ci.into_boxed_slice()
 }
 
-fn check_connections_in_non_team(category: Category, decls: &[String]) -> Vec<CardIssue> {
+fn check_connections_in_non_team(category: Category, decls: &[String]) -> Box<[CardIssue]> {
     let mut ci = Vec::new();
     if category.event == Combo || category.event == Team {
-        return ci;
+        return ci.into_boxed_slice();
     }
 
     let c_regex = Regex::new(r"^C[\dB][A-z]?").unwrap();
@@ -493,13 +493,13 @@ fn check_connections_in_non_team(category: Category, decls: &[String]) -> Vec<Ca
             ci_err(&mut ci, "connections can not be used in solos");
         }
     }
-    ci
+    ci.into_boxed_slice()
 }
 
-fn check_families(card: &CoachCard) -> Vec<CardIssue> {
+fn check_families(card: &CoachCard) -> Box<[CardIssue]> {
     let mut ci = Vec::new();
     if !card.category.free || card.category.event == Acrobatic {
-        return ci;
+        return ci.into_boxed_slice();
     }
 
     let mut regex_map = vec![
@@ -533,13 +533,13 @@ fn check_families(card: &CoachCard) -> Vec<CardIssue> {
     for family in missing_families {
         ci_err(&mut ci, format!("need at least one hybrid with one unfactored {family}"));
     }
-    ci
+    ci.into_boxed_slice()
 }
 
-fn check_overlapping_elements(card: &CoachCard) -> Vec<CardIssue> {
+fn check_overlapping_elements(card: &CoachCard) -> Box<[CardIssue]> {
     let mut ci = Vec::new();
     if card.category.event != Combo {
-        return ci;
+        return ci.into_boxed_slice();
     }
 
     let mut prev_elem: Option<&Element> = None;
@@ -554,17 +554,17 @@ fn check_overlapping_elements(card: &CoachCard) -> Vec<CardIssue> {
         }
         prev_elem = Some(elem);
     }
-    ci
+    ci.into_boxed_slice()
 }
 
-fn check_dd_limits(category: Category, dd: &str) -> Vec<CardIssue> {
+fn check_dd_limits(category: Category, dd: &str) -> Box<[CardIssue]> {
     if category.ag == AG12U && dd.parse().unwrap_or(0.0) > 7.0 {
         return ci_warns("USAAS 12U routines may not have hybrid with a DD greater than 7");
     }
-    Vec::new()
+    Vec::new().into_boxed_slice()
 }
 
-fn check_category(card: &CoachCard) -> Vec<CardIssue> {
+fn check_category(card: &CoachCard) -> Box<[CardIssue]> {
     let mut ci = Vec::new();
     if card.category.ag == AgeGroups::Unknown {
         ci_err(&mut ci, "Could not determine Age Group for card");
@@ -572,10 +572,10 @@ fn check_category(card: &CoachCard) -> Vec<CardIssue> {
     if card.category.event == Events::Unknown {
         ci_err(&mut ci, "Could not determine Event for card");
     }
-    ci
+    ci.into_boxed_slice()
 }
 
-fn check_hybrid_common_base_marks(category: Category, decls: &[String]) -> Vec<CardIssue> {
+fn check_hybrid_common_base_marks(category: Category, decls: &[String]) -> Box<[CardIssue]> {
     const PROBLEM_JOIN_CODES: &[&str] = &["A4b", "F10"]; // FUTURE add F9?
     const TECH_DUET_MIRROR_CODES: &[&str] = &["C1a", "C2a", "C4", "C6a", "C6b", "C7"];
     const KNIGHT_CODES: &[&str] = &["F3c", "F5a", "F5c", "F6b", "F6c", "F8a"];
@@ -631,10 +631,10 @@ fn check_hybrid_common_base_marks(category: Category, decls: &[String]) -> Vec<C
 
         prev_decl = decl;
     }
-    ci
+    ci.into_boxed_slice()
 }
 
-fn check_hybrid_start_end(_: Category, decls: &[String]) -> Vec<CardIssue> {
+fn check_hybrid_start_end(_: Category, decls: &[String]) -> Box<[CardIssue]> {
     let mut ci = Vec::new();
 
     let decls: &[String] = if decls.last().is_some_and(|x| x.ends_with("PC")) {
@@ -655,10 +655,10 @@ fn check_hybrid_start_end(_: Category, decls: &[String]) -> Vec<CardIssue> {
             ci_warn(&mut ci, format!("{decl} is not at the start, is this correct?"));
         }
     }
-    ci
+    ci.into_boxed_slice()
 }
 
-fn check_ascent_connection(_: Category, decls: &[String]) -> Vec<CardIssue> {
+fn check_ascent_connection(_: Category, decls: &[String]) -> Box<[CardIssue]> {
     let mut ci = Vec::new();
     let mut prev_decl = "";
     for decl in decls {
@@ -679,10 +679,10 @@ fn check_ascent_connection(_: Category, decls: &[String]) -> Vec<CardIssue> {
         }
         prev_decl = decl;
     }
-    ci
+    ci.into_boxed_slice()
 }
 
-fn check_flexibility_combinations(_: Category, decls: &[String]) -> Vec<CardIssue> {
+fn check_flexibility_combinations(_: Category, decls: &[String]) -> Box<[CardIssue]> {
     let mut ci = Vec::new();
     let mut prev_decl = "";
     for decl in decls {
@@ -720,10 +720,10 @@ fn check_flexibility_combinations(_: Category, decls: &[String]) -> Vec<CardIssu
         }
         prev_decl = decl;
     }
-    ci
+    ci.into_boxed_slice()
 }
 
-pub fn check_one_element(category: Category, element: &ElementKind) -> Vec<CardIssue> {
+pub fn check_one_element(category: Category, element: &ElementKind) -> Box<[CardIssue]> {
     match &element {
         TeamAcro(ta, dd) => check_team_acro(category, ta, dd).into_iter().collect(),
         PairAcro(decl) => check_pair_acro(category, decl).into_iter().collect(),
@@ -743,24 +743,24 @@ pub fn check_one_element(category: Category, element: &ElementKind) -> Vec<CardI
             .flat_map(|check| check(category, decls))
             .collect();
             ci.extend(check_dd_limits(category, dd));
-            ci
+            ci.into_boxed_slice()
         }
         TRE(decl, dd) => check_tres(category, decl, dd),
-        ChoHy | SuConn => Vec::new(),
+        ChoHy | SuConn => Vec::new().into_boxed_slice(),
     }
 }
 
-fn check_elements(card: &CoachCard) -> Vec<CardIssue> {
+fn check_elements(card: &CoachCard) -> Box<[CardIssue]> {
     let mut ci = Vec::new();
     for elem in &card.elements {
         for i in check_one_element(card.category, &elem.kind) {
             ci.push(CardIssue::new(i.level, format!("Element {}: {}", elem.number, i.text)));
         }
     }
-    ci
+    ci.into_boxed_slice()
 }
 
-pub fn run_checks(card: &CoachCard) -> Vec<CardIssue> {
+pub fn run_checks(card: &CoachCard) -> Box<[CardIssue]> {
     [
         check_iss_version,
         check_routine_maxes,
@@ -794,8 +794,9 @@ mod tests {
         }
 
         fn hybrids(mut self, hybrids: &[&[&str]]) -> Self {
+            let mut elements = Vec::new();
             for hybrid in hybrids {
-                let decls: Vec<String> = hybrid.iter().map(ToString::to_string).collect();
+                let decls: Box<[String]> = hybrid.iter().map(ToString::to_string).collect();
                 let kind = if decls[0].starts_with("TRE") {
                     TRE(decls[0].clone(), String::new())
                 } else if decls[0] == "ChoHy" {
@@ -805,37 +806,45 @@ mod tests {
                 } else {
                     Hybrid(decls, "1.0".into())
                 };
-                self.card.elements.push(Element {
+                elements.push(Element {
                     number: self.card.elements.len() + 1,
                     start_time: Default::default(),
                     stop_time: Default::default(),
                     kind,
                 });
             }
+            self.card.elements =
+                [self.card.elements, elements.into_boxed_slice()].concat().into_boxed_slice();
             self
         }
 
         fn pair_acros(mut self, acros: &[&str]) -> Self {
+            let mut elements = Vec::new();
             for acro in acros {
-                self.card.elements.push(Element {
+                elements.push(Element {
                     number: self.card.elements.len() + 1,
                     start_time: Default::default(),
                     stop_time: Default::default(),
                     kind: PairAcro(acro.to_string()),
                 });
             }
+            self.card.elements =
+                [self.card.elements, elements.into_boxed_slice()].concat().into_boxed_slice();
             self
         }
 
         fn team_acros(mut self, acros: &[&str]) -> Self {
+            let mut elements = Vec::new();
             for acro in acros {
-                self.card.elements.push(Element {
+                elements.push(Element {
                     number: self.card.elements.len() + 1,
                     start_time: Default::default(),
                     stop_time: Default::default(),
                     kind: TeamAcro(acro.parse().unwrap(), "1.0".into()),
                 });
             }
+            self.card.elements =
+                [self.card.elements, elements.into_boxed_slice()].concat().into_boxed_slice();
             self
         }
 
@@ -872,7 +881,7 @@ mod tests {
 
     #[test]
     fn test_hybrid_issues() {
-        type CheckFn = fn(Category, &[String]) -> Vec<CardIssue>;
+        type CheckFn = fn(Category, &[String]) -> Box<[CardIssue]>;
         let def = Default::default();
 
         let tests: &[(&str, CheckFn, Category, &[&str], usize)] = &[
@@ -1027,7 +1036,7 @@ mod tests {
         let ag12solo = Category { ag: AG12U, event: Solo, free: true };
         let ysolo = Category { ag: Youth, event: Solo, free: true };
 
-        let tests: &[(&str, fn(&CoachCard) -> Vec<CardIssue>, Category, &[&[&str]], usize)] = &[
+        let tests: &[(&str, fn(&CoachCard) -> Box<[CardIssue]>, Category, &[&[&str]], usize)] = &[
             ("too_many_hybrids", check_routine_maxes, ag12solo, five_hybrids, 1),
             ("too_few_hybrids", check_routine_maxes, FSOLO, five_hybrids, 1),
             ("ok_hybrids", check_routine_maxes, ysolo, five_hybrids, 0),

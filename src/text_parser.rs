@@ -50,21 +50,23 @@ pub fn parse_text(ag: &str, free: bool, evt: &str, input: &str) -> ParseResult {
     if let Some(time) = get_expected_routine_time(&category) {
         card.end_time = *time;
     }
+
+    let mut elements = Vec::new();
     for (i, line) in input.lines().map(str::trim).filter(|line| !line.is_empty()).enumerate() {
         match parse_element(line) {
             Ok(kind) => {
                 let start_second = u32::try_from(i).unwrap_or_default();
-                let element = Element {
+                elements.push(Element {
                     number: i + 1,
                     start_time: NaiveTime::from_hms_opt(0, 0, start_second).unwrap_or_default(),
                     stop_time: NaiveTime::from_hms_opt(0, 0, start_second).unwrap_or_default(),
                     kind,
-                };
-                card.elements.push(element);
+                });
             }
             Err(e) => return ParseResult::Err(e),
         }
     }
+    card.elements = elements.into_boxed_slice();
     ParseResult::Card(card)
 }
 
@@ -124,9 +126,9 @@ mod tests {
                         construction: "Sq".to_string(),
                         direction: Some(Backwards),
                         connection_grip: String::new(),
-                        positions: vec!["tk".into(), "2pk".into()],
-                        rotations: vec!["s1".into()],
-                        bonuses: vec![],
+                        positions: vec!["tk".into(), "2pk".into()].into_boxed_slice(),
+                        rotations: vec!["s1".into()].into_boxed_slice(),
+                        bonuses: vec![].into_boxed_slice(),
                     },
                     "1.0".into()
                 )
@@ -140,7 +142,10 @@ mod tests {
             parse_text("SR", true, "Solo", "A4b C4+  2R1"),
             ParseResult::Element(
                 EXPECTED_CATEGORY,
-                Hybrid(vec!["A4b".into(), "C4+".into(), "2R1".into()], "1.0".into())
+                Hybrid(
+                    vec!["A4b".into(), "C4+".into(), "2R1".into()].into_boxed_slice(),
+                    "1.0".into()
+                )
             )
         );
     }

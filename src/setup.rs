@@ -101,15 +101,18 @@ fn add_card_issues(
 fn blob_to_issues(
     fname: &str,
     file: Result<Vec<u8>, gloo::file::FileReadError>,
-) -> Vec<(String, Vec<CardIssue>)> {
-    let mut issues: Vec<(String, Vec<CardIssue>)> = Vec::new();
+) -> Vec<(String, Box<[CardIssue]>)> {
+    let mut issues: Vec<(String, Box<[CardIssue]>)> = Vec::new();
     match file {
         Ok(buf) => {
             let mut c = Cursor::new(buf);
             match parse_excel(fname, &mut c) {
                 Ok(cards) => {
                     for (cname, card) in cards {
-                        issues.push((cname, [run_checks(&card), run_acro_checks(&card)].concat()));
+                        issues.push((
+                            cname,
+                            [run_checks(&card), run_acro_checks(&card)].concat().into_boxed_slice(),
+                        ));
                     }
                 }
                 Err(e) => {
@@ -124,7 +127,12 @@ fn blob_to_issues(
     issues
 }
 
-fn text_to_issues(ag: &str, free: bool, event: &str, input: &str) -> Vec<(String, Vec<CardIssue>)> {
+fn text_to_issues(
+    ag: &str,
+    free: bool,
+    event: &str,
+    input: &str,
+) -> Vec<(String, Box<[CardIssue]>)> {
     let mut issues = Vec::new();
 
     let result = parse_text(ag, free, event, input);
@@ -137,7 +145,10 @@ fn text_to_issues(ag: &str, free: bool, event: &str, input: &str) -> Vec<(String
             },
         )),
         ParseResult::Card(card) => {
-            issues.push((String::new(), [run_checks(&card), run_acro_checks(&card)].concat()));
+            issues.push((
+                String::new(),
+                [run_checks(&card), run_acro_checks(&card)].concat().into_boxed_slice(),
+            ));
         }
         ParseResult::Err(e) => {
             issues.push((String::new(), ci_errs(format!("could not parse input: {e}"))));
@@ -158,7 +169,7 @@ fn clear_issues(document: &Document) {
     }
 }
 
-fn show_issues(document: &Document, issues: Vec<(String, Vec<CardIssue>)>) {
+fn show_issues(document: &Document, issues: Vec<(String, Box<[CardIssue]>)>) {
     if let Some(results) = document.get_element_by_id("results") {
         for (card_name, ci) in issues {
             let table = add_card_issues(document, &card_name, &ci);
