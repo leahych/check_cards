@@ -1178,6 +1178,7 @@ pub fn run_acro_checks(card: &CoachCard) -> Vec<CardIssue> {
 }
 
 #[cfg(test)]
+#[cfg_attr(test, allow(clippy::too_many_lines))]
 mod tests {
     use super::*;
     use crate::{Element, ElementKind};
@@ -1244,7 +1245,7 @@ mod tests {
             ("missing_p", acat, &[ex_a, ex_b, ex_c], 1),
             ("too_many_a", acat, &[ex_a, ex_a, ex_a, ex_b, ex_c, ex_p], 1),
         ];
-        for (name, cat, a, expected) in tests.into_iter() {
+        for (name, cat, a, expected) in tests {
             let card = &CoachCard { category: *cat, elements: team_acros(a), ..Default::default() };
             assert_eq!(check_groups_for_acro_routine(card).len(), *expected, "{name}");
         }
@@ -1438,11 +1439,11 @@ mod tests {
     fn test_check_duplicate_pair_acros() {
         let category = Category { event: Duet, ..Default::default() };
 
-        let same = pair_acros(&[&"W!fr1", &"W!fr1"]);
+        let same = pair_acros(&["W!fr1", "W!fr1"]);
         let card = CoachCard { category, elements: same, ..Default::default() };
         assert_eq!(check_duplicate_pair_acros(&card).len(), 1);
 
-        let diff = pair_acros(&[&"W!fr0.5", &"W!fr1"]);
+        let diff = pair_acros(&["W!fr0.5", "W!fr1"]);
         let card = CoachCard { category, elements: diff, ..Default::default() };
         assert_eq!(check_duplicate_pair_acros(&card).len(), 0);
     }
@@ -1464,7 +1465,7 @@ mod tests {
         for (event, acro, expected) in tests {
             let category = Category { event: *event, ..Default::default() };
             let card = CoachCard { category, elements: pair_acros(&[acro]), ..Default::default() };
-            assert_eq!(check_pair_acro_common_base_marks(&card).len(), *expected, "{acro}")
+            assert_eq!(check_pair_acro_common_base_marks(&card).len(), *expected, "{acro}");
         }
     }
 
@@ -1492,7 +1493,7 @@ mod tests {
             category: Category { event: Solo, ..Default::default() },
             ..Default::default()
         };
-        assert_eq!(run_acro_checks(&solo).len(), 0);
+        assert_eq!(run_acro_checks(solo).len(), 0);
     }
 
     #[test]
@@ -1525,7 +1526,7 @@ mod tests {
         let cat = Category::default();
         for (s, expected_num_issues) in acros {
             let ci = check_one_acro(cat, &s.parse().unwrap(), "1.0");
-            assert_eq!(expected_num_issues, ci.len(), "acro {}: {:?}", s, ci);
+            assert_eq!(expected_num_issues, ci.len(), "acro {s}: {ci:?}");
         }
     }
 }

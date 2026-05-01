@@ -175,7 +175,7 @@ mod tests {
 
     #[test]
     fn test_blob_to_issues() {
-        let issues = blob_to_issues("", Err(gloo::file::FileReadError::NotReadable("".to_owned())));
+        let issues = blob_to_issues("", Err(gloo::file::FileReadError::NotReadable(String::new())));
         assert_eq!(issues.len(), 1);
         let ci = &issues[0].1;
         assert_eq!(ci.len(), 1);

@@ -1,3 +1,5 @@
+#![allow(clippy::too_many_lines)]
+
 use check_cards::AcroDirection::{Backwards, Forwards};
 use check_cards::AcroGroup::{Airborne, Combined, Platform};
 use check_cards::AgeGroups::JRSR;
@@ -11,7 +13,7 @@ use std::fs::File;
 use std::io::BufReader;
 
 fn vec_of_strings(input: &str) -> Vec<String> {
-    input.split(' ').map(|s| s.to_string()).collect()
+    input.split(' ').map(ToString::to_string).collect()
 }
 
 #[test]
@@ -49,7 +51,7 @@ fn test_parse_iss_team() {
                             group: Combined,
                             construction: "Thr^2F".to_string(),
                             direction: Some(Forwards),
-                            connection_grip: "".to_string(),
+                            connection_grip: String::new(),
                             positions: vec!["ow".to_string(), "2ln".to_string()],
                             rotations: vec![],
                             bonuses: vec![],
@@ -66,7 +68,7 @@ fn test_parse_iss_team() {
                             group: Airborne,
                             construction: "Shou".to_string(),
                             direction: Some(Backwards),
-                            connection_grip: "".to_string(),
+                            connection_grip: String::new(),
                             positions: vec!["tk".to_string()],
                             rotations: vec!["s1".into()],
                             bonuses: vec![],
@@ -95,7 +97,7 @@ fn test_parse_iss_team() {
                 Element {
                     number: 6,
                     start_time: NaiveTime::from_hms_opt(0, 1, 44).unwrap(),
-                    stop_time: NaiveTime::from_hms_opt(0, 2, 06).unwrap(),
+                    stop_time: NaiveTime::from_hms_opt(0, 2, 6).unwrap(),
                     kind: Hybrid(vec_of_strings("C4 C4 C4 RD2 S1 2PC"), "3.8".into())
                 },
                 Element {
@@ -124,7 +126,7 @@ fn test_parse_iss_team() {
             iss_ver: Some(Version::new(3, 0, 5)),
             end_time: NaiveTime::from_hms_opt(0, 3, 29).unwrap(),
         },
-        issues.iter().next().unwrap().1
+        issues.first().unwrap().1
     );
 }
 
@@ -142,12 +144,12 @@ fn test_parse_iss_combo() {
                 stop_time: NaiveTime::from_hms_opt(0, 0, 1).unwrap(),
                 kind: ChoHy,
             }],
-            theme: "".to_string(),
+            theme: String::new(),
             end_time: NaiveTime::from_hms_opt(0, 0, 1).unwrap(),
             iss_ver: Some(Version::new(3, 0, 2)),
         },
-        issues.iter().next().unwrap().1
-    )
+        issues.first().unwrap().1
+    );
 }
 
 #[test]
@@ -178,12 +180,12 @@ fn test_parse_iss_mixed_duet() {
                     kind: PairAcro("Js1B+pf".to_string()),
                 },
             ],
-            theme: "".to_string(),
+            theme: String::new(),
             end_time: NaiveTime::from_hms_opt(0, 0, 3).unwrap(),
             iss_ver: Some(Version::new(3, 0, 2)),
         },
-        issues.iter().next().unwrap().1
-    )
+        issues.first().unwrap().1
+    );
 }
 
 #[test]
@@ -203,7 +205,7 @@ fn test_parse_iss_report() {
                         number: 1,
                         start_time: NaiveTime::from_hms_opt(0, 0, 15).unwrap(),
                         stop_time: NaiveTime::from_hms_opt(0, 0, 17).unwrap(),
-                        kind: TeamAcro("A-Sq-Back-tk-t1".parse().unwrap(), "".into()),
+                        kind: TeamAcro("A-Sq-Back-tk-t1".parse().unwrap(), String::new()),
                     },
                     Element {
                         number: 2,
@@ -215,7 +217,7 @@ fn test_parse_iss_report() {
                         number: 3,
                         start_time: NaiveTime::from_hms_opt(0, 0, 53).unwrap(),
                         stop_time: NaiveTime::from_hms_opt(0, 1, 3).unwrap(),
-                        kind: TeamAcro("P-P-HA-wi/2ow-Pos3/Trav".parse().unwrap(), "".into()),
+                        kind: TeamAcro("P-P-HA-wi/2ow-Pos3/Trav".parse().unwrap(), String::new()),
                     },
                     Element {
                         number: 4,
@@ -223,7 +225,7 @@ fn test_parse_iss_report() {
                         stop_time: NaiveTime::from_hms_opt(0, 1, 28).unwrap(),
                         kind: Hybrid(
                             vec_of_strings("F9 2R1 RC1 RC1 F6c 2RB RU1 A6 F3a F3b F2a"),
-                            "".to_string()
+                            String::new()
                         ),
                     },
                     Element {
@@ -232,14 +234,14 @@ fn test_parse_iss_report() {
                         stop_time: NaiveTime::from_hms_opt(0, 1, 58).unwrap(),
                         kind: Hybrid(
                             vec_of_strings("F7 2RB A3a F5a 1RB A3a F5a F1a F3b A1d A6 SC1 2PC"),
-                            "".to_string()
+                            String::new()
                         ),
                     },
                     Element {
                         number: 6,
                         start_time: NaiveTime::from_hms_opt(0, 2, 4).unwrap(),
                         stop_time: NaiveTime::from_hms_opt(0, 2, 7).unwrap(),
-                        kind: TeamAcro("C-Thr>St-Forw-co-Jump".parse().unwrap(), "".into()),
+                        kind: TeamAcro("C-Thr>St-Forw-co-Jump".parse().unwrap(), String::new()),
                     },
                     Element {
                         number: 7,
@@ -247,7 +249,7 @@ fn test_parse_iss_report() {
                         stop_time: NaiveTime::from_hms_opt(0, 2, 26).unwrap(),
                         kind: Hybrid(
                             vec_of_strings("T6a A3b F5a F5a RU1 A8 F1a RC1 F8a"),
-                            "".to_string()
+                            String::new()
                         ),
                     },
                     Element {
@@ -256,7 +258,7 @@ fn test_parse_iss_report() {
                         stop_time: NaiveTime::from_hms_opt(0, 3, 2).unwrap(),
                         kind: Hybrid(
                             vec_of_strings("F9 A7 A4b F5a A4b F5a F1a RC1 RU1 RD1"),
-                            "".to_string()
+                            String::new()
                         ),
                     },
                     Element {
@@ -265,14 +267,14 @@ fn test_parse_iss_report() {
                         stop_time: NaiveTime::from_hms_opt(0, 3, 28).unwrap(),
                         kind: Hybrid(
                             vec_of_strings("T5c A3b 2R1 RC1 F5a F5a C4+ C4+ 1PC"),
-                            "".to_string()
+                            String::new()
                         ),
                     },
                     Element {
                         number: 10,
                         start_time: NaiveTime::from_hms_opt(0, 3, 32).unwrap(),
                         stop_time: NaiveTime::from_hms_opt(0, 3, 34).unwrap(),
-                        kind: TeamAcro("B-StH-ShF-bb/2spl".parse().unwrap(), "".into()),
+                        kind: TeamAcro("B-StH-ShF-bb/2spl".parse().unwrap(), String::new()),
                     },
                 ],
                 theme: "foo".to_string(),
@@ -293,7 +295,7 @@ fn test_parse_iss_report() {
                         number: 1,
                         start_time: NaiveTime::from_hms_opt(0, 0, 9).unwrap(),
                         stop_time: NaiveTime::from_hms_opt(0, 0, 13).unwrap(),
-                        kind: TeamAcro("C-Thr>F-Forw-ln".parse().unwrap(), "".into()),
+                        kind: TeamAcro("C-Thr>F-Forw-ln".parse().unwrap(), String::new()),
                     },
                     Element {
                         number: 2,
@@ -301,20 +303,20 @@ fn test_parse_iss_report() {
                         stop_time: NaiveTime::from_hms_opt(0, 0, 40).unwrap(),
                         kind: Hybrid(
                             vec_of_strings("A1c A6 A1c 2RB A1c 2RB 2R1 F1a F2b 2PC"),
-                            "".to_string()
+                            String::new()
                         ),
                     },
                     Element {
                         number: 3,
                         start_time: NaiveTime::from_hms_opt(0, 1, 24).unwrap(),
                         stop_time: NaiveTime::from_hms_opt(0, 1, 40).unwrap(),
-                        kind: Hybrid(vec_of_strings("A3b A6 1R4 S1 T7"), "".to_string()),
+                        kind: Hybrid(vec_of_strings("A3b A6 1R4 S1 T7"), String::new()),
                     },
                     Element {
                         number: 4,
                         start_time: NaiveTime::from_hms_opt(0, 1, 41).unwrap(),
                         stop_time: NaiveTime::from_hms_opt(0, 1, 55).unwrap(),
-                        kind: TeamAcro("P-2S-F2A-sd-Climb/Fall".parse().unwrap(), "".into()),
+                        kind: TeamAcro("P-2S-F2A-sd-Climb/Fall".parse().unwrap(), String::new()),
                     },
                     Element {
                         number: 5,
@@ -322,32 +324,32 @@ fn test_parse_iss_report() {
                         stop_time: NaiveTime::from_hms_opt(0, 2, 27).unwrap(),
                         kind: Hybrid(
                             vec_of_strings("CB+*0.5 AB SC1 2RB A2b A3a S1 1PC"),
-                            "".to_string()
+                            String::new()
                         ),
                     },
                     Element {
                         number: 6,
                         start_time: NaiveTime::from_hms_opt(0, 2, 30).unwrap(),
                         stop_time: NaiveTime::from_hms_opt(0, 2, 34).unwrap(),
-                        kind: TeamAcro("A-Thr-Up-ln-t1".parse().unwrap(), "".into()),
+                        kind: TeamAcro("A-Thr-Up-ln-t1".parse().unwrap(), String::new()),
                     },
                     Element {
                         number: 7,
                         start_time: NaiveTime::from_hms_opt(0, 2, 35).unwrap(),
                         stop_time: NaiveTime::from_hms_opt(0, 2, 38).unwrap(),
-                        kind: TeamAcro("B-St-FS-sd".parse().unwrap(), "".into()),
+                        kind: TeamAcro("B-St-FS-sd".parse().unwrap(), String::new()),
                     },
                     Element {
                         number: 8,
                         start_time: NaiveTime::from_hms_opt(0, 2, 46).unwrap(),
                         stop_time: NaiveTime::from_hms_opt(0, 2, 57).unwrap(),
-                        kind: Hybrid(vec_of_strings("A3a S2 CB A1c"), "".to_string()),
+                        kind: Hybrid(vec_of_strings("A3a S2 CB A1c"), String::new()),
                     },
                     Element {
                         number: 9,
                         start_time: NaiveTime::from_hms_opt(0, 2, 58).unwrap(),
                         stop_time: NaiveTime::from_hms_opt(0, 2, 58).unwrap(),
-                        kind: Hybrid(vec_of_strings("T6c SC1"), "".to_string()),
+                        kind: Hybrid(vec_of_strings("T6c SC1"), String::new()),
                     },
                     Element {
                         number: 10,

@@ -361,86 +361,6 @@ pub fn ci_warns(text: impl Into<String>) -> Vec<CardIssue> {
     vec![CardIssue::new(Warning, text)]
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::AcroDirection::Backwards;
-    use crate::AcroGroup::Airborne;
-
-    #[test]
-    fn test_parse_team_acro() {
-        assert!("Q-Sq-Forw-ln".parse::<TeamAcrobatic>().is_err());
-        assert!("A-Sq-Bln-ln".parse::<TeamAcrobatic>().is_err());
-        assert!("A-Sq-Down-ln".parse::<TeamAcrobatic>().is_err());
-        assert_eq!(
-            "A-Sq-Back-ln-D".parse(),
-            Ok(TeamAcrobatic {
-                group: Airborne,
-                construction: "Sq".to_string(),
-                direction: Some(Backwards),
-                connection_grip: "".to_string(),
-                positions: vec!["ln".to_string()],
-                rotations: vec!["D".to_string()],
-                bonuses: vec![],
-            })
-        );
-        assert_eq!(
-            "A-Sq-Back-ln-dt0.5".parse(),
-            Ok(TeamAcrobatic {
-                group: Airborne,
-                construction: "Sq".to_string(),
-                direction: Some(Backwards),
-                connection_grip: "".to_string(),
-                positions: vec!["ln".to_string()],
-                rotations: vec!["dt0.5".to_string()],
-                bonuses: vec![],
-            })
-        );
-        assert_eq!(
-            "A-Sq-Back-ln-Dbl".parse(),
-            Ok(TeamAcrobatic {
-                group: Airborne,
-                construction: "Sq".to_string(),
-                direction: Some(Backwards),
-                connection_grip: "".to_string(),
-                positions: vec!["ln".to_string()],
-                rotations: vec![],
-                bonuses: vec!["Dbl".to_string()],
-            })
-        )
-    }
-
-    #[test]
-    fn test_age_groups_from() {
-        assert_eq!("12u".parse(), Ok(AG12U));
-        assert_eq!("Youth".parse(), Ok(Youth));
-        assert_eq!("13-15".parse(), Ok(Youth));
-        assert_eq!("1517".parse(), Ok(JRSR));
-        assert_eq!("1617".parse(), Ok(JRSR));
-        assert_eq!("16-19".parse(), Ok(JRSR));
-        assert_eq!("18-19".parse(), Ok(JRSR));
-        assert_eq!("collegiate".parse(), Ok(JRSR));
-        assert_eq!("jr".parse(), Ok(JRSR));
-        assert_eq!("Junior".parse(), Ok(JRSR));
-        assert_eq!("sr".parse(), Ok(JRSR));
-        assert_eq!("Senior".parse(), Ok(JRSR));
-        assert_eq!("".parse(), Ok(AgeGroups::Unknown));
-    }
-
-    #[test]
-    fn test_event_from() {
-        assert_eq!("acro".parse(), Ok(Acrobatic));
-        assert_eq!("Acrobatic".parse(), Ok(Acrobatic));
-        assert_eq!("combination".parse(), Ok(Combo));
-        assert_eq!("combo".parse(), Ok(Combo));
-        assert_eq!("duet".parse(), Ok(Duet));
-        assert_eq!("MixedDuet".parse(), Ok(MixedDuet));
-        assert_eq!("solo".parse(), Ok(Solo));
-        assert_eq!("trio".parse(), Ok(Trio));
-        assert_eq!("".parse(), Ok(Events::Unknown));
-    }
-}
-
 const fn routine_time(min: u32, secs: u32) -> NaiveTime {
     NaiveTime::from_hms_opt(0, min, secs).unwrap()
 }
@@ -478,4 +398,84 @@ pub fn get_expected_routine_time(category: &Category) -> Option<&NaiveTime> {
     });
 
     map.get(category)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::AcroDirection::Backwards;
+    use crate::AcroGroup::Airborne;
+
+    #[test]
+    fn test_parse_team_acro() {
+        assert!("Q-Sq-Forw-ln".parse::<TeamAcrobatic>().is_err());
+        assert!("A-Sq-Bln-ln".parse::<TeamAcrobatic>().is_err());
+        assert!("A-Sq-Down-ln".parse::<TeamAcrobatic>().is_err());
+        assert_eq!(
+            "A-Sq-Back-ln-D".parse(),
+            Ok(TeamAcrobatic {
+                group: Airborne,
+                construction: "Sq".to_string(),
+                direction: Some(Backwards),
+                connection_grip: String::new(),
+                positions: vec!["ln".to_string()],
+                rotations: vec!["D".to_string()],
+                bonuses: vec![],
+            })
+        );
+        assert_eq!(
+            "A-Sq-Back-ln-dt0.5".parse(),
+            Ok(TeamAcrobatic {
+                group: Airborne,
+                construction: "Sq".to_string(),
+                direction: Some(Backwards),
+                connection_grip: String::new(),
+                positions: vec!["ln".to_string()],
+                rotations: vec!["dt0.5".to_string()],
+                bonuses: vec![],
+            })
+        );
+        assert_eq!(
+            "A-Sq-Back-ln-Dbl".parse(),
+            Ok(TeamAcrobatic {
+                group: Airborne,
+                construction: "Sq".to_string(),
+                direction: Some(Backwards),
+                connection_grip: String::new(),
+                positions: vec!["ln".to_string()],
+                rotations: vec![],
+                bonuses: vec!["Dbl".to_string()],
+            })
+        );
+    }
+
+    #[test]
+    fn test_age_groups_from() {
+        assert_eq!("12u".parse(), Ok(AG12U));
+        assert_eq!("Youth".parse(), Ok(Youth));
+        assert_eq!("13-15".parse(), Ok(Youth));
+        assert_eq!("1517".parse(), Ok(JRSR));
+        assert_eq!("1617".parse(), Ok(JRSR));
+        assert_eq!("16-19".parse(), Ok(JRSR));
+        assert_eq!("18-19".parse(), Ok(JRSR));
+        assert_eq!("collegiate".parse(), Ok(JRSR));
+        assert_eq!("jr".parse(), Ok(JRSR));
+        assert_eq!("Junior".parse(), Ok(JRSR));
+        assert_eq!("sr".parse(), Ok(JRSR));
+        assert_eq!("Senior".parse(), Ok(JRSR));
+        assert_eq!("".parse(), Ok(AgeGroups::Unknown));
+    }
+
+    #[test]
+    fn test_event_from() {
+        assert_eq!("acro".parse(), Ok(Acrobatic));
+        assert_eq!("Acrobatic".parse(), Ok(Acrobatic));
+        assert_eq!("combination".parse(), Ok(Combo));
+        assert_eq!("combo".parse(), Ok(Combo));
+        assert_eq!("duet".parse(), Ok(Duet));
+        assert_eq!("MixedDuet".parse(), Ok(MixedDuet));
+        assert_eq!("solo".parse(), Ok(Solo));
+        assert_eq!("trio".parse(), Ok(Trio));
+        assert_eq!("".parse(), Ok(Events::Unknown));
+    }
 }

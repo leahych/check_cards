@@ -778,6 +778,7 @@ pub fn run_checks(card: &CoachCard) -> Vec<CardIssue> {
 }
 
 #[cfg(test)]
+#[cfg_attr(test, allow(clippy::too_many_lines))]
 mod tests {
     use super::*;
     use crate::{Category, Element};
@@ -788,15 +789,15 @@ mod tests {
     }
 
     impl CardBuilder {
-        fn new() -> CardBuilder {
-            CardBuilder { card: Default::default() }
+        fn new() -> Self {
+            Self { card: Default::default() }
         }
 
         fn hybrids(mut self, hybrids: &[&[&str]]) -> Self {
-            for hybrid in hybrids.into_iter() {
-                let decls: Vec<String> = hybrid.into_iter().map(|s| s.to_string()).collect();
+            for hybrid in hybrids {
+                let decls: Vec<String> = hybrid.iter().map(ToString::to_string).collect();
                 let kind = if decls[0].starts_with("TRE") {
-                    TRE(decls[0].clone(), "".into())
+                    TRE(decls[0].clone(), String::new())
                 } else if decls[0] == "ChoHy" {
                     ChoHy
                 } else if decls[0] == "SuConn" {
@@ -809,13 +810,13 @@ mod tests {
                     start_time: Default::default(),
                     stop_time: Default::default(),
                     kind,
-                })
+                });
             }
             self
         }
 
         fn pair_acros(mut self, acros: &[&str]) -> Self {
-            for acro in acros.into_iter() {
+            for acro in acros {
                 self.card.elements.push(Element {
                     number: self.card.elements.len() + 1,
                     start_time: Default::default(),
@@ -827,7 +828,7 @@ mod tests {
         }
 
         fn team_acros(mut self, acros: &[&str]) -> Self {
-            for acro in acros.into_iter() {
+            for acro in acros {
                 self.card.elements.push(Element {
                     number: self.card.elements.len() + 1,
                     start_time: Default::default(),
@@ -871,9 +872,9 @@ mod tests {
 
     #[test]
     fn test_hybrid_issues() {
-        let def = Category { ..Default::default() };
-
         type CheckFn = fn(Category, &[String]) -> Vec<CardIssue>;
+        let def = Default::default();
+
         let tests: &[(&str, CheckFn, Category, &[&str], usize)] = &[
             (
                 "6_factored_ok",
@@ -996,7 +997,7 @@ mod tests {
             ("rise_to_rotate_conn_ok", check_ascent_connection, def, &["A3b", "C5"], 0),
         ];
         for (name, check, cat, hybrid, expected) in tests {
-            let decls: Vec<String> = hybrid.iter().map(|s| s.to_string()).collect();
+            let decls: Vec<String> = hybrid.iter().map(ToString::to_string).collect();
             assert_eq!(check(*cat, &decls).len(), *expected, "{name}");
         }
     }
@@ -1015,7 +1016,7 @@ mod tests {
             ("tre_in_combo_err", Category { ag: Youth, event: Combo, free: false }, "TRE4a", "", 1),
         ];
         for (case, cat, tre, dd, errs) in conditions {
-            assert_eq!(check_tres(cat, tre, dd).len(), errs, "{}", case);
+            assert_eq!(check_tres(cat, tre, dd).len(), errs, "{case}");
         }
     }
 
@@ -1207,11 +1208,11 @@ mod tests {
         let team_acro = &"A-Shou-Back-tk-s1".parse().unwrap();
 
         assert_eq!(check_pair_acro(FSOLO, &"Js1B".into()).len(), 1);
-        assert_eq!(check_team_acro(FSOLO, team_acro, &"".into()).len(), 1);
+        assert_eq!(check_team_acro(FSOLO, team_acro, &String::new()).len(), 1);
         assert_eq!(check_pair_acro(FDUET, &"Js1B".into()).len(), 0);
-        assert_eq!(check_team_acro(FDUET, team_acro, &"".into()).len(), 1);
+        assert_eq!(check_team_acro(FDUET, team_acro, &String::new()).len(), 1);
         assert_eq!(check_pair_acro(FTEAM, &"Js1B".into()).len(), 1);
-        assert_eq!(check_team_acro(FTEAM, team_acro, &"".into()).len(), 0);
+        assert_eq!(check_team_acro(FTEAM, team_acro, &String::new()).len(), 0);
     }
 
     #[test]
@@ -1242,7 +1243,7 @@ mod tests {
         let within_time = check_routine_times(
             &CardBuilder::new()
                 .category(Category { ag: AG12U, event: Solo, free: true })
-                .end_time(NaiveTime::from_hms_opt(0, 2, 03).unwrap())
+                .end_time(NaiveTime::from_hms_opt(0, 2, 3).unwrap())
                 .card,
         );
         assert_eq!(within_time.len(), 0);
@@ -1315,7 +1316,7 @@ mod tests {
         ];
         for (decls, warns) in hybrids {
             let ci = check_flexibility_combinations(TMIXED, decls);
-            assert_eq!(warns, ci.len(), "hybrid {:?}: {:?}", decls, ci);
+            assert_eq!(warns, ci.len(), "hybrid {decls:?}: {ci:?}");
         }
     }
 }

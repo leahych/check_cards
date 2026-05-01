@@ -100,7 +100,7 @@ mod tests {
     fn test_parse_text_tre() {
         assert_eq!(
             parse_text("SR", true, "Solo", "TRE1a"),
-            ParseResult::Element(EXPECTED_CATEGORY, TRE("TRE1a".into(), "".into()))
+            ParseResult::Element(EXPECTED_CATEGORY, TRE("TRE1a".into(), String::new()))
         );
     }
 
@@ -123,7 +123,7 @@ mod tests {
                         group: Airborne,
                         construction: "Sq".to_string(),
                         direction: Some(Backwards),
-                        connection_grip: "".to_string(),
+                        connection_grip: String::new(),
                         positions: vec!["tk".into(), "2pk".into()],
                         rotations: vec!["s1".into()],
                         bonuses: vec![],
