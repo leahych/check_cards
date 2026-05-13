@@ -193,6 +193,10 @@ impl FromStr for AcroDirection {
 
 // TODO should this be an enum and split this into
 // common piece + group specific piece?
+// Using group specific piece would allow it to be
+// customized to only allow valid parts (direction
+// only for A/C, only A positions for A, etc) but
+// would make some parts harder to deal with
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct TeamAcrobatic {
     pub group: AcroGroup,
@@ -201,6 +205,9 @@ pub struct TeamAcrobatic {
     pub connection_grip: String,
     pub positions: Box<[String]>,
     pub rotations: Box<[String]>,
+    // TODO convert to enum? move check_bonus_validity here?
+    // If so, try to do something smart so that the valid bonus
+    // values are tied to the group?
     pub bonuses: Box<[String]>,
 }
 
