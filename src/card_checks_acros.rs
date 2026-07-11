@@ -961,6 +961,18 @@ fn check_positions(acro: &TeamAcrobatic) -> Vec<CardIssue> {
         );
     }
 
+    if ONE_LEG_CONNECTIONS.contains(&acro.connection_grip.as_str())
+        && B_TWO_LEG_POSITIONS.contains(&first_pos)
+    {
+        ci_warn(
+            &mut ci,
+            format!(
+                "two leg position, {first_pos}, declared but {} is not a two leg connection",
+                acro.connection_grip
+            ),
+        );
+    }
+
     let all_b_positions = [
         B_ONE_LEG_POSITIONS,
         B_TWO_LEG_POSITIONS,
@@ -1407,6 +1419,8 @@ mod tests {
             ("invalid_airborne_position", check_positions, "A-Sq-Forw-ar", 1),
             ("one_leg_pos_two_leg_conn", check_positions, "B-St-FS-he", 1),
             ("one_leg_pos_one_leg_conn", check_positions, "B-St-F1S-he", 0),
+            ("two_leg_pos_one_leg_conn", check_positions, "B-St-F1S-sd", 1),
+            ("two_leg_pos_two_leg_conn", check_positions, "B-St-FS-sd", 0),
             ("fly_above_airborne_first", check_positions, "C-Thr^2F-Back-tk/2ow", 1),
             ("fly_above_balance_first", check_positions, "C-Thr^2F-Back-ow/2tk", 0),
             ("fly_above_with_spl", check_positions, "C-Thr^2F-Back-spl/2tk", 1),
