@@ -1,242 +1,210 @@
-use crate::ElementKind::{ChoHy, Hybrid, PairAcro, SuConn, TRE, TeamAcro};
 use crate::Events::{Duet, Trio};
-use crate::{Category, CoachCard, Element};
+use crate::element::parse_elem_kind;
+use crate::{CardIssue, Category, CoachCard, Element, MilliDD, ci_err, ci_errs};
 use calamine::{Data, DataType, Range, Reader, Rows, Xls, Xlsx};
 use chrono::NaiveTime;
 use std::io::{Read, Seek};
 
-fn parse_elements(sheet: Rows<Data>, team_event: bool) -> (Box<[Element]>, NaiveTime) {
-    let mut elements = vec![];
-    let mut end_time = NaiveTime::default();
+type ParsedElements = (Box<[Element]>, NaiveTime, Box<[CardIssue]>);
+type ParsedCard = (String, CoachCard, Box<[CardIssue]>);
 
-    for element_row in sheet {
-        let mut row_cols = element_row.iter().filter(|x| !x.is_empty());
+fn parse_element(category: Category, element_row: &[Data]) -> (Result<Element, String>, NaiveTime) {
+    // if we have a DD column, get that value and remove that column
+    // from the columns to search for difficulty declarations
+    let (dd, element_row) = if let Some(last_col) = element_row.last()
+        && let Some(dd) = last_col.as_f64()
+    {
+        // if DD is negative then this will blow up later when we validate
+        // the reported DD, so it does not matter if the sign is lost. Using
+        // units of MilliDD should convert the DD to a whole number, but
+        // we'll call round just in case we end up with 5.999 instead of 6.
+        #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+        (Some(MilliDD((dd * 1000.0).round() as u32)), &element_row[..element_row.len() - 1])
+    } else {
+        (None, element_row)
+    };
 
-        // FUTURE use map_or_default once it is in stable
-        let start_end_time_str = row_cols.next().map_or_else(String::new, ToString::to_string);
-        let mut parts = start_end_time_str.split('-');
-        let val = parts.next().map(|v| "0:".to_owned() + v).unwrap_or_default();
-        let start_time = NaiveTime::parse_from_str(&val, "%T").unwrap_or_default();
-        let val = parts.next().map(|v| "0:".to_owned() + v).unwrap_or_default();
-        let stop_time = NaiveTime::parse_from_str(&val, "%T").unwrap_or_default();
+    // get_string will return a &str but only if the underlying DataType
+    // is String, otherwise it skips the cell, so the element numbers
+    // would be skipped (they are stored as float).
+    let mut row_cols = element_row.iter().filter_map(Data::as_string);
 
-        end_time = NaiveTime::max(stop_time, end_time);
+    let start_end_time_str = row_cols.next().unwrap_or_default();
+    let mut parts = start_end_time_str.split('-');
+    let val = parts.next().map(|v| "0:".to_owned() + v).unwrap_or_default();
+    let start_time = NaiveTime::parse_from_str(&val, "%T").unwrap_or_default();
+    let val = parts.next().map(|v| "0:".to_owned() + v).unwrap_or_default();
+    let stop_time = NaiveTime::parse_from_str(&val, "%T").unwrap_or_default();
 
-        let element_type_str =
-            row_cols.next().map_or_else(String::new, ToString::to_string).to_uppercase();
-        let (number, element_type_str) = match element_type_str.parse() {
-            Ok(num) => {
-                (num, row_cols.next().map_or_else(String::new, ToString::to_string).to_uppercase())
-            }
-            Err(_) => (
-                row_cols
-                    .next()
-                    .and_then(DataType::as_i64)
-                    .and_then(|x| i64::try_into(x).ok())
-                    .unwrap_or_default(),
-                element_type_str,
-            ),
-        };
+    // reports can be # ACRO-A ACRO-A <decl>
+    // cards can be ACRO # ACRO-A <decl>
+    // transitions won't have any element number
+    let next = row_cols.next().unwrap_or_default().to_uppercase();
+    let (num, etype) = match next.parse() {
+        Ok(n) => (n, row_cols.next().unwrap_or_default().to_uppercase()),
+        Err(_) => (row_cols.next().unwrap_or_default().parse().unwrap_or_default(), next),
+    };
 
-        // turn DD into a string because it makes implementing Eq easier
-        let dd = row_cols
-            .clone()
-            .rev()
-            .find_map(|x| if x.is_float() { x.as_string() } else { None })
-            .unwrap_or_default();
+    let code = match etype.trim() {
+        "CHOHY" => "ChoHy".to_owned(),
+        "TRE" => row_cols.next().unwrap_or_default(),
+        "ACRO" | "ACROBATIC" | "ACRO-A" | "ACRO-B" | "ACRO-C" | "ACRO-P" => row_cols
+            .find(|x| !matches!(x.as_str(), "ACRO" | "ACRO-A" | "ACRO-B" | "ACRO-C" | "ACRO-P"))
+            .unwrap_or_default(),
+        "SUCONN" | "TRANS-SUCONN" => "SuConn".to_owned(),
+        "HYBRID" | "REQHY" => row_cols.collect::<Vec<_>>().join(" "),
+        // not really an error, but we don't want transitions to be an
+        // element type since all we need to parse from them is a stop
+        // time. So return an error with an empty string, and the
+        // caller will filter that out
+        "" | "TRANS" => return (Err(String::new()), stop_time),
+        &_ => {
+            return (Err(format!("Element {num}: unknown element type '{etype}'")), stop_time);
+        }
+    };
 
-        let kind = match element_type_str.as_str() {
-            "CHOHY" => ChoHy,
-            "TRE" => {
-                let code = row_cols.next().map_or_else(String::new, ToString::to_string);
-                TRE(code, dd)
-            }
-            "ACRO" | "ACROBATIC" | "ACRO-A" | "ACRO-B" | "ACRO-C" | "ACRO-P" => {
-                if team_event {
-                    //row_cols.next(); // base mark/acro type
-                    let prefixes = &["ACRO-A", "ACRO-B", "ACRO-C", "ACRO-P"];
-                    let code = row_cols
-                        .find_map(|x| {
-                            if x.is_string() && !prefixes.contains(&&*x.to_string()) {
-                                x.as_string()
-                            } else {
-                                None
-                            }
-                        })
-                        .unwrap_or_default()
-                        .replace('\n', "");
-                    if let Ok(acro) = code.parse() {
-                        TeamAcro(acro, dd)
-                    } else {
-                        // TODO log
-                        continue;
-                    }
-                } else {
-                    // filter out ACRO, cards that were originally created
-                    // older versions of ISS can have "ACRO" both in the
-                    // part column and in the base mark column.
-                    PairAcro(
-                        row_cols
-                            .find_map(|x| {
-                                if x.is_string() && *x != "ACRO" { x.as_string() } else { None }
-                            })
-                            .unwrap_or_default(),
-                    )
-                }
-            }
-            "SUCONN" | "TRANS-SUCONN" => SuConn,
-            "HYBRID" | "REQHY" => {
-                let decls = row_cols
-                    .filter(|x| Data::is_string(x))
-                    .flat_map(|x| {
-                        x.to_string().split_whitespace().map(String::from).collect::<Vec<_>>()
-                    })
-                    .collect();
-                Hybrid(decls, dd)
-            }
-            &_ => {
-                // TODO log
-                continue;
-            }
-        };
-        elements.push(Element { number, start_time, stop_time, kind });
+    match parse_elem_kind(category.event, category.free, code.as_str(), dd) {
+        Ok(kind) => (Ok(Element { number: num, start_time, stop_time, kind }), stop_time),
+        Err(e) => (Err(format!("Element {num}: {e}")), stop_time),
     }
-    (elements.into_boxed_slice(), end_time)
 }
 
-fn parse_report(sheet: &Range<Data>) -> Vec<(String, CoachCard)> {
+fn parse_elements(sheet: Rows<Data>, category: Category) -> ParsedElements {
+    let mut elements = Vec::new();
+    let mut end_time = NaiveTime::default();
+    let mut ci = Vec::new();
+
+    for element_row in sheet {
+        let (ret, stop_time) = parse_element(category, element_row);
+        end_time = NaiveTime::max(stop_time, end_time);
+        match ret {
+            Ok(element) => elements.push(element),
+            Err(e) if !e.is_empty() => ci_err(&mut ci, e),
+            _ => {} // transition, ignore
+        }
+    }
+    (elements.into(), end_time, ci.into())
+}
+
+fn parse_report(sheet: &Range<Data>) -> Box<[ParsedCard]> {
     let mut cards = Vec::new();
     let mut category = Category::default();
     let mut name = String::new();
 
     let mut elements_start = (0u32, 0u32);
     for (i, row) in (0u32..).zip(sheet.rows()) {
-        let mut cols = row.iter().filter(|x| !x.is_empty());
-        let first_col = cols.next().unwrap_or(&Data::Empty);
+        let mut cols = row.iter().filter_map(Data::get_string);
+        let first_col = cols.next().unwrap_or_default();
         if first_col == "EVENT" {
-            let event_txt =
-                cols.next().map_or_else(String::new, ToString::to_string).to_uppercase();
-            category.ag = event_txt.parse().unwrap_or_default();
+            let event_txt = cols.next().unwrap_or_default();
+            category.ag = event_txt.into();
             category.free = !event_txt.contains("TECH");
-            category.event = event_txt.parse().unwrap_or_default();
+            category.event = event_txt.into();
         } else if first_col == "ROUTINE #" {
-            let draw = cols.next().map_or_else(String::new, ToString::to_string);
-            let routine_name = cols.next().map_or_else(String::new, ToString::to_string);
+            let draw = cols.next().unwrap_or_default();
+            let routine_name = cols.next().unwrap_or_default();
             name = format!("{draw} {routine_name}");
         } else if first_col == "TIME" {
             elements_start = (i + 1, 0u32);
         }
 
-        if elements_start != (0u32, 0u32) && *first_col == Data::Empty
-            || (i as usize) == sheet.rows().len() - 1
+        if elements_start != (0u32, 0u32) && first_col.is_empty()
+            || (i as usize) == sheet.height() - 1
         {
-            let elements_end = if (i as usize) == sheet.rows().len() - 1 {
+            let elements_end = if (i as usize) == sheet.height() - 1 {
                 sheet.end().unwrap_or_default()
             } else {
                 (i - 1, 10u32)
             };
+
             let er = sheet.range(elements_start, elements_end);
             // make up a theme since this report don't include them so
             // we don't warn about that for every single acro/combo
-            let (elements, end_time) = parse_elements(er.rows(), category.event.is_team_event());
+            let (elements, end_time, ci) = parse_elements(er.rows(), category);
             cards.push((
                 name,
                 CoachCard { category, theme: "foo".into(), elements, end_time, iss_ver: None },
+                ci,
             ));
             elements_start = (0u32, 0u32);
             name = String::new();
         }
     }
-    cards
+    cards.into()
 }
 
-fn parse_iss_card(name: &str, sheet: &Range<Data>) -> Vec<(String, CoachCard)> {
+fn parse_iss_card(name: &str, sheet: &Range<Data>) -> Box<[ParsedCard]> {
+    const ISS_VER_PREFIX: &str = "ISS Coach Card Version: ";
+
     let mut card = CoachCard::default();
 
-    let mut cur_positon = 0_usize;
-    for (i, row) in sheet.rows().enumerate() {
-        cur_positon = i;
-        let mut cols = row.iter().filter(|x| !x.is_empty());
-        let row_name = match cols.next() {
-            Some(Data::String(s)) => s,
-            Some(Data::DateTime(dt)) => &dt.as_datetime().unwrap().format("%H:%M").to_string(),
-            _ => continue,
-        };
+    let Some((elem_start_row, _)) = (0u32..)
+        .zip(sheet.rows())
+        .find(|(_, row)| row.first().is_some_and(|c| c.to_string().starts_with("0:")))
+    else {
+        return [(name.into(), card, ci_errs("could not find elements"))].into();
+    };
+
+    let header = sheet.range((0, 0), (elem_start_row, sheet.end().unwrap_or_default().1));
+    for row in header.rows() {
+        let mut cols = row.iter().filter_map(Data::get_string);
+        let row_name = cols.next().unwrap_or_default();
 
         if row_name.starts_with("Theme") {
-            card.theme = cols.next().map_or_else(String::new, ToString::to_string);
+            card.theme = cols.next().unwrap_or_default().into();
         }
         if row_name.starts_with("Age Group") {
-            card.category.ag =
-                cols.next().map_or_else(Default::default, |c| c.to_string().parse().unwrap());
+            card.category.ag = cols.next().unwrap_or_default().into();
         }
         if row_name.starts_with("Event") {
-            card.category.event = cols.next().map_or_else(Default::default, |col| {
-                let event_txt = col.to_string().to_uppercase();
-                card.category.free = !event_txt.contains("TECH");
-                let parsed_event = event_txt.parse().unwrap_or_default();
-                if parsed_event == Duet
-                    && (card.theme.to_uppercase().contains(" TRIO")
-                        || card.theme.to_uppercase().contains("TRIO ")
-                        || card.theme.to_uppercase() == "TRIO"
-                        || name.to_uppercase().contains(" TRIO")
-                        || name.to_uppercase().contains("_TRIO"))
-                {
-                    // Special case Trio since ISS does not support
-                    // Trios. To avoid matching on a theme that
-                    // has a word that contain "trio", only match if
-                    // "trio" is its own word.
-                    Trio
-                } else {
-                    parsed_event
-                }
-            });
-        }
-        if row_name.contains("0:") {
-            break;
-        }
-    }
-
-    let mut elements_start = sheet.start().unwrap_or_default();
-    let mut elements_end = sheet.end().unwrap_or_default();
-    elements_start.0 += u32::try_from(cur_positon).unwrap_or_default();
-    // remove ISS hidden checksum column
-    elements_end.1 -= 1;
-    let element_range = sheet.range(elements_start, elements_end);
-    (card.elements, card.end_time) =
-        parse_elements(element_range.rows(), card.category.event.is_team_event());
-
-    for col in element_range
-        .rows()
-        .filter_map(|r| r.first().and_then(Data::as_string))
-        .filter(|col| col.starts_with("ISS Coach Card Version: "))
-    {
-        let ver_str = col.strip_prefix("ISS Coach Card Version: ");
-        card.iss_ver = match semver::Version::parse(ver_str.unwrap_or_default()) {
-            Ok(ver) => Some(ver),
-            Err(_) => {
-                continue;
+            let col = cols.next().unwrap_or_default();
+            card.category.event = col.into();
+            card.category.free = !col.to_uppercase().contains("TECH");
+            if card.category.event == Duet
+                && (card.theme.to_uppercase().contains(" TRIO")
+                    || card.theme.to_uppercase().contains("TRIO ")
+                    || card.theme.to_uppercase() == "TRIO"
+                    || name.to_uppercase().contains(" TRIO")
+                    || name.to_uppercase().contains("_TRIO"))
+            {
+                // Special case Trio since ISS does not support
+                // Trios. To avoid matching on a theme that
+                // has a word that contain "trio", only match if
+                // "trio" is its own word.
+                card.category.event = Trio;
             }
         }
     }
 
-    vec![(name.into(), card)]
+    // remove ISS hidden checksum column
+    let elements_end = sheet.end().map(|r| (r.0, r.1 - 1)).unwrap_or_default();
+    let element_range = sheet.range((elem_start_row, 0), elements_end);
+    let ci;
+    (card.elements, card.end_time, ci) = parse_elements(element_range.rows(), card.category);
+
+    if let Some(col) = element_range
+        .rows()
+        .filter_map(|r| r.first().and_then(Data::as_string))
+        .find(|c| c.starts_with(ISS_VER_PREFIX))
+    {
+        card.iss_ver = col.strip_prefix(ISS_VER_PREFIX).and_then(|s| s.parse().ok());
+    }
+
+    [(name.into(), card, ci)].into()
 }
 
-fn parse_sheet(name: &str, sheet: &Range<Data>) -> Vec<(String, CoachCard)> {
-    let row = sheet.rows().next();
-    if row.and_then(|r| r.first()).map(ToString::to_string) == Some("JUDGE #".into()) {
+fn parse_sheet(name: &str, sheet: &Range<Data>) -> Box<[ParsedCard]> {
+    if sheet.get((0, 0)).is_some_and(|c| c == "JUDGE #") {
         parse_report(sheet)
     } else {
         parse_iss_card(name, sheet)
     }
 }
 
-// TODO how to handle non-fatal, i.e. unknown event?
 pub fn parse_excel<R: Read + Seek>(
     name: &str,
     reader: &mut R,
-) -> Result<Vec<(String, CoachCard)>, String> {
+) -> Result<Box<[ParsedCard]>, String> {
     let sheets = if name.to_lowercase().ends_with(".xls") {
         let workbook: Result<Xls<_>, _> = calamine::open_workbook_from_rs(reader);
         match workbook {

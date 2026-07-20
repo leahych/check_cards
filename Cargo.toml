@@ -12,6 +12,10 @@ repository = "https://github.com/leahych/check_cards"
 [lib]
 crate-type = ["cdylib", "lib"]
 
+# speed up dev builds a bit
+[profile.dev]
+debug = false
+
 [profile.release]
 codegen-units = 1
 lto = true
@@ -30,18 +34,25 @@ unused = "warn"
 all = { level = "warn", priority = -1 }
 nursery = { level = "warn", priority = -1 }
 pedantic = { level = "warn", priority = -1 }
+enum_glob_use = "allow"
 missing-errors-doc = "allow"
 similar-names = "allow"
+trivially_copy_pass_by_ref = "allow"
 
-[build-dependencies]
-chrono = "0.4.45"
+[build-dependencies.chrono]
+version = "0.4.45"
+default-features = false
+features = ["now"]
 
 [dependencies]
+anyhow = "1.0.103"
 calamine = { version = "0.35.0", features = ["chrono"] }
-regex-lite = "0.1.9"
-wasm-bindgen = "0.2.121"
-semver = "1.0.28"
 console_error_panic_hook = "0.1.7"
+semver = "1.0.28"
+strum = "0.28"
+strum_macros = "0.28"
+wasm-bindgen = "0.2.121"
+
 
 [dependencies.chrono]
 version = "0.4.45"

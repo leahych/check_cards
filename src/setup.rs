@@ -27,7 +27,11 @@ fn is_supported_file(file: &gloo::file::File) -> bool {
 
 #[wasm_bindgen]
 pub fn on_file_input_changed(event: &Event) {
-    process_files(&event.target().unwrap().dyn_into::<HtmlInputElement>().unwrap());
+    if let Some(t) = event.target()
+        && let Ok(input) = t.dyn_into::<HtmlInputElement>()
+    {
+        process_files(&input);
+    }
 }
 
 fn process_files(input_element: &HtmlInputElement) {
@@ -36,13 +40,14 @@ fn process_files(input_element: &HtmlInputElement) {
         None => return,
     };
     for file in files.iter().filter(|f| is_supported_file(f)) {
-        let doc = input_element.owner_document().unwrap();
-        let file = file.clone();
-        js_sys::futures::spawn_local(async move {
-            let res = gloo::file::futures::read_as_bytes(&file).await;
-            let ci = blob_to_issues(&file.name(), res);
-            show_issues(&doc, ci);
-        });
+        if let Some(doc) = input_element.owner_document() {
+            let file = file.clone();
+            js_sys::futures::spawn_local(async move {
+                let res = gloo::file::futures::read_as_bytes(&file).await;
+                let ci = blob_to_issues(&file.name(), res);
+                show_issues(&doc, &ci);
+            });
+        }
     }
 }
 
@@ -56,7 +61,7 @@ pub fn on_text_input_changed(ag: String, event: String, free: bool, input: Strin
     if !input.trim().is_empty() {
         js_sys::futures::spawn_local(async move {
             let ci = text_to_issues(&ag, free, &event, &input);
-            show_issues(&doc, ci);
+            show_issues(&doc, &ci);
         });
     }
 }
@@ -76,7 +81,7 @@ fn add_card_issues(
     name: &str,
     issues: &[CardIssue],
 ) -> Result<HtmlTableElement, JsValue> {
-    let table = document.create_element("table").unwrap().dyn_into::<HtmlTableElement>()?;
+    let table = document.create_element("table")?.dyn_into::<HtmlTableElement>()?;
     let thead = table.create_t_head().dyn_into::<HtmlTableSectionElement>()?;
 
     let th = document.create_element("th")?;
@@ -101,17 +106,17 @@ fn add_card_issues(
 fn blob_to_issues(
     fname: &str,
     file: Result<Vec<u8>, gloo::file::FileReadError>,
-) -> Vec<(String, Box<[CardIssue]>)> {
+) -> Box<[(String, Box<[CardIssue]>)]> {
     let mut issues: Vec<(String, Box<[CardIssue]>)> = Vec::new();
     match file {
         Ok(buf) => {
             let mut c = Cursor::new(buf);
             match parse_excel(fname, &mut c) {
                 Ok(cards) => {
-                    for (cname, card) in cards {
+                    for (cname, card, ci) in cards {
                         issues.push((
                             cname,
-                            [run_checks(&card), run_acro_checks(&card)].concat().into_boxed_slice(),
+                            [ci, run_checks(&card), run_acro_checks(&card)].concat().into(),
                         ));
                     }
                 }
@@ -124,7 +129,7 @@ fn blob_to_issues(
             issues.push((fname.into(), ci_errs(format!("could not read file: {e}"))));
         }
     }
-    issues
+    issues.into()
 }
 
 fn text_to_issues(
@@ -132,30 +137,32 @@ fn text_to_issues(
     free: bool,
     event: &str,
     input: &str,
-) -> Vec<(String, Box<[CardIssue]>)> {
+) -> Box<[(String, Box<[CardIssue]>)]> {
     let mut issues = Vec::new();
 
     let result = parse_text(ag, free, event, input);
     match result {
-        ParseResult::Element(category, element) => issues.push((
+        Ok(ParseResult::Element(category, element)) => issues.push((
             String::new(),
             match element {
-                TeamAcro(acro, dd) => check_one_acro(category, &acro, &dd),
+                // TODO make this split out part of check_one_element?
+                // reported DD is ignored because there is none for text input
+                TeamAcro(acro, _) => check_one_acro(category, &acro),
                 _ => check_one_element(category, &element),
             },
         )),
-        ParseResult::Card(card) => {
+        Ok(ParseResult::Card(card, ci)) => {
             issues.push((
                 String::new(),
-                [run_checks(&card), run_acro_checks(&card)].concat().into_boxed_slice(),
+                [ci, run_checks(&card), run_acro_checks(&card)].concat().into(),
             ));
         }
-        ParseResult::Err(e) => {
-            issues.push((String::new(), ci_errs(format!("could not parse input: {e}"))));
+        Err(e) => {
+            issues.push((String::new(), ci_errs(e.to_string())));
         }
     }
 
-    issues
+    issues.into()
 }
 
 fn clear_issues(document: &Document) {
@@ -169,10 +176,10 @@ fn clear_issues(document: &Document) {
     }
 }
 
-fn show_issues(document: &Document, issues: Vec<(String, Box<[CardIssue]>)>) {
+fn show_issues(document: &Document, issues: &[(String, Box<[CardIssue]>)]) {
     if let Some(results) = document.get_element_by_id("results") {
         for (card_name, ci) in issues {
-            let table = add_card_issues(document, &card_name, &ci);
+            let table = add_card_issues(document, card_name, ci);
             if let Ok(table) = table {
                 let _unused = results.append_child(&table);
             }
@@ -199,7 +206,7 @@ mod tests {
             .expect("Could not open file");
         let issues = blob_to_issues("", Ok(data));
         let ci = &issues[0].1;
-        assert_eq!(ci.len(), 0);
+        assert_eq!(ci, &[].into());
     }
 
     #[test]
