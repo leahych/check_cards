@@ -28,16 +28,38 @@ keyword-idents = "warn"
 let-underscore = "warn"
 refining-impl-trait = "warn"
 warnings = "warn"
-unused = "warn"
+unused = { level = "warn", priority = -1 }
+redundant_imports = "warn"
+unsafe_code = "forbid"
 
 [lints.clippy]
 all = { level = "warn", priority = -1 }
 nursery = { level = "warn", priority = -1 }
 pedantic = { level = "warn", priority = -1 }
+as_pointer_underscore = "warn"
+assertions_on_result_states = "warn"
+clone_on_ref_ptr = "warn"
+deref_by_slicing = "warn"
+disallowed_script_idents = "warn"
+empty_drop = "warn"
+empty_enum_variants_with_brackets = "warn"
+empty_structs_with_brackets = "warn"
 enum_glob_use = "allow"
+fn_to_numeric_cast_any = "warn"
+if_then_some_else_none = "warn"
 missing-errors-doc = "allow"
+redundant_type_annotations = "warn"
+renamed_function_params = "warn"
+semicolon_outside_block = "warn"
 similar-names = "allow"
+single_call_fn = "allow"
 trivially_copy_pass_by_ref = "allow"
+unneeded_field_pattern = "warn"
+unused_result_ok = "warn"
+
+expect_used = "warn"
+panic = "warn"
+unwrap_used = "warn"
 
 [build-dependencies.chrono]
 version = "0.4.45"
