@@ -46,7 +46,7 @@ features = ["now"]
 
 [dependencies]
 anyhow = "1.0.103"
-calamine = { version = "0.35.0", features = ["chrono"] }
+calamine = { version = "0.36.1", features = ["chrono"] }
 console_error_panic_hook = "0.1.7"
 semver = "1.0.28"
 strum = "0.28"
