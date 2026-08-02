@@ -1,836 +1,635 @@
-use crate::AcroDirection::{Backwards, Forwards, Sideways, Upwards};
-use crate::AcroGroup::{Airborne, Balance, Combined, Platform};
-use crate::AgeGroups::{AG12U, JRSR, Youth};
-use crate::ElementKind::{PairAcro, TeamAcro};
+use crate::AgeGroups::JRSR;
 use crate::Events::{Acrobatic, Combo, Duet, MixedDuet, Solo, Team, Trio};
+use crate::team_acro::TeamAcroKind::{Airborne, Balance, Combined, Platform};
+use crate::team_acro::{Positions, TeamAcroKind};
+use crate::utils::oxford_join;
 use crate::{
-    AcroGroup, AgeGroups, CardIssue, Category, CoachCard, Element, Events, TeamAcrobatic, ci_err,
-    ci_warn,
+    ABonus, AConst, ADir, APos, ARotationGroup, AcroA, AcroB, AcroC, AcroP, AgeGroups, BBonus,
+    BConn, BConst, BPos, BRotationGroup, CBonus, CConst, CDir, CPos, CardIssue, Category,
+    CoachCard, DD, Events, Family, FeaturedRotation, MilliDD, PBonus, PConn, PConst, ci_err,
+    ci_errs, ci_warn, ci_warns,
 };
-use regex_lite::Regex;
-use std::cmp::Ordering;
-use std::collections::{HashMap, HashSet};
-use std::ops::Not;
+use std::collections::HashSet;
+use std::fmt::Display;
+use std::hash::Hash;
+use std::str::FromStr;
 
-fn pair_acros(v: &[Element]) -> impl Iterator<Item = (usize, &String)> {
-    v.iter().filter_map(|e| match &e.kind {
-        PairAcro(d) => Some((e.number, d)),
-        _ => None,
-    })
-}
+fn check_dd_limits(category: Category, acro: &TeamAcroKind) -> Box<[CardIssue]> {
+    use AgeGroups::*;
 
-fn team_acros(v: &[Element]) -> impl Iterator<Item = (usize, &TeamAcrobatic, &String)> {
-    v.iter().filter_map(|e| match &e.kind {
-        TeamAcro(d, dd) => Some((e.number, d, dd)),
-        _ => None,
-    })
-}
+    const COMBO_12U: Category = Category { ag: AG12U, event: Combo, free: true };
+    const COMBO_YOUTH: Category = Category { ag: Youth, event: Combo, free: true };
+    const TEAM_12U: Category = Category { ag: AG12U, event: Team, free: true };
+    const TEAM_YOUTH: Category = Category { ag: Youth, event: Team, free: true };
+    const TEAM_JRSR_TECH: Category = Category { ag: JRSR, event: Team, free: false };
 
-fn check_dd_limits(category: Category, group: AcroGroup, dd: &str) -> Vec<CardIssue> {
-    #[derive(Eq, Hash, PartialEq)]
-    struct Cg {
-        c: Category,
-        g: AcroGroup,
+    #[rustfmt::skip]
+    const fn get_max_dd(category: Category, acro: &TeamAcroKind) -> Option<MilliDD> {
+        #[allow(clippy::match_same_arms)]
+        match (category, acro) {
+            (TEAM_12U,       Airborne(_)) => Some(MilliDD(2500)),
+            (COMBO_12U,      Airborne(_)) => Some(MilliDD(2500)),
+            (TEAM_YOUTH,     Airborne(_)) => Some(MilliDD(2700)),
+            (COMBO_YOUTH,    Airborne(_)) => Some(MilliDD(2700)),
+            (TEAM_JRSR_TECH, Airborne(_)) => Some(MilliDD(3000)),
+            (TEAM_12U,       Balance(_))  => Some(MilliDD(2600)),
+            (COMBO_12U,      Balance(_))  => Some(MilliDD(2600)),
+            (TEAM_YOUTH,     Balance(_))  => Some(MilliDD(2800)),
+            (COMBO_YOUTH,    Balance(_))  => Some(MilliDD(2800)),
+            (TEAM_JRSR_TECH, Balance(_))  => Some(MilliDD(3000)),
+            (TEAM_12U,       Combined(_)) => Some(MilliDD(2600)),
+            (COMBO_12U,      Combined(_)) => Some(MilliDD(2600)),
+            (TEAM_YOUTH,     Combined(_)) => Some(MilliDD(2800)),
+            (COMBO_YOUTH,    Combined(_)) => Some(MilliDD(2800)),
+            (TEAM_JRSR_TECH, Combined(_)) => Some(MilliDD(3000)),
+            (TEAM_12U,       Platform(_)) => Some(MilliDD(2800)),
+            (COMBO_12U,      Platform(_)) => Some(MilliDD(2800)),
+            (TEAM_YOUTH,     Platform(_)) => Some(MilliDD(3000)),
+            (COMBO_YOUTH,    Platform(_)) => Some(MilliDD(3000)),
+            (TEAM_JRSR_TECH, Platform(_)) => Some(MilliDD(3000)),
+            _ => None,
+        }
     }
-    let map = HashMap::from([
-        (Cg { c: Category { ag: AG12U, event: Team, free: true }, g: Airborne }, 2.5),
-        (Cg { c: Category { ag: AG12U, event: Team, free: true }, g: Balance }, 2.6),
-        (Cg { c: Category { ag: AG12U, event: Team, free: true }, g: Combined }, 2.6),
-        (Cg { c: Category { ag: AG12U, event: Team, free: true }, g: Platform }, 2.8),
-        (Cg { c: Category { ag: AG12U, event: Combo, free: true }, g: Airborne }, 2.5),
-        (Cg { c: Category { ag: AG12U, event: Combo, free: true }, g: Balance }, 2.6),
-        (Cg { c: Category { ag: AG12U, event: Combo, free: true }, g: Combined }, 2.6),
-        (Cg { c: Category { ag: AG12U, event: Combo, free: true }, g: Platform }, 2.8),
-        (Cg { c: Category { ag: Youth, event: Team, free: true }, g: Airborne }, 2.7),
-        (Cg { c: Category { ag: Youth, event: Team, free: true }, g: Balance }, 2.8),
-        (Cg { c: Category { ag: Youth, event: Team, free: true }, g: Combined }, 2.8),
-        (Cg { c: Category { ag: Youth, event: Team, free: true }, g: Platform }, 3.0),
-        (Cg { c: Category { ag: Youth, event: Combo, free: true }, g: Airborne }, 2.7),
-        (Cg { c: Category { ag: Youth, event: Combo, free: true }, g: Balance }, 2.8),
-        (Cg { c: Category { ag: Youth, event: Combo, free: true }, g: Combined }, 2.8),
-        (Cg { c: Category { ag: Youth, event: Combo, free: true }, g: Platform }, 3.0),
-        (Cg { c: Category { ag: JRSR, event: Team, free: false }, g: Airborne }, 3.0),
-        (Cg { c: Category { ag: JRSR, event: Team, free: false }, g: Balance }, 3.0),
-        (Cg { c: Category { ag: JRSR, event: Team, free: false }, g: Combined }, 3.0),
-        (Cg { c: Category { ag: JRSR, event: Team, free: false }, g: Platform }, 3.0),
-    ]);
 
     let mut ci = Vec::new();
-    if let Some(max_dd) = map.get(&Cg { c: category, g: group })
-        && dd.parse().unwrap_or(0.0) > *max_dd
+    // Use the calculated DD for this check. There is a check for if the
+    // calculated DD does not match the reported so there will be some
+    // error even if the calculation is wrong. Using the calculated DD
+    // makes this work from the text entry mode where there is no
+    // reported DD to check against.
+    if let Some(max) = get_max_dd(category, acro)
+        && acro.dd() > max
     {
-        ci_err(&mut ci, format!("{category} may not have an acrobatic that has a DD > {max_dd}"));
+        ci_err(
+            &mut ci,
+            format!("{category} {} acrobatics may not have a DD > {max}", acro.family()),
+        );
     }
-    ci
+    ci.into()
 }
 
 fn check_groups_for_acro_routine(card: &CoachCard) -> Box<[CardIssue]> {
+    type NamedFamilyMatcher = (&'static str, fn(a: &TeamAcroKind) -> bool);
+    const MATCHERS: &[NamedFamilyMatcher] = &[
+        ("Airborne", |a: &TeamAcroKind| matches!(a, Airborne(_))),
+        ("Balance", |a: &TeamAcroKind| matches!(a, Balance(_))),
+        ("Combined", |a: &TeamAcroKind| matches!(a, Combined(_))),
+        ("Platform", |a: &TeamAcroKind| matches!(a, Platform(_))),
+    ];
+
     let mut ci = Vec::new();
     if card.category.event != Acrobatic {
-        return ci.into_boxed_slice();
+        return ci.into();
     }
 
-    let mut group_counts = HashMap::<AcroGroup, usize>::new();
-    for (num, acro, _) in team_acros(&card.elements) {
-        let mut count = *group_counts.get(&acro.group).unwrap_or(&0usize);
-        count += 1;
-        group_counts.insert(acro.group, count);
-        if count > 2 {
-            ci_err(
-                &mut ci,
-                format!("Element {num}: may not have more than 2 {:?} acrobatics", acro.group),
-            );
+    for (name, matcher) in MATCHERS {
+        let num = card.team_acros().filter(|(_, a)| matcher(a)).count();
+        if num == 0 {
+            ci_err(&mut ci, format!("Missing {name} acrobatic"));
+        } else if num > 2 {
+            ci_err(&mut ci, format!("may not have more than 2 {name} acrobatics"));
         }
     }
 
-    for group in AcroGroup::iter() {
-        if team_acros(&card.elements).any(|(_, acro, _)| acro.group == group).not() {
-            ci_err(&mut ci, format!("Missing {group:?} acrobatic"));
-        }
-    }
-    ci.into_boxed_slice()
+    ci.into()
 }
 
 fn check_duplicate_pair_acros(card: &CoachCard) -> Box<[CardIssue]> {
     let mut ci = Vec::new();
     let mut prev_acros = HashSet::new();
-    for (num, acro) in pair_acros(&card.elements) {
+    for (num, acro) in card.pair_acros() {
         if prev_acros.contains(&acro) {
             ci_err(&mut ci, format!("Element {num}: repeated acrobatic"));
         }
         prev_acros.insert(acro);
     }
-    ci.into_boxed_slice()
+    ci.into()
 }
 
-fn check_duplicate_elements<'a, F: Fn(&TeamAcrobatic) -> Box<[String]>>(
-    acros: impl Iterator<Item = &'a (usize, &'a TeamAcrobatic, &'a String)>,
-    map_function: F,
-) -> Vec<CardIssue> {
+fn check_duplicate_elements<A, F, I, Part>(
+    acros: impl IntoIterator<Item = (usize, A)>,
+    map_fn: F,
+) -> Box<[CardIssue]>
+where
+    A: Family,
+    F: Fn(A) -> I,
+    I: IntoIterator<Item = Part>,
+    Part: Eq + Hash + Display,
+{
     let mut ci = Vec::new();
 
-    let mut prev_elems = HashSet::new();
-    for (num, acro, _) in acros {
-        for elem in map_function(acro) {
-            if prev_elems.contains(&elem) {
-                ci_err(
-                    &mut ci,
-                    format!(
-                        "Element {num}: {elem} can only be used once in a {:?} acrobatic",
-                        acro.group
-                    ),
+    let mut prev_parts = HashSet::new();
+    for (num, acro) in acros {
+        for part in map_fn(acro) {
+            if prev_parts.contains(&part) {
+                let msg = format!(
+                    "Element {num}: {part} can only be used once in a {} acrobatic",
+                    A::family()
                 );
+                ci_err(&mut ci, msg);
+            } else {
+                prev_parts.insert(part);
             }
-            prev_elems.insert(elem);
         }
     }
-    ci
+
+    ci.into()
 }
 
 fn check_team_duplicate_acros(card: &CoachCard) -> Box<[CardIssue]> {
-    let fg = |g: AcroGroup| team_acros(&card.elements).filter(move |(_, acro, _)| acro.group == g);
-    let group_a: Vec<(usize, &TeamAcrobatic, &String)> = fg(Airborne).collect();
-    let group_b: Vec<(usize, &TeamAcrobatic, &String)> = fg(Balance).collect();
-    let group_c: Vec<(usize, &TeamAcrobatic, &String)> = fg(Combined).collect();
-    let group_p: Vec<(usize, &TeamAcrobatic, &String)> = fg(Platform).collect();
-
-    let positions = |a: &TeamAcrobatic| {
-        a.positions.iter().map(|p| p.strip_prefix('2').unwrap_or(p).to_string()).collect()
-    };
-    let constructions = |acro: &TeamAcrobatic| vec![acro.construction.clone()].into_boxed_slice();
-    let connections = |acro: &TeamAcrobatic| vec![acro.connection_grip.clone()].into_boxed_slice();
-    let bonuses = |acro: &TeamAcrobatic| acro.bonuses.clone();
-
-    let mut ci = check_duplicate_elements(group_a.iter(), positions);
-    ci.extend(check_duplicate_elements(group_b.iter(), constructions));
-    ci.extend(check_duplicate_elements(group_b.iter(), connections));
-    ci.extend(check_duplicate_elements(group_c.iter(), constructions));
-    ci.extend(check_duplicate_elements(group_p.iter(), constructions));
-    ci.extend(check_duplicate_elements(group_p.iter(), connections));
-    ci.extend(check_duplicate_elements(group_p.iter(), positions));
-    ci.extend(check_duplicate_elements(group_p.iter(), bonuses));
-    ci.into_boxed_slice()
-}
-
-fn check_num_athletes(acro: &TeamAcrobatic) -> Vec<CardIssue> {
-    let mut ci = Vec::new();
-    if !acro.bonuses.contains(&"Dbl".into()) {
-        return ci;
+    fn pos_to_slice<T: DD + FromStr>(p: &Positions<T>) -> Box<[&T]> {
+        p.second.as_ref().map_or_else(|| [&p.first].into(), |pos2| [&p.first, pos2].into())
     }
 
+    macro_rules! family {
+        ($c: ident, $f:ident) => {
+            card.team_acros().filter_map(|(num, a)| match a {
+                $f(a) => Some((num, a)),
+                _ => None,
+            })
+        };
+    }
+
+    let mut ci: Vec<CardIssue> = Vec::new();
+    ci.extend(check_duplicate_elements(family!(card, Airborne), |a| pos_to_slice(&a.positions)));
+    ci.extend(check_duplicate_elements(family!(card, Balance), |a| [&a.construction]));
+    ci.extend(check_duplicate_elements(family!(card, Balance), |a| [&a.conn]));
+    ci.extend(check_duplicate_elements(family!(card, Combined), |a| [&a.construction]));
+    ci.extend(check_duplicate_elements(family!(card, Platform), |a| [&a.construction]));
+    ci.extend(check_duplicate_elements(family!(card, Platform), |a| [&a.conn]));
+    ci.extend(check_duplicate_elements(family!(card, Platform), |a| pos_to_slice(&a.positions)));
+    ci.extend(check_duplicate_elements(family!(card, Platform), |a| a.bonuses.iter()));
+    ci.into()
+}
+
+fn check_num_athletes(acro: &TeamAcroKind) -> Box<[CardIssue]> {
     // LH probably needs/usually is done with 5+, but not required
     // it isn't clear that 2Sup/2SupH requires 5
-    let req5 =
-        ["Sq", "2SupU", "2SupD", "2SupM", "St>", "2S", "Flower", "Thr>Pair>", "Thr>FF", "Thr^Lh"];
+    const A_REQ5: &[AConst] = &[AConst::Sq];
+    const B_REQ5: &[BConst] =
+        &[BConst::_2SupU, BConst::_2SupD, BConst::_2SupM, BConst::StTransitional];
+    const C_REQ5: &[CConst] = &[CConst::ThrOntoPair, CConst::ThrOntoFF, CConst::ThrAboveLh];
+    const P_REQ5: &[PConst] = &[PConst::_2S, PConst::Flower];
+
     // Lh2F might not really require 6+, but realistically it isn't happening with 4-5.
-    let req6 = ["2SupD2F", "Lh2F", "2Sup+", "Thr>St2", "Thr>StH>1F"];
-    if req6.contains(&acro.construction.as_str()) {
-        ci_err(&mut ci, format!("{} with Dbl requires 12 athletes!", acro.construction));
-    } else if req5.contains(&acro.construction.as_str()) {
-        ci_warn(&mut ci, format!("{} with Dbl requires 10 athletes!", acro.construction));
-    } else {
-        ci_warn(&mut ci, "requires 8 or more athletes");
+    const B_REQ6: &[BConst] = &[BConst::_2SupD2F, BConst::Lh2F];
+    const C_REQ6: &[CConst] = &[CConst::_2SupPlus, CConst::ThrOntoSt2, CConst::ThrOntoStHOnto1F];
+
+    fn check_nums<T: Display + PartialEq>(c: &T, req5: &[T], req6: &[T]) -> Box<[CardIssue]> {
+        if req5.contains(c) {
+            ci_warns(format!("{c} with Dbl requires 10 athletes!"))
+        } else if req6.contains(c) {
+            ci_errs(format!("{c} with Dbl requires 12 athletes!"))
+        } else {
+            ci_warns("Dbl requires 8 or more athletes")
+        }
     }
-    ci
+
+    if !match acro {
+        Airborne(a) => a.bonuses.contains(&ABonus::Dbl),
+        Balance(a) => a.bonuses.contains(&BBonus::Dbl),
+        Combined(a) => a.bonuses.contains(&CBonus::Dbl),
+        Platform(a) => a.bonuses.contains(&PBonus::Dbl),
+    } {
+        return [].into();
+    }
+
+    match acro {
+        Airborne(a) => check_nums(&a.construction, A_REQ5, &[]),
+        Balance(a) => check_nums(&a.construction, B_REQ5, B_REQ6),
+        Combined(a) => check_nums(&a.construction, C_REQ5, C_REQ6),
+        Platform(a) => check_nums(&a.construction, P_REQ5, &[]),
+    }
 }
 
-fn check_team_acro_validity(acro: &TeamAcrobatic) -> Vec<CardIssue> {
+fn check_team_acro_validity(acro: &TeamAcroKind) -> Box<[CardIssue]> {
     let mut ci = Vec::new();
-    if acro.construction.is_empty()
-        || (acro.connection_grip.is_empty() && acro.direction.is_none())
-        || acro.positions.is_empty()
-        || acro.positions.len() > 2
-    {
-        ci_err(&mut ci, "is missing one or more parts");
-    } else if acro.positions.first().is_some_and(|pos| pos.starts_with('2')) {
-        ci_err(
-            &mut ci,
-            format!("has second position, {}, but missing first position", acro.positions[0]),
-        );
-    } else if acro.positions.len() == 2 {
-        if acro.positions[0] == acro.positions[1].strip_prefix('2').unwrap_or(&acro.positions[1]) {
-            ci_err(&mut ci, format!("first and second positions are both {}", acro.positions[0]));
-        } else if !acro.positions[1].starts_with('2') {
-            ci_err(
-                &mut ci,
-                format!("second position, {}, does not start with '2'", acro.positions[1]),
-            );
-        }
-    }
-    if acro.bonuses.contains(&"Pos3".into()) && acro.positions.len() < 2 {
-        ci_err(
-            &mut ci,
-            format!("3rd position bonus declared, but only {} position(s)", acro.positions.len()),
-        );
+
+    if match acro {
+        Airborne(a) => a.bonuses.contains(&ABonus::Pos3) && a.positions.second.is_none(),
+        Balance(a) => a.bonuses.contains(&BBonus::Pos3) && a.positions.second.is_none(),
+        Combined(a) => a.bonuses.contains(&CBonus::Pos3) && a.positions.second.is_none(),
+        Platform(a) => a.bonuses.contains(&PBonus::Pos3) && a.positions.second.is_none(),
+    } {
+        ci_err(&mut ci, "3rd position bonus declared, but only one position declared");
     }
 
-    ci
+    if match acro {
+        Airborne(a) => matches!(&a.positions.second, Some(pos2) if pos2 == &a.positions.first),
+        Balance(a) => matches!(&a.positions.second, Some(pos2) if pos2 == &a.positions.first),
+        Combined(a) => matches!(&a.positions.second, Some(pos2) if pos2 == &a.positions.first),
+        Platform(a) => matches!(&a.positions.second, Some(pos2) if pos2 == &a.positions.first),
+    } {
+        ci_err(&mut ci, "first and second positions are the same");
+    }
+
+    if match acro {
+        Airborne(a) => a.bonuses.len() == 2 && a.bonuses[0] == a.bonuses[1],
+        Balance(a) => a.bonuses.len() == 2 && a.bonuses[0] == a.bonuses[1],
+        Combined(a) => {
+            a.bonuses.len() == 2 && a.bonuses[0] == a.bonuses[1] && a.bonuses[0] != CBonus::CRoll
+        }
+        Platform(a) => a.bonuses.len() == 2 && a.bonuses[0] == a.bonuses[1],
+    } {
+        ci_err(&mut ci, "cannot declare the same bonus twice");
+    }
+
+    ci.into()
 }
 
-fn check_direction(acro: &TeamAcrobatic) -> Vec<CardIssue> {
-    let mut ci = Vec::new();
-    for rotation in &acro.rotations {
-        if (rotation.starts_with('c') || rotation == "C") && acro.direction != Some(Sideways) {
-            ci_err(&mut ci, "Direction should always be Sideways for cartwheels");
+macro_rules! validate_exclusive_bonuses {
+    ($a: ident, $excl: ident) => {{
+        // FUTURE use into_array?
+        if let [b1, b2] = &*($a.bonuses) {
+            if $excl.iter().any(|set| set.contains(&b1) && set.contains(&b2)) {
+                return ci_errs(format!("cannot declare {b1} and {b2} in the same acrobatic"));
+            }
         }
-        if (rotation.starts_with('h') || rotation == "H")
-            && (acro.direction != Some(Forwards) && acro.direction != Some(Backwards))
-        {
-            ci_err(&mut ci, "Direction should always be Forwards or Backwards for handsprings");
-        }
-    }
-
-    if acro.direction != Some(Upwards) {
-        if acro.construction == "2Sup+" {
-            ci_err(&mut ci, "Direction should be Up for 2Sup+");
-        }
-        if acro.bonuses.contains(&"Hula".into()) {
-            ci_err(&mut ci, "Direction should be Up for Hula");
-        }
-        if acro.bonuses.contains(&"Turn".into()) {
-            ci_err(&mut ci, "Direction should be Up for Turn");
-        }
-    }
-
-    let somersaults_only = Regex::new(r"^(D|s)").unwrap();
-    if acro.direction == Some(Upwards)
-        && somersaults_only.is_match(acro.rotations.first().unwrap_or(&String::new()))
-    {
-        ci_warn(&mut ci, "Up declared with somersault, should this be Forward or Backwards?");
-    }
-
-    ci
+        [].into()
+    }};
 }
 
-fn check_rotation_construction(acro: &TeamAcrobatic) -> Vec<CardIssue> {
-    const R_SLASH: &[&str] = &["r0.5/", "r1/", "r1.5/"];
-    const R_PLAIN: &[&str] = &["r0.5", "r1", "r1.5"];
-    const R_PLUS: &[&str] = &["r0.5+", "r1+", "r1.5+", "r2+"];
-    const R_BANG: &[&str] = &["r0.5!", "r1!", "r1.5!", "r2!"];
-    const R_PLAIN_AND_PLUS: &[&str] = &["r0.5", "r1", "r1.5", "r0.5+", "r1+", "r1.5+", "r2+"];
-    const R_PLAIN_AND_BANG: &[&str] = &["r0.5", "r1", "r1.5", "r0.5!", "r1!", "r1.5!", "r2!"];
-    const R_L: &[&str] = &["r/L", "r0.5L", "r1L"];
-    const P_R: &[&str] = &["Pr", "Pr0.5", "Pr1", "Pr1.5"];
-    const P_H: &[&str] = &["Ph", "P0.5h", "P1h", "P1.5h"];
-    const P_2S: &[&str] = &["P2S", "P2Sr0.5", "P2Sr1"];
-    const P_DB: &[&str] = &["PDB", "PDB0.5", "PDB1"];
-    const C_BANG: &[&str] = &["Cr0.5!", "Cr1!", "Cr1.5!"];
-    const C_R_AND_BANG: &[&str] = &["Cr0.5", "Cr1", "Cr1.5", "Cr0.5!", "Cr1!", "Cr1.5!"];
-    const C_L: &[&str] = &["Cr0.5L"];
-    const C_P: &[&str] = &["CP0.5"];
-    const C_2F: &[&str] = &["2F0.5", "2F1"];
-    const C_FEATURED_ROTATIONS: &[&str] = &[
-        "Ct0.5", "Ct1", "Ct1.5", "Ct2", "Ct2.5", "Ct3", "Cd", "Cdt0.5", "Cdt1", "Cdt1.5", "Cs1",
-        "Css1", "Cs1.5", "Cs1.5o", "Cf1", "Cf1.5", "Cc", "Cct0.5", "Cct1", "Ch", "Cht0.5", "Cht1",
-        "Cs1t0.5", "Cs1t1", "Cs1t1.5", "Cs1t2", "Css1t0.5", "Css1t1", "Css1t1.5", "Css1t2",
-        "Cs1t1o", "Cs1t1.5o", "Cs1t2o", "Chs0.5",
+fn check_exclusive_bonuses(acro: &TeamAcroKind) -> Box<[CardIssue]> {
+    use ABonus::*;
+    use BBonus::*;
+    use CBonus::*;
+    use PBonus::*;
+
+    const A_EXCL: &[&[ABonus]] = &[&[Grip, Conn, Catch], &[Hula, RetSq, RetPa]];
+    const B_EXCL: &[&[BBonus]] = &[&[BBonus::Twirl, RotF], &[Moon, BBonus::Mov, Hold]];
+    const C_EXCL: &[&[CBonus]] =
+        &[&[Ju, _1POntoH, HOnto1P, Jump, JumpPass, On1Foot, _1FOnto1F, _1FOnto1FPlus, _2FOnto2F]];
+    const P_EXCL: &[&[PBonus]] = &[
+        &[Porp, Spich],
+        &[Stand, Diva],
+        &[Spider, Climb],
+        &[
+            Dive,
+            CH,
+            Ps1,
+            Ps1t0_5,
+            Ps1o,
+            Ps1t0_5o,
+            Ps1t1,
+            Pf1,
+            Pf1o,
+            PBonus::Mov,
+            Mov1,
+            Mov1PlusT,
+            Fall,
+            FTurn,
+        ],
     ];
-    static HM: std::sync::OnceLock<HashMap<&str, &[&str]>> = std::sync::OnceLock::new();
+
+    match acro {
+        Airborne(a) => validate_exclusive_bonuses!(a, A_EXCL),
+        Balance(a) => validate_exclusive_bonuses!(a, B_EXCL),
+        Combined(a) => validate_exclusive_bonuses!(a, C_EXCL),
+        Platform(a) => validate_exclusive_bonuses!(a, P_EXCL),
+    }
+}
+
+fn check_age_restrictions(ag: AgeGroups, acro: &TeamAcroKind) -> Box<[CardIssue]> {
+    use ABonus::*;
+    use CBonus::*;
+
+    fn a_bonuses(b: &ABonus) -> Option<String> {
+        if let RetSq | RetPa = b { Some(b.to_string()) } else { None }
+    }
+
+    fn c_bonuses(b: &CBonus) -> Option<String> {
+        if let _1FOnto1F | _1FOnto1FPlus | _1POntoH | HOnto1P = b {
+            Some(b.to_string())
+        } else {
+            None
+        }
+    }
+
+    if ag == JRSR {
+        return [].into();
+    }
 
     let mut ci = Vec::new();
-    let con = match acro.group {
-        Airborne => return ci,
-        Combined | Platform => &acro.construction,
-        Balance => &acro.connection_grip,
+    for bonus in match acro {
+        Airborne(a) => a.bonuses.iter().filter_map(a_bonuses).collect(),
+        Combined(a) => a.bonuses.iter().filter_map(c_bonuses).collect(),
+        _ => Vec::new(), // B and P don't have any limited bonuses
+    } {
+        ci_err(&mut ci, format!("{bonus} is only allowed in JR/SR routines"));
+    }
+    ci.into()
+}
+
+fn check_group_c_positions(acro: &TeamAcroKind) -> Box<[CardIssue]> {
+    const AIRBORNE_CONSTRUCTIONS: &[CConst] = &[
+        CConst::_2SupPlus,
+        CConst::ThrPlusThr,
+        CConst::Sn,
+        CConst::ThrOntohead,
+        CConst::ThrOntoPair,
+    ];
+    const AIRBORNE_BONUSES: &[CBonus] = &[CBonus::JumpPass, CBonus::Turn];
+    const BALANCE_CONSTRUCTIONS: &[CConst] = &[CConst::ThrOntoFF, CConst::ThrOntoF];
+    const BALANCE_BONUSES: &[CBonus] = &[
+        CBonus::Ju,
+        CBonus::_1POntoH,
+        CBonus::HOnto1P,
+        CBonus::Jump,
+        CBonus::On1Foot,
+        CBonus::_1FOnto1F,
+        CBonus::_1FOnto1FPlus,
+        CBonus::_2FOnto2F,
+    ];
+
+    let mut ci = Vec::new();
+
+    let Combined(acro) = acro else {
+        return ci.into();
     };
 
-    let rotation_map = HM.get_or_init(|| {
-        HashMap::from([
-            ("FS", R_SLASH),
-            ("FP", R_PLAIN_AND_PLUS),
-            ("SiSb", R_PLAIN),
-            ("Bp", R_PLAIN),
-            ("E", R_PLAIN),
-            ("AP", R_PLAIN),
-            ("SiS", R_PLAIN),
-            ("F1S", R_PLAIN_AND_PLUS),
-            ("Tw", R_PLAIN),
-            ("1F1P", R_PLAIN_AND_PLUS),
-            ("S+", R_PLAIN_AND_BANG),
-            ("PP", R_PLAIN_AND_BANG),
-            ("1F1F", R_PLAIN_AND_BANG),
-            ("F1F", R_PLUS),
-            ("1P1P", R_BANG),
-            ("1P1F", R_BANG),
-            ("1PPx", R_BANG),
-            ("PF", R_BANG),
-            ("PH/", R_BANG),
-            ("PP2", R_BANG),
-            ("2PH", R_BANG),
-            ("1PH", R_BANG),
-            ("FF", R_BANG),
-            ("FF/", R_BANG),
-            ("ShF", R_BANG),
-            ("LayF", R_BANG),
-            ("SiF", R_BANG),
-            ("H1F/", R_BANG),
-            ("HT+", R_BANG),
-            ("LiH", R_L),
-            ("Li", R_L),
-            ("P", P_R),
-            ("Box", P_R),
-            ("Knees", P_R),
-            ("B", P_R),
-            ("Chariot", P_R),
-            ("Hand", P_H),
-            ("2S", P_2S),
-            ("Flower", P_2S),
-            ("DB", P_DB),
-            ("Thr>St", C_R_AND_BANG),
-            ("Thr>St2", C_R_AND_BANG),
-            ("Thr>StH", C_BANG),
-            ("Thr>StH>1F", C_BANG),
-            ("Thr^Lh", C_L),
-            ("Thr>F", C_P),
-            ("Thr>FF", C_P),
-            ("Thr>hand", C_P),
-            ("Thr^2F", C_2F),
-        ])
-    });
+    if acro.construction == CConst::ThrAbove2F
+        && let CPos::B(pos1) = &acro.positions.first
+        && pos1.is_head_up()
+    {
+        ci_warn(
+            &mut ci,
+            "head-up position in fly-above construction, should that be a head-down position?",
+        );
+    }
 
-    let allowed_rotations = rotation_map.get(con.as_str());
-    for rotation in &acro.rotations {
-        // Group C limits rotations of the base, but rotation of the
-        // featured swimmer does not depend on the base.
-        // TODO the error message isn't great if they manually type a rotation
-        // that does not exist in the Group C somersaults
-        if acro.group == Combined && C_FEATURED_ROTATIONS.contains(&rotation.as_str()) {
-            continue;
+    if AIRBORNE_CONSTRUCTIONS.contains(&acro.construction)
+        && (matches!(acro.positions.first, CPos::B(_))
+            || matches!(acro.positions.second, Some(CPos::B(_))))
+    {
+        ci_err(&mut ci, format!("{} requires airborne positions", acro.construction));
+    }
+
+    if BALANCE_CONSTRUCTIONS.contains(&acro.construction)
+        && (matches!(acro.positions.first, CPos::A(_))
+            || matches!(acro.positions.second, Some(CPos::A(_))))
+    {
+        ci_err(&mut ci, format!("{} requires balance positions", acro.construction));
+    }
+
+    for bonus in &acro.bonuses {
+        if AIRBORNE_BONUSES.contains(bonus)
+            && (matches!(acro.positions.first, CPos::B(_))
+                || matches!(acro.positions.second, Some(CPos::B(_))))
+        {
+            ci_err(&mut ci, format!("{bonus} requires airborne positions"));
         }
 
-        // need to check here because we don't want to return an error
-        // when a group C acro doesn't allow rotation of the base but
-        // does allow for rotation of the featured athlete.
-        // TODO this check is more complicated since technically for
-        // Group C we should only allow them to claim one rotation of
-        // the base and one of the feature swimmer. ISS does not let
-        // you mis-code this, so this is a lower priority.
-        if let Some(ar) = allowed_rotations {
-            if !ar.contains(&rotation.as_str()) {
-                ci_err(&mut ci, format!("for {con} the rotation must be one of {}", ar.join(", ")));
-            }
-        } else {
-            ci_err(&mut ci, format!("no rotations of the construction allowed for {con}"));
+        if BALANCE_BONUSES.contains(bonus)
+            && (matches!(acro.positions.first, CPos::A(_))
+                || matches!(acro.positions.second, Some(CPos::A(_))))
+        {
+            ci_err(&mut ci, format!("{bonus} requires balance positions"));
         }
     }
 
-    ci
+    ci.into()
 }
 
-fn check_rotations(acro: &TeamAcrobatic) -> Vec<CardIssue> {
+fn check_positions(acro: &TeamAcroKind) -> Box<[CardIssue]> {
     let mut ci = Vec::new();
 
-    match acro.rotations.len().cmp(&2) {
-        Ordering::Less => {
-            if acro.rotations.is_empty() {
-                return ci;
-            }
-        }
-        Ordering::Equal => {
-            if acro.group != Combined {
-                ci_err(&mut ci, "Only one rotation allowed, but two declared");
-            }
-        }
-        Ordering::Greater => {
-            ci_err(
-                &mut ci,
-                format!("{} rotations declared, but only two allowed", acro.rotations.len()),
-            );
-            return ci;
-        }
+    // FUTURE Group C also has Airborne take-off positions, but that
+    // check is harder. For now, leave this as just for Airborne and
+    // see if this become an issue for Combined.
+    if let Airborne(acro) = acro
+        && acro.positions.second.is_some()
+        && acro.positions.first == APos::ln
+    {
+        ci_warn(&mut ci, "line claimed as 1st position, are you sure line isn't take-off");
     }
 
-    if acro.rotations.iter().any(|rotation| rotation.contains('o')) {
-        let first_pos = acro.positions.first().map_or("", |m| m);
-        let second_pos = acro.positions.get(1).map_or("", |m| m);
+    let (positions, allow_stand_up) = if let Balance(acro) = acro {
+        (&acro.positions, acro.bonuses.contains(&BBonus::SdUp))
+    } else if let Platform(acro) = acro {
+        // this assumes that when platforms stand they go to a two leg
+        // stand. This will warn more than is needed, but not claiming
+        // stand isn't common, and this will allow us to catch things
+        // like 2spl being used instead of owl which is more common.
+        (&acro.positions, acro.positions.second == Some(BPos::sd))
+    } else {
+        return ci.into();
+    };
 
-        if first_pos != "tk" && first_pos != "pk" {
-            // something like a fly above could start with ow and then
-            // have 2tk-Pos3 for the open somersault, lets make sure we
-            // aren't warning in that case.
-            if second_pos != "2tk" && second_pos != "2pk" {
-                ci_warn(
-                    &mut ci,
-                    "Somersault with open declared, but first airborne position is not tuck or pike, is this right?",
-                );
-            } else if !acro.bonuses.contains(&"Pos3".into()) {
-                ci_warn(
-                    &mut ci,
-                    "Somersault with open declared, but Pos3 not declared, is this right?",
-                );
-            }
-        } else if second_pos != "2ln" {
-            ci_warn(&mut ci, "Somersault with open declared, but 2ln not declared, is this right?");
-        }
-    }
-
-    if acro.rotations.iter().any(|rotation| rotation.contains("ss")) {
-        // allow for things like C-Thr^2F-Bln-ow/2ln-Css1
-        if (acro.construction.contains('^') && !acro.positions.contains(&"2ln".into()))
-            || (!acro.construction.contains('^')
-                && (acro.positions.len() > 1 || !acro.positions.contains(&"ln".into())))
-        {
-            ci_err(
-                &mut ci,
-                "Straight somersault can only be declared with one position and that must be ln",
-            );
-        }
-    }
-
-    ci.extend(check_rotation_construction(acro));
-
-    // FUTURE look at cleaning this up
-    let unlikely_twist_pos = ["tk", "pk", "rg"];
-    let just_twist_regex = Regex::new(r"^t(0.5|1|1.5|2|2.5|3)$").unwrap();
-
-    for rotation in &acro.rotations {
-        if just_twist_regex.is_match(rotation)
-            && acro.positions.len() == 1
-            && unlikely_twist_pos.contains(&acro.positions[0].as_str())
-        {
+    if let Some(pos2) = &positions.second {
+        if positions.first.is_head_up() && pos2.definitely_head_down() {
             ci_warn(
                 &mut ci,
-                format!(
-                    "twist declared, but {} is usually performed as a somersault",
-                    acro.positions[0]
-                ),
+                format!("{} is heads-up and {pos2} is heads-down, is this right?", positions.first),
             );
         }
-    }
-    ci
-}
 
-fn are_bonuses_exclusive(bonus1: &str, bonus2: &str) -> bool {
-    let eb: &[&[&str]] = &[
-        &["Grip", "Conn", "Catch"],
-        &["Hula", "RetSq", "RetPa"],
-        &["Twirl", "RotF"],
-        &["Moon", "Mov", "Hold"],
-        &["Jump", "Jump>", "On1Foot", "1F>1F"],
-        &["Porp", "Spich"],
-        &["Stand", "Diva"],
-        &["Spider", "Climb"],
-        &[
-            "Dive", "CH", "Ps1", "Ps1t0.5", "Ps1o", "Ps1t0,5o", "Ps1t1", "Pf1", "Pf1o", "Mov",
-            "Mov1", "Mov1+t", "Fall", "FTurn",
-        ],
-        &["Ju", "1P>H", "H>1P", "Jump", "Jump>", "On1Foot", "1F>1F", "1F>1F+", "2F>2F"],
-    ];
-    eb.iter().any(|exclusive| exclusive.contains(&bonus1) && exclusive.contains(&bonus2))
-}
-
-fn check_bonuses_allowed_constructions(construction: &str, bonuses: &[String]) -> Vec<CardIssue> {
-    const P_ALLOWED: &[&str] = &["2S", "Flower", "Hand"];
-    static HM: std::sync::OnceLock<HashMap<&str, &[&str]>> = std::sync::OnceLock::new();
-
-    let mut ci = Vec::new();
-    let map = HM.get_or_init(|| {
-        HashMap::from([
-            ("Turn", &["2Sup+"] as &[&str]),
-            ("Run", &["Thr>FF", "Thr>F"]),
-            ("Ju", &["Thr>FF", "Thr>F", "Thr>hand", "Thr>Sq"]),
-            ("Jump", &["Thr>St", "Thr>StH", "Thr>St2"]),
-            ("Jump>", &["Thr>St", "Thr>StH", "Thr>FF", "Thr>F", "Thr>hand", "Thr>Sq", "Thr>St2"]),
-            ("1F>1F+", &["Thr>StH>1F"]),
-            ("2F>2F", &["Thr>StH"]),
-            ("Spider", P_ALLOWED),
-            ("Climb", P_ALLOWED),
-            ("Fall", P_ALLOWED),
-            ("FTurn", P_ALLOWED),
-            ("Diva", &["2S"]),
-        ])
-    });
-    for bonus in bonuses {
-        if let Some(ac) = map.get(bonus.as_str())
-            && !ac.contains(&construction)
-        {
-            ci_err(
+        // If SdUp bonus is there, they are purposefully standing up,
+        // so a head up position is expected. For platforms, standing
+        // up and then dismounting is common. For now, just check for
+        // "sd" since that is the most common way of getting out of a
+        // head down position in a platform.
+        if positions.first.definitely_head_down() && pos2.is_head_up() && !allow_stand_up {
+            ci_warn(
                 &mut ci,
-                format!("{bonus} can only be used with {} constructions", ac.join(", ")),
+                format!("{} is heads-down and {pos2} is heads-up, is this right?", positions.first),
             );
         }
     }
 
-    ci
+    ci.into()
 }
 
-fn check_bonus_validity(acro: &TeamAcrobatic) -> Vec<CardIssue> {
+fn check_pair_acro_common_base_marks(card: &CoachCard) -> Box<[CardIssue]> {
     let mut ci = Vec::new();
-
-    let valid_bonuses: &[&str] = match acro.group {
-        Airborne => {
-            &["Dbl", "Pos3", "Grip", "Conn", "Catch", "Split", "Hula", "RetSq", "RetPa", "Feet"]
-        }
-        Balance => &["Dbl", "Pos3", "SdUp", "Wave", "Twirl", "RotF", "Moon", "Mov", "Hold"],
-        Combined => &[
-            "Dbl", "Pos3", "Slip", "Star", "Cx", "Twirl", "CRoll", "Turn", "Run", "Ju", "1P>H",
-            "H>1P", "Jump", "Jump>", "On1Foot", "1F>1F", "1F>1F+", "2F>2F",
-        ],
-        Platform => &[
-            "Dbl", "Pos3", "UP", "Porp", "Spich", "Trav", "Stand", "Diva", "PRoll", "Box",
-            "Spider", "Climb", "Arch", "Kozak", "Dive", "CH", "Ps1", "Ps1t0.5", "Ps1o", "Ps1t0,5o",
-            "Ps1t1", "Pf1", "Pf1o", "Mov", "Mov1", "Mov1+t", "Fall", "FTurn",
-        ],
-    };
-    for bonus in &acro.bonuses {
-        if !valid_bonuses.contains(&bonus.as_str()) {
-            ci_err(&mut ci, format!("{bonus} is not a valid bonus"));
-        }
+    if card.category.event != Duet && card.category.event != MixedDuet {
+        return ci.into();
     }
-    ci
-}
 
-fn check_bonuses(acro: &TeamAcrobatic) -> Vec<CardIssue> {
-    const ALLOWED_SPLIT_POSITIONS: &[&str] = &["tk", "ln", "kt"];
-    let mut ci = check_bonus_validity(acro);
-
-    let first_pos = acro.positions.first().map_or("", |v| v);
-    let second_pos = acro.positions.get(1).map_or("", |v| v.strip_prefix('2').unwrap_or(v));
-    if acro.bonuses.contains(&"Split".into()) && !ALLOWED_SPLIT_POSITIONS.contains(&first_pos) {
-        ci_err(
+    for (num, acro) in card.pair_acros().filter(|(_, a)| a.is_airborne() && !a.is_crash()) {
+        ci_warn(
             &mut ci,
             format!(
-                "for Split bonus, first position should be {}",
-                ALLOWED_SPLIT_POSITIONS.join(", ")
+                "Element {num}: {acro} requires the featured-swimmer must be completely in the AIR (top of the head and toes must be above the surface at the same time)"
             ),
         );
     }
 
-    if acro.bonuses.contains(&"Porp".into()) && first_pos != "bb" {
-        ci_err(&mut ci, "For Porp bonus, Position 1 must be bamboo");
+    ci.into()
+}
+
+macro_rules! acro_req {
+    ($ci: ident, $req: expr, $with: expr, $found: expr) => {
+        if let Some(r) = $req
+            && &$found != r
+        {
+            ci_err(&mut $ci, format!("{r} is expected with {} but found {}", $with, $found));
+        }
+    };
+}
+
+macro_rules! acro_reqs {
+    ($ci: ident, $reqs: expr, $with: expr, $found: expr) => {
+        if !$reqs.is_empty() && !$reqs.contains(&$found) {
+            ci_err(
+                &mut $ci,
+                format!("{} is expected with {} but found {}", oxford_join($reqs), $with, $found),
+            )
+        }
+    };
+}
+
+#[derive(Clone, Copy)]
+enum SecondAirborne<'a> {
+    NotPossible,
+    PossibleButNone,
+    Has(&'a APos),
+}
+
+fn check_featured_rotation(
+    r: &impl FeaturedRotation,
+    dir: &ADir,
+    pos1: &APos,
+    pos2: SecondAirborne,
+) -> Box<[CardIssue]> {
+    let mut ci = Vec::new();
+
+    if r.is_open() {
+        if !matches!(pos1, APos::tk | APos::pk) {
+            ci_warn(&mut ci, "Somersault with open, but first position is not tuck or pike");
+        }
+
+        // why on earth are we doing Option<Option<>>? Because for
+        // Group C flyabove there is no declared 2nd airport position.
+        // the other option would be to only do this check if there is
+        // a declared 2nd position, but then we wouldn't handle the
+        // type case where ss is select for GroupA when s is meant.
+        // There isn't anything we can do to detect that typo for
+        // Group C flyabove so this is probably as good as we can get.
+        match pos2 {
+            SecondAirborne::PossibleButNone => {
+                ci_warn(&mut ci, "Somersault with open, but 2ln not declared");
+            }
+            SecondAirborne::Has(pos2) if pos2 != &APos::ln => {
+                ci_err(&mut ci, format!("Somersault with open, but {pos2} declared not 2ln"));
+            }
+            _ => {}
+        }
     }
 
-    if acro.bonuses.contains(&"Spich".into())
-        && !((first_pos == "bb" && second_pos == "sh") || (first_pos == "sh" && second_pos == "bb"))
+    let group = r.group();
+    if matches!(group, ARotationGroup::Somersault | ARotationGroup::StraightSomersault)
+        && dir == &ADir::Up
     {
-        // warn because technically you could do something before Spich
-        // and then you'd start with that position, but that's unlikely
-        ci_err(&mut ci, "Spich requires going from bamboo to shrimp or shrimp to bamboo");
+        ci_warn(&mut ci, "Up declared with somersault, should this be Forward or Backwards?");
     }
 
-    if acro.bonuses.contains(&"RetPa".into()) || acro.bonuses.contains(&"RetSq".into()) {
-        if acro.bonuses.contains(&"RetPa".into()) && acro.construction != "Shou" {
-            ci_err(&mut ci, "RetPa probably needs to use Shou construction");
-        }
+    if group == ARotationGroup::StraightSomersault && pos1 != &APos::ln {
+        ci_warn(&mut ci, "Straight somersault can only be declared with ln");
+    }
 
-        if acro.bonuses.contains(&"RetSq".into()) && acro.construction != "Sq" {
-            ci_err(&mut ci, "RetSq must use Sq construction");
-        }
+    if group == ARotationGroup::Cartwheel && dir != &ADir::Side {
+        ci_err(&mut ci, "Direction should always be Sideways for cartwheels");
+    }
 
-        // this isn't in the wording, but doing anything else seems fishy
-        if acro.direction != Some(Upwards) {
-            ci_warn(&mut ci, "RetPa and RetSq should probably have Up as the direction");
-        }
+    if group == ARotationGroup::Handspring && !matches!(dir, ADir::Back | ADir::Forw) {
+        ci_err(&mut ci, "Direction should always be Forwards or Backwards for handsprings");
+    }
+
+    ci.into()
+}
+
+fn check_reqs_a(acro: &AcroA) -> Box<[CardIssue]> {
+    let mut ci = Vec::new();
+
+    if let Some(r) = &acro.rotation {
+        let pos2 = acro
+            .positions
+            .second
+            .as_ref()
+            .map_or(SecondAirborne::PossibleButNone, SecondAirborne::Has);
+        ci.extend(check_featured_rotation(r, &acro.dir, &acro.positions.first, pos2));
+
+        let group = r.group();
 
         // they don't say Cartwheel/Handspring, but I think that's not
         // going to be a winning argument, so let's ban them as well.
         // That leaves twists as the only option, and since it's group A
         //  there is only one rotation to check
-        if !acro.rotations.is_empty() && !acro.rotations[0].starts_with('t') {
+        if group != ARotationGroup::Twist
+            && (acro.bonuses.contains(&ABonus::RetPa) || acro.bonuses.contains(&ABonus::RetSq))
+        {
             ci_err(&mut ci, "Somersaults cannot be used with RetPa or RetSq");
+        }
+
+        if group == ARotationGroup::Twist
+            && matches!(acro.positions.first, APos::tk | APos::pk | APos::rg)
+            && acro.positions.second.is_none()
+        {
+            ci_warn(
+                &mut ci,
+                format!(
+                    "twist declared, but {} is usually performed as a somersault",
+                    acro.positions.first
+                ),
+            );
         }
     }
 
-    if acro.bonuses.contains(&"Catch".into()) && !acro.bonuses.contains(&"Dbl".into()) {
+    for bonus in &acro.bonuses {
+        acro_reqs!(ci, bonus.required_consts(), bonus, acro.construction);
+        acro_req!(ci, &bonus.required_dir(), bonus, acro.dir);
+        acro_reqs!(ci, bonus.required_positions(), bonus, acro.positions.first);
+    }
+
+    // This is an underdeclaration, the check is only here to because
+    // the manual says Dbl is required. If they have a bonus that's
+    // worth more than Dbl, then they know enough to ignore this
+    // message. This might flag the case where a coach claimed
+    // "Catch" but misunderstood the requirements.
+    if acro.bonuses.contains(&ABonus::Catch) && !acro.bonuses.contains(&ABonus::Dbl) {
         ci_warn(&mut ci, "Catch requires two simultaneous acrobatics, so Dbl should be claimed");
     }
 
-    match acro.bonuses.len().cmp(&2) {
-        Ordering::Less => {
-            for rotation in &acro.rotations {
-                // in here assuming that if they have 2 they don't want to claim Conn
-                if (rotation.starts_with('c') || rotation.starts_with('h'))
-                    && !acro.bonuses.contains(&"Conn".into())
-                    && !acro.bonuses.contains(&"Grip".into())
-                    && !acro.bonuses.contains(&"Catch".into())
-                {
-                    ci_warn(&mut ci, format!("can claim 'Conn' with {rotation}"));
-                }
-            }
-        }
-        Ordering::Equal => {
-            let b1 = &acro.bonuses[0];
-            let b2 = &acro.bonuses[1];
-            if b1 == b2 && b1 != "CRoll" {
-                ci_err(&mut ci, "cannot declare the same bonus twice");
-            } else if are_bonuses_exclusive(b1, b2) {
-                ci_err(&mut ci, format!("cannot declare {b1} and {b2} in the same acrobatic"));
-            }
-        }
-        Ordering::Greater => {
-            ci_err(&mut ci, format!("only 2 bonuses allowed but {} declared", acro.bonuses.len()));
-        }
-    }
-
-    ci.extend(check_bonuses_allowed_constructions(&acro.construction, &acro.bonuses));
-
-    if acro.bonuses.contains(&"Hold".into()) && !acro.rotations.is_empty() {
-        ci_warn(&mut ci, "Hold and Rotation must not be simultaneous");
-    }
-
-    if acro.bonuses.contains(&"Hula".into())
-        && !acro.positions.contains(&"rg".into())
-        && !acro.positions.contains(&"ja".into())
-    {
-        ci_err(&mut ci, "Hula requires that the featured athlete be in Ring or Jay position");
-    }
-
-    if acro.bonuses.contains(&"Spider".into()) && first_pos != "br" {
-        ci_err(&mut ci, "Spider requires bridge position");
-    }
-
-    if acro.bonuses.contains(&"Diva".into()) && acro.connection_grip != "3pS" {
-        ci_err(&mut ci, "Diva requires 3pS connection");
-    }
-
-    let horizontal_positions = [B_FREE_POSITIONS, B_HORIZONTAL_POSITIONS].concat();
-    if acro.bonuses.contains(&"RotF".into())
-        && !horizontal_positions.contains(&first_pos)
-        && !horizontal_positions.contains(&second_pos)
-    {
-        ci_err(&mut ci, "RotF claimed, but no horizontal position claimed");
-    }
-
-    let torso_down_positions =
-        [B_FREE_POSITIONS, B_HORIZONTAL_POSITIONS, B_HEAD_DOWN_POSITIONS, B_EXTREME_FLEX_POSITIONS]
-            .concat();
-    if acro.bonuses.contains(&"SdUp".into())
-        && !torso_down_positions.contains(&first_pos)
-        && !torso_down_positions.contains(&second_pos)
-    {
-        ci_warn(&mut ci, "SdUp claimed, but no head/torso down position claimed");
-    }
-
-    ci
+    ci.into()
 }
 
-fn check_age_restrictions(ag: AgeGroups, acro: &TeamAcrobatic) -> Vec<CardIssue> {
-    const JRSR_ONLY_BONUSES: &[&str] = &["RetSq", "RetPa", "1F>1F", "1F>1F+", "1P>H", "H>1P"];
+fn check_reqs_b(acro: &AcroB) -> Box<[CardIssue]> {
     let mut ci = Vec::new();
-    if ag == JRSR {
-        return ci;
-    }
-    for bonus in &acro.bonuses {
-        if JRSR_ONLY_BONUSES.contains(&bonus.as_str()) {
-            ci_err(&mut ci, format!("{bonus} is only allowed in JR/SR routines"));
-        }
-    }
-    ci
-}
 
-fn check_construction(acro: &TeamAcrobatic) -> Vec<CardIssue> {
-    let allowed_grip_map = HashMap::<&str, &[&str]>::from([
-        (
-            "St",
-            &[
-                "1P1P", "1PPx", "PP", "FP", "SiSb", "Bp", "E", "PH/", "AP", "SiS", "FS", "F1S",
-                "Tw", "S+", "1PH", "1F1P", "1F1F",
-            ] as &[&str],
-        ),
-        ("StH", &["1P1F", "FF", "FF/", "PF", "ShF", "LayF", "SiF", "S+", "1F1F", "H1F/", "HT+"]),
-        ("2SupU", &["Le", "1FH+1FP", "PP2"]),
-        ("2SupD", &["Tow"]),
-        ("2SupM", &["Le", "Ch"]),
-        ("2SupD2F", &["Tow"]),
-        ("L", &["Li"]),
-        ("L2F+", &["Li"]),
-        ("St>", &["PP", "PF", "Bp", "ShF", "E", "F1S", "LayF", "1P1F", "2pH", "PH/"]),
-        ("LH", &["LiH"]),
-        ("Lh2F", &["LiH"]),
-        ("P", &["F2A", "SiA", "1FA", "3pA", "HA", ">F1P", "2pA/", "4p", "3pbA", "BA", ">2P2P"]),
-        ("Box", &["4p", "3pA", "SiA", "F2A", "HA", "3pbA"]),
-        (
-            "Knees",
-            &["2pK", "3pbA", "3pK", "SP+K", "F2A", "SiA", "3pA", ">F1P", ">2P2P", "BA", "1FA"],
-        ),
-        (
-            "B",
-            &[
-                "2pBb", ">F1P", "L/SiF+P", "SiF+Pb", "SP+L", "FA+PF", "F2A", "SiA", "HP+L", "FAb",
-                "3pA", "1FA", "HA", "3pS", "3pbA", "2b/",
-            ],
-        ),
-        (
-            "DB",
-            &[
-                "L/SiF+P", "ShF+P", "SiF+Pb", "SP+L", "FA+PF", "3pK", "F2A", "SiA", ">F1P",
-                "ShiShi+", "SF+TP", "HP+L", "3pA", "1FA", "4p", "DBB", "3pbA", "2b/",
-            ],
-        ),
-        ("Chariot", &["2pA/", "4p", "3pbA", "3pA", "FAb", "F2A", "SiA", "1FA", "BA"]),
-        (
-            "2S",
-            &[
-                "2b/", "2pBb", "FA+PF", "3pbA", "HA", "3pA", "F2A", "SiA", "1FA", "SP+K", "3pS",
-                "ShF+P", "L/SiF+P", "2pA/", "BA",
-            ],
-        ),
-        ("Flower", &["2pA/", "3pbA", "HA", "3pA", "F2A", "SiA", "1FA", "BA"]),
-        ("Hand", &["2pA/", "3pbA", "HA", "1FA", "3pA", "F2A", "SiA", "BA"]),
-    ]);
+    acro_reqs!(ci, acro.construction.required_conns(), acro.construction, acro.conn);
+    acro_reqs!(ci, acro.conn.required_consts(), acro.conn, acro.construction);
+    acro_reqs!(ci, acro.conn.required_positions(), acro.conn, acro.positions.first);
 
-    let mut ci = Vec::new();
-    if let Some(allowed_grips) = allowed_grip_map.get(acro.construction.as_str())
-        && !allowed_grips.contains(&acro.connection_grip.as_str())
-    {
+    let pos1 = &acro.positions.first;
+
+    if acro.conn.expects_head_down_pos() && !pos1.could_be_head_down() {
         ci_warn(
             &mut ci,
-            format!(
-                "{} cannot be used with {}, must be a connection such as {}",
-                acro.construction,
-                acro.connection_grip,
-                allowed_grips.join(", ")
-            ),
+            format!("expected head-down position with {}, but found {pos1}", acro.conn),
         );
     }
 
-    ci
-}
-
-const A_POSITIONS: &[&str] = &["tk", "pk", "kt", "ln", "sp", "ja", "rg"];
-const B_ONE_LEG_POSITIONS: &[&str] = &["he", "vs", "gl", "ba", "sa", "ne", "ey"];
-const B_TWO_LEG_POSITIONS: &[&str] = &["sd"];
-const B_FREE_POSITIONS: &[&str] = &["mo", "PP", "ct", "sh", "hp", "fl", "tu"];
-const B_HORIZONTAL_POSITIONS: &[&str] = &["co", "spl", "so", "pi"];
-const B_HEAD_DOWN_POSITIONS: &[&str] = &["bb", "bo", "ff", "wi", "br", "ow", "ma"];
-const B_EXTREME_FLEX_POSITIONS: &[&str] = &["dr", "qu", "sn"];
-
-fn check_connection(acro: &TeamAcrobatic) -> Vec<CardIssue> {
-    // not a category but positions that can be done by standing w/two feet
-    const TWO_FOOT_POSITIONS: &[&str] = &["sd", "mo", "sh", "dr"];
-    // a few of these aren't handstands, but have the same sort of movement
-    // so they should also probably start in bamboo
-    const HANDSTAND_CONNECTIONS: &[&str] = &[
-        "1P1P", "1P1F", "1PPx", "PP", "PF", "PH/", "PP2", "1pH", "1PH", "2pH", "2PH", "H1F/",
-        "HT+", "ShF", "E",
-    ];
-    const TWO_SUP_UP_CONSTRUCTIONS: &[&str] = &["2SupU", "2SupM"];
-
-    // similar, anything that could be considered head up
-    let head_up_positions =
-        [B_ONE_LEG_POSITIONS, B_TWO_LEG_POSITIONS, B_FREE_POSITIONS, B_HORIZONTAL_POSITIONS]
-            .concat();
-
-    // The extreme flex positions can be done in a ballet leg platform
-    // with a foot under the hips, and that can count as laying on the
-    // foot, so we'll add those positions what is allowed.
-    //
-    // Positions such as willow or bridge can also be done where the
-    // torso is vertical but the athlete is laying on a foot, so we'll
-    // also allow those positions.
-    let laying_positions =
-        [B_FREE_POSITIONS, B_HORIZONTAL_POSITIONS, B_EXTREME_FLEX_POSITIONS, &["wi", "br"]]
-            .concat();
-
-    let mut ci = Vec::new();
-    let first_pos = acro.positions.first().map_or("", |v| v);
-    match acro.connection_grip.as_str() {
-        "FS" | "F2A" if !TWO_FOOT_POSITIONS.contains(&first_pos) => {
-            ci_warn(
-                &mut ci,
-                format!(
-                    "expected two foot position with {}, but found {first_pos}",
-                    acro.connection_grip
-                ),
-            );
-        }
-        "1P1P" | "1P1F" | "1PPx" | "PP" | "PF" | "Bp" | "ShF" | "E" | "PH/" | "Tw" | "1pH"
-        | "1PH" | "2pH" | "2PH" | "H1F/" | "HT+" | "SP+L" | "HA" | "ShF+P" | "2pA/" | ">2P2P"
-        | "HP+L"
-            if !B_HEAD_DOWN_POSITIONS.contains(&first_pos)
-                && !B_FREE_POSITIONS.contains(&first_pos) =>
-        {
-            ci_warn(
-                &mut ci,
-                format!(
-                    "expected head-down position with {}, but found {first_pos}",
-                    acro.connection_grip
-                ),
-            );
-        }
-        "FP" | "FF" | "FF/" | "SiSb" | "F1S" | "SiF" | "1FH+1FP" | "1F1P" | "1F1F" | "FAb"
-        | "SiF+Pb"
-            if !head_up_positions.contains(&first_pos) =>
-        {
-            ci_warn(
-                &mut ci,
-                format!(
-                    "expected head-up position with {}, but found {first_pos}",
-                    acro.connection_grip
-                ),
-            );
-        }
-        "LayF" | "S+" | "SiA" | "L/SiF+P" | "SF+TP" | "ShiShi+"
-            if !laying_positions.contains(&first_pos) =>
-        {
-            ci_warn(
-                &mut ci,
-                format!(
-                    "expected sit, stand, or lay position with {}, but found {first_pos}",
-                    acro.connection_grip
-                ),
-            );
-        }
-        "BA" | "DBB" if first_pos != "br" => {
-            ci_err(&mut ci, format!("{} requires bridge position", acro.connection_grip));
-        }
-        "2pBb" if first_pos != "qu" => {
-            ci_err(&mut ci, format!("2pBb requires queen position but found {first_pos}"));
-        }
-        // LiH | AP | SiS | Le | Tow | Li | Ch
-        _ => {}
+    // TODO is this over aggressive? Ex. can owl be done with some of these?
+    if acro.conn.expects_head_up_pos() && !pos1.is_head_up() && !pos1.is_free() {
+        ci_warn(&mut ci, format!("expected head-up position with {}, but found {pos1}", acro.conn));
     }
 
-    if HANDSTAND_CONNECTIONS.contains(&acro.connection_grip.as_str()) && first_pos != "bb" {
+    let pos1 = &acro.positions.first;
+    if matches!(acro.conn, BConn::LayF | BConn::SPlus) && !pos1.is_laying() {
+        ci_warn(
+            &mut ci,
+            format!("expected sit, stand, or lay position with {}, but found {pos1}", acro.conn),
+        );
+    }
+
+    if acro.conn.is_handstand() && acro.positions.first != BPos::bb {
         ci_warn(
             &mut ci,
             "in handstand positions, the first position should be bb unless the featured swimmer goes directly to Position 1 from underwater",
         );
     }
 
-    if acro.connection_grip == "Le"
-        && !TWO_SUP_UP_CONSTRUCTIONS.contains(&acro.construction.as_str())
-    {
+    if acro.conn == BConn::Le && !matches!(acro.construction, BConst::_2SupU | BConst::_2SupM) {
         ci_warn(
             &mut ci,
             format!(
@@ -840,46 +639,163 @@ fn check_connection(acro: &TeamAcrobatic) -> Vec<CardIssue> {
         );
     }
 
-    ci
+    let req_r_for_conn = acro.conn.required_rotations();
+    if let Some(r) = &acro.rotation
+        && !req_r_for_conn.contains(&r.group())
+    {
+        if req_r_for_conn.is_empty() {
+            ci_err(&mut ci, format!("rotations are not allowed for {}", acro.conn));
+        } else {
+            ci_err(
+                &mut ci,
+                format!(
+                    "{} is expected with {} but found {}",
+                    oxford_join(req_r_for_conn),
+                    acro.conn,
+                    r,
+                ),
+            );
+        }
+    }
+
+    if let Some(r) = &acro.rotation {
+        use BPos::*;
+        const STANDING_SPLIT: &[BPos] = &[ey, ne, vs, gl, sa, ow, qu];
+        acro_reqs!(ci, r.group().required_conns(), r.group(), acro.conn);
+
+        let has_non_standing = !STANDING_SPLIT.contains(pos1)
+            || acro.positions.second.as_ref().is_some_and(|pos2| !STANDING_SPLIT.contains(pos2));
+        if r.group() == BRotationGroup::Plus && has_non_standing {
+            ci_err(
+                &mut ci,
+                format!(
+                    "r+ requires a standing split of 135+, expected {}",
+                    oxford_join(STANDING_SPLIT)
+                ),
+            );
+        }
+    }
+
+    // this could be a required check, but this might not always be
+    // correct, so have a custom check here instead
+    if pos1.is_one_foot() && !acro.conn.is_one_leg() {
+        ci_warn(
+            &mut ci,
+            format!("one leg position, {pos1}, but {} is not a one leg connection", acro.conn),
+        );
+    }
+
+    if acro.conn.is_only_one_leg() && pos1.is_two_foot() {
+        ci_warn(
+            &mut ci,
+            format!("one leg connection, {}, but {pos1} is a two leg position", acro.conn),
+        );
+    }
+
+    if acro.bonuses.contains(&BBonus::Hold) && acro.rotation.is_some() {
+        ci_warn(&mut ci, "Hold and Rotation must not be simultaneous");
+    }
+
+    if acro.bonuses.contains(&BBonus::RotF) {
+        // this is based on "rotates on feet of support"
+        const ROTF_REQ_CONNS: &[BConn] = &[BConn::Li, BConn::Ch, BConn::LayF, BConn::SPlus];
+        acro_reqs!(ci, ROTF_REQ_CONNS, &BBonus::RotF, acro.conn);
+
+        if !pos1.is_horizontal()
+            && !matches!(&acro.positions.second, Some(pos2) if pos2.is_horizontal())
+        {
+            ci_err(&mut ci, "RotF claimed, but no horizontal position claimed");
+        }
+    }
+
+    if acro.bonuses.contains(&BBonus::SdUp) && pos1.is_head_up() {
+        ci_warn(&mut ci, "SdUp claimed, but {pos} is head up");
+    }
+
+    ci.into()
 }
 
-fn check_group_c_positions(acro: &TeamAcrobatic) -> Vec<CardIssue> {
+fn check_reqs_c(acro: &AcroC) -> Box<[CardIssue]> {
     let mut ci = Vec::new();
 
-    let first_pos = acro.positions.first().map_or("", |v| v);
-    let pos2 = acro.positions.get(1).map_or("", |s| s.strip_prefix('2').unwrap_or(""));
+    acro_req!(ci, &acro.construction.required_dir(), acro.construction, acro.dir);
 
-    let all_b_positions = [
-        B_ONE_LEG_POSITIONS,
-        B_TWO_LEG_POSITIONS,
-        B_FREE_POSITIONS,
-        B_HORIZONTAL_POSITIONS,
-        B_HEAD_DOWN_POSITIONS,
-        B_EXTREME_FLEX_POSITIONS,
-    ]
-    .concat();
+    let req_r_for_const = acro.construction.required_rotations();
+    if let Some(r) = &acro.base
+        && !req_r_for_const.contains(&r.group())
+    {
+        if req_r_for_const.is_empty() {
+            ci_err(&mut ci, format!("base rotations are not allowed for {}", acro.construction));
+        } else {
+            ci_err(
+                &mut ci,
+                format!(
+                    "{} is expected with {} but found {}",
+                    oxford_join(req_r_for_const),
+                    acro.construction,
+                    r,
+                ),
+            );
+        }
+    }
 
-    if acro.construction.contains('^') {
-        if !all_b_positions.contains(&first_pos) || !A_POSITIONS.contains(&pos2) {
+    if let Some(r) = &acro.base {
+        acro_reqs!(ci, r.required_consts(), r, acro.construction);
+    }
+
+    if let Some(r) = &acro.featured {
+        let dir = match &acro.dir {
+            CDir::Base(b) => b,
+            CDir::Bln => &ADir::Back,
+        };
+
+        // if flyabove doesn't have an airborne in the right place a
+        // different check will handle that
+        let res = if acro.construction.is_flyabove()
+            && let Some(CPos::A(pos1)) = &acro.positions.second
+        {
+            Some((pos1, SecondAirborne::NotPossible))
+        } else if let CPos::A(pos1) = &acro.positions.first {
+            let pos2 = match &acro.positions.second {
+                Some(CPos::A(pos2)) => SecondAirborne::Has(pos2),
+                _ => SecondAirborne::PossibleButNone,
+            };
+            Some((pos1, pos2))
+        } else {
+            None
+        };
+
+        if let Some((pos1, pos2)) = res {
+            ci.extend(check_featured_rotation(r, dir, pos1, pos2));
+        }
+    }
+
+    if acro.construction.is_flyabove() {
+        if !matches!(acro.positions.first, CPos::B(_))
+            || !matches!(acro.positions.second, Some(CPos::A(_)))
+        {
             ci_err(
                 &mut ci,
                 "fly-above must have a balance position followed by an airborne position",
             );
         }
-    } else if (all_b_positions.contains(&first_pos) && A_POSITIONS.contains(&pos2))
-        || (A_POSITIONS.contains(&first_pos) && all_b_positions.contains(&pos2))
+    } else if (matches!(acro.positions.first, CPos::A(_))
+        && matches!(acro.positions.second, Some(CPos::B(_))))
+        || (matches!(acro.positions.first, CPos::B(_))
+            && matches!(acro.positions.second, Some(CPos::A(_))))
     {
         ci_err(&mut ci, "Cannot have both airborne and balance positions in except for fly-above");
     }
 
-    if acro.construction == "Thr^Lh" && !(first_pos == "br" || first_pos == "ct") {
+    if acro.construction == CConst::ThrAboveLh
+        && !matches!(acro.positions.first, CPos::B(BPos::br | BPos::ct))
+    {
         ci_err(&mut ci, "For Thr^Lh balance position must be Bridge or Cat");
     }
 
-    if acro.construction.contains("Thr^2F")
-        && (B_ONE_LEG_POSITIONS.contains(&first_pos)
-            || B_TWO_LEG_POSITIONS.contains(&first_pos)
-            || B_HORIZONTAL_POSITIONS.contains(&first_pos))
+    if acro.construction == CConst::ThrAbove2F
+        && let CPos::B(pos1) = &acro.positions.first
+        && pos1.is_head_up()
     {
         ci_warn(
             &mut ci,
@@ -887,299 +803,152 @@ fn check_group_c_positions(acro: &TeamAcrobatic) -> Vec<CardIssue> {
         );
     }
 
-    for position in &acro.positions {
-        const AIRBORNE_CONSTRUCTIONS: &[&str] =
-            &["2Sup+", "Thr+Thr", "Sn", "Thr>head>", "Thr>Pair>"];
-        const AIRBORNE_BONUSES: &[&str] = &["Jump>", "Turn"];
-        const BALANCE_CONSTRUCTIONS: &[&str] = &["Thr>FF", "Thr>F"];
-        const BALANCE_BONUSES: &[&str] =
-            &["Ju", "1P>H", "H>1P", "Jump", "On1Foot", "1F>1F", "1F>1F+", "2F>2F"];
-
-        let position = position.strip_prefix('2').unwrap_or(position);
-
-        if (AIRBORNE_CONSTRUCTIONS.contains(&acro.construction.as_str())
-            || acro.construction.ends_with('>'))
-            && all_b_positions.contains(&position)
-        {
-            ci_err(
-                &mut ci,
-                format!(
-                    "{position} declared but {} requires airborne positions",
-                    acro.construction
-                ),
-            );
-        }
-
-        if BALANCE_CONSTRUCTIONS.contains(&acro.construction.as_str())
-            && A_POSITIONS.contains(&position)
-        {
-            ci_err(
-                &mut ci,
-                format!("{position} declared but {} requires balance positions", acro.construction),
-            );
-        }
-
-        for bonus in &acro.bonuses {
-            if AIRBORNE_BONUSES.contains(&bonus.as_str()) && all_b_positions.contains(&position) {
-                ci_err(
-                    &mut ci,
-                    format!("{position} declared but {bonus} requires airborne positions"),
-                );
-            }
-            if BALANCE_BONUSES.contains(&bonus.as_str()) && A_POSITIONS.contains(&position) {
-                ci_err(
-                    &mut ci,
-                    format!("{position} declared but {bonus} requires balance positions"),
-                );
-            }
-        }
+    for bonus in &acro.bonuses {
+        acro_reqs!(ci, bonus.required_consts(), bonus, acro.construction);
+        acro_req!(ci, &bonus.required_dir(), bonus, acro.dir);
     }
 
-    ci
+    ci.into()
 }
 
-fn check_positions(acro: &TeamAcrobatic) -> Vec<CardIssue> {
-    const ONE_LEG_CONNECTIONS: &[&str] = &[
-        "F1S", "1F1P", "1F1F", "FAb", "3pA", "1FA", "3pS", "3pbA", "FA+PF", ">F1P", "FP",
-        "ShiShi+", "2pBb",
-    ];
+fn check_reqs_p(acro: &AcroP) -> Box<[CardIssue]> {
     let mut ci = Vec::new();
 
-    let first_pos = acro.positions.first().map_or("", |v| v);
-    let pos2 = acro.positions.get(1).map_or("", |s| s.strip_prefix('2').unwrap_or(""));
+    acro_reqs!(ci, acro.construction.required_conns(), &acro.construction, acro.conn);
+    let req_r_for_const = acro.construction.required_rotation();
+    if let Some(r) = &acro.rotation
+        && req_r_for_const != r.group()
+    {
+        ci_err(
+            &mut ci,
+            format!("{} is expected with {} but found {}", req_r_for_const, acro.construction, r),
+        );
+    }
 
-    if (B_ONE_LEG_POSITIONS.contains(&first_pos) || first_pos == "qu" || first_pos == "sn")
-        && !acro.connection_grip.is_empty()
-        && !ONE_LEG_CONNECTIONS.contains(&acro.connection_grip.as_str())
+    acro_reqs!(ci, acro.conn.required_consts(), acro.conn, acro.construction);
+    acro_reqs!(ci, acro.conn.required_positions(), acro.conn, acro.positions.first);
+
+    let pos1 = &acro.positions.first;
+
+    if matches!(
+        acro.conn,
+        PConn::SPPlusL
+            | PConn::HA
+            | PConn::ShFPlusP
+            | PConn::_2pASlash
+            | PConn::_2P2P
+            | PConn::HPPlusL
+    ) && !pos1.could_be_head_down()
     {
         ci_warn(
             &mut ci,
+            format!("expected head-down position with {}, but found {pos1}", acro.conn),
+        );
+    }
+
+    if matches!(acro.conn, PConn::FAb | PConn::SiFPlusPb) && !pos1.is_head_up() && !pos1.is_free() {
+        ci_warn(&mut ci, format!("expected head-up position with {}, but found {pos1}", acro.conn));
+    }
+
+    if matches!(acro.conn, PConn::SiA | PConn::LSlashSiFPlusP | PConn::SFPlusTP | PConn::ShiShiPlus)
+        && !pos1.is_laying()
+    {
+        ci_warn(
+            &mut ci,
+            format!("expected sit, stand, or lay position with {}, but found {pos1}", acro.conn),
+        );
+    }
+
+    if let Some(r) = &acro.rotation {
+        acro_reqs!(ci, r.group().required_consts(), r.group(), acro.construction);
+    }
+
+    if pos1.is_one_foot() && !acro.conn.is_one_leg() {
+        ci_warn(
+            &mut ci,
             format!(
-                "one leg position, {first_pos}, declared but {} is not a one leg connection",
-                acro.connection_grip
+                "one leg position, {pos1}, declared but {} is not a one leg connection",
+                acro.conn
             ),
         );
     }
 
-    let all_b_positions = [
-        B_ONE_LEG_POSITIONS,
-        B_TWO_LEG_POSITIONS,
-        B_FREE_POSITIONS,
-        B_HORIZONTAL_POSITIONS,
-        B_HEAD_DOWN_POSITIONS,
-        B_EXTREME_FLEX_POSITIONS,
-    ]
-    .concat();
-
-    let valid_positions = match acro.group {
-        Airborne => A_POSITIONS,
-        Balance | Platform => &all_b_positions,
-        Combined => &[A_POSITIONS, &all_b_positions].concat(),
-    };
-    for position in &acro.positions {
-        if !valid_positions.contains(&position.strip_prefix('2').unwrap_or(position)) {
-            ci_err(
-                &mut ci,
-                format!("{position} is not a valid position for {:?} acrobatics", acro.group),
-            );
-        }
+    if acro.conn.is_one_leg() && pos1.is_two_foot() {
+        ci_warn(
+            &mut ci,
+            format!("one leg connection, {}, declared but {pos1} is a two leg position", acro.conn),
+        );
     }
 
-    // FUTURE Group C also has Airborne take-off positions, but that
-    // check is harder. For now, leave this as just for Airborne and
-    // see if this become an issue for Combined.
-    if acro.group == Airborne
-        && acro.positions.len() == 2
-        && acro.positions.first() == Some(&"ln".to_string())
+    for bonus in &acro.bonuses {
+        acro_reqs!(ci, bonus.required_consts(), bonus, acro.construction);
+        acro_req!(ci, &bonus.required_conns(), bonus, acro.conn);
+        acro_req!(ci, &bonus.required_position(), bonus, acro.positions.first);
+    }
+
+    if acro.bonuses.contains(&PBonus::Spich)
+        && !((pos1 == &BPos::bb && acro.positions.second == Some(BPos::sh))
+            || (pos1 == &BPos::sh && acro.positions.second == Some(BPos::bb)))
     {
-        ci_warn(&mut ci, "line claimed as 1st position, are you sure line isn't take-off");
+        // warn because technically you could do something before Spich,
+        // and then you'd start with that position, but that's unlikely
+        ci_err(&mut ci, "Spich requires going from bamboo to shrimp or shrimp to bamboo");
     }
 
-    // above is just checking that the claimed position is one that is
-    // allowed at all, now for Group C, we'll do a more complicated
-    // check depending on construction, bonuses, etc.
-    if acro.group == Combined {
-        ci.extend(check_group_c_positions(acro));
-    }
-
-    let balance_acro = acro.group == Balance
-        || acro.group == Platform
-        || acro.positions.iter().all(|pos| all_b_positions.contains(&pos.as_str()));
-    if balance_acro && acro.positions.len() == 2 {
-        let pos1_head_up = B_ONE_LEG_POSITIONS.contains(&first_pos)
-            || B_TWO_LEG_POSITIONS.contains(&first_pos)
-            || B_HORIZONTAL_POSITIONS.contains(&first_pos);
-        let pos1_head_down = B_HEAD_DOWN_POSITIONS.contains(&first_pos)
-            || B_EXTREME_FLEX_POSITIONS.contains(&first_pos);
-        let pos2_head_up = B_ONE_LEG_POSITIONS.contains(&pos2)
-            || B_TWO_LEG_POSITIONS.contains(&pos2)
-            || B_HORIZONTAL_POSITIONS.contains(&pos2);
-        let pos2_head_down =
-            B_HEAD_DOWN_POSITIONS.contains(&pos2) || B_EXTREME_FLEX_POSITIONS.contains(&pos2);
-        if pos1_head_up && pos2_head_down {
-            ci_warn(
-                &mut ci,
-                format!("{first_pos} is heads-up and {pos2} is heads-down, is this right?"),
-            );
-        }
-
-        // If SdUp bonus is there, they are purposefully standing up,
-        // so a head up position is expected. For platforms, standing
-        // up and then dismounting is common. For now, just check for
-        // "sd" since that is the most common way of getting out of a
-        // head down position in a platform.
-        if pos1_head_down
-            && pos2_head_up
-            && !acro.bonuses.contains(&"SdUp".into())
-            && !(acro.group == Platform && pos2 == "sd")
-        {
-            ci_warn(
-                &mut ci,
-                format!("{first_pos} is heads-down and {pos2} is heads-up, is this right?"),
-            );
-        }
-    }
-
-    ci
+    ci.into()
 }
 
-fn check_pair_acro_common_base_marks(card: &CoachCard) -> Box<[CardIssue]> {
-    let mut ci = Vec::new();
-    if card.category.event != Duet && card.category.event != MixedDuet {
-        return ci.into_boxed_slice();
+fn check_reqs(acro: &TeamAcroKind) -> Box<[CardIssue]> {
+    match acro {
+        Airborne(a) => check_reqs_a(a),
+        Balance(a) => check_reqs_b(a),
+        Combined(a) => check_reqs_c(a),
+        Platform(a) => check_reqs_p(a),
     }
-
-    for (num, acro) in pair_acros(&card.elements) {
-        if acro == "J" || acro == "Jf" {
-            // these can crash on the surface even though they don't end
-            // '»', so we won't warn on them
-            continue;
-        }
-        if (acro.starts_with('J') || acro.starts_with('W'))
-            && !acro.contains("s0.5")
-            && !acro.contains("s1")
-            && !acro.ends_with('d')
-            && !acro.ends_with('»')
-        {
-            ci_warn(
-                &mut ci,
-                format!(
-                    "Element {num}: {acro} requires the featured-swimmer must be completely in the AIR (top of the head and toes must be above the surface at the same time)"
-                ),
-            );
-        }
-    }
-    ci.into_boxed_slice()
 }
 
-fn check_pair_acro_validity(card: &CoachCard) -> Box<[CardIssue]> {
-    const PAIR_ACROS: &[&str] = &[
-        "L»",
-        "L!»",
-        "L",
-        "Lf»",
-        "L!f»",
-        "L!r0.5»",
-        "L!",
-        "Lf",
-        "L!r1»",
-        "L!fr0.5»",
-        "Lr0.5",
-        "SL>",
-        "L!r0.5",
-        "Lfr0.5",
-        "L!f",
-        "SL!>",
-        "Lr1",
-        "J",
-        "W!»",
-        "L!r1",
-        "L!fr0.5",
-        "SL!f>",
-        "SL!r0.5>",
-        "Jr0.5",
-        "Jf",
-        "W!d",
-        "L!fr1",
-        "SL!fr0.5>",
-        "W!r0.5",
-        "W!f",
-        "Jd",
-        "Js0.5B",
-        "W!s0.5",
-        "W!fr0.5",
-        "Jpd",
-        "W!r1",
-        "Jdf",
-        "W!fr1",
-        "Js0.5t0.5",
-        "W!s0.5t0.5",
-        "Js1B",
-        "W!fr1.5",
-        "JBs1t0.5",
-        "Jfs1B",
-        "Js1F",
-        "Js1B+f",
-        "SL!f2+r1>",
-        "Js1B+pf",
-        "W!s1F",
-        "JF1B",
-    ];
-    // TODO "SL!r1>", "SL!fr1>" in ISS but not AQUA
-
-    let mut ci = Vec::new();
-    for (num, acro) in pair_acros(&card.elements) {
-        if !PAIR_ACROS.contains(&acro.as_str()) {
-            ci_err(&mut ci, format!("Element {num}: {acro} is not a valid pair acro"));
-        }
-    }
-    ci.into_boxed_slice()
-}
-
-pub fn check_one_acro(category: Category, acro: &TeamAcrobatic, dd: &str) -> Box<[CardIssue]> {
-    let mut element_ci = check_age_restrictions(category.ag, acro);
-    element_ci.extend(check_dd_limits(category, acro.group, dd));
+pub fn check_one_acro(category: Category, acro: &TeamAcroKind) -> Box<[CardIssue]> {
+    let mut element_ci = Vec::new();
+    element_ci.extend(check_age_restrictions(category.ag, acro));
+    element_ci.extend(check_dd_limits(category, acro));
     element_ci.extend(
         [
             check_num_athletes,
             check_team_acro_validity,
-            check_direction,
-            check_rotations,
-            check_bonuses,
-            check_construction,
-            check_connection,
+            check_reqs,
+            check_exclusive_bonuses,
             check_positions,
+            check_group_c_positions,
         ]
         .iter()
         .flat_map(|check| check(acro)),
     );
-    element_ci.into_boxed_slice()
+    element_ci.into()
 }
 
+type CardCheckFn = fn(&CoachCard) -> Box<[CardIssue]>;
+
 pub fn run_acro_checks(card: &CoachCard) -> Box<[CardIssue]> {
-    let checks: &[fn(&CoachCard) -> Box<[CardIssue]>] = match card.category.event {
+    let checks: &[CardCheckFn] = match card.category.event {
         Solo | Events::Unknown => &[],
-        Duet | MixedDuet | Trio => &[
-            check_pair_acro_validity,
-            check_duplicate_pair_acros,
-            check_pair_acro_common_base_marks,
-        ],
+        Duet | MixedDuet | Trio => &[check_duplicate_pair_acros, check_pair_acro_common_base_marks],
         Acrobatic | Combo | Team => &[check_groups_for_acro_routine, check_team_duplicate_acros],
     };
 
     let mut ci = checks.iter().flat_map(|check| check(card)).collect::<Vec<_>>();
-    for (num, acro, dd) in team_acros(&card.elements) {
-        for i in check_one_acro(card.category, acro, dd) {
+    for (num, acro) in card.team_acros() {
+        for i in check_one_acro(card.category, acro) {
             ci.push(CardIssue::new(i.level, format!("Element {num}: {}", i.text)));
         }
     }
-    ci.into_boxed_slice()
+    ci.into()
 }
 
 #[cfg(test)]
 #[cfg_attr(test, allow(clippy::too_many_lines))]
 mod tests {
     use super::*;
+    use crate::AgeGroups::{AG12U, Youth};
     use crate::{Element, ElementKind};
 
     fn elements(acros: &[&str], to_element: fn(&str) -> ElementKind) -> Box<[Element]> {
@@ -1192,25 +961,25 @@ mod tests {
                 kind: to_element(acro),
             });
         }
-        ret.into_boxed_slice()
+        ret.into()
     }
 
     fn pair_acros(acros: &[&str]) -> Box<[Element]> {
-        elements(acros, |acro| PairAcro(acro.into()))
+        elements(acros, |acro| ElementKind::PairAcro(acro.parse().unwrap(), None))
     }
 
     fn team_acros(acros: &[&str]) -> Box<[Element]> {
-        elements(acros, |acro| TeamAcro(acro.parse().unwrap(), "1.0".into()))
+        elements(acros, |acro| ElementKind::TeamAcro(acro.parse().unwrap(), None))
     }
 
     #[test]
     fn test_check_team_duplicate_acros() {
         let tests: &[(&str, &[&str], usize)] = &[
             ("repeat_pos_group_a", &["A-Sq-Back-pk/2tk", "A-Sq-Back-tk/2ja"], 1),
-            ("group_a_no_dups", &["A-Sq-Back-pk/2ln", "A-Sq-Back-tk/2spl"], 0),
+            ("group_a_no_dups", &["A-Sq-Back-pk/2ln", "A-Sq-Back-tk/2sp"], 0),
             ("repeat_construction_group_b", &["B-St-1P1P-bb", "B-St-PP-ow"], 1),
             ("repeat_connection_group_b", &["B-St-PP-bb", "B-StH-PP-ow"], 1),
-            ("group_b_no_dups_ok", &["B-St-1P1P-bb", "B-StH-PPOw"], 0),
+            ("group_b_no_dups_ok", &["B-St-1P1P-bb", "B-StH-PP-ow"], 0),
             ("repeat_pos_group_c", &["C-Thr>St-Bln-tk-Cs1", "C-Thr>St-Forw-sd/2tk-Cd-Jump"], 1),
             ("group_c_no_dups", &["C-Thr>St-Bln-tk-Cs1", "C-Thr>F-Forw-sd/2tk-Cd-Jump"], 0),
             ("repeat_construction_group_p", &["P-Knees-SP+K-bb/2ow", "P-Knees-3pA-ne"], 1),
@@ -1228,7 +997,7 @@ mod tests {
     #[test]
     fn test_check_groups_for_acro_routine() {
         let ex_a = "A-Shou-Back-tk-s1";
-        let ex_b = "B-St-FS-ln";
+        let ex_b = "B-St-FS-sd";
         let ex_c = "C-Thr^2F-Forw-bb";
         let ex_p = "P-P-HA-bb/2wi-Porp/Trav";
 
@@ -1252,177 +1021,170 @@ mod tests {
 
     #[test]
     fn test_check_dd_limits() {
-        let tests = &[
-            ("tech_limit", Category { ag: JRSR, event: Team, free: false }, Airborne, "3.05", 1),
-            ("free_no_limit", Category { ag: JRSR, event: Team, free: true }, Airborne, "3.05", 0),
-            ("12u_ok", Category { ag: AG12U, event: Team, free: true }, Platform, "2.75", 0),
-            ("12u_high", Category { ag: AG12U, event: Team, free: true }, Platform, "2.85", 1),
-            ("youth_ok", Category { ag: Youth, event: Team, free: true }, Platform, "2.85", 0),
-            ("youth_high", Category { ag: Youth, event: Team, free: true }, Platform, "3.05", 1),
+        const TESTS: &[(&str, Category, &str, usize)] = &[
+            ("tech_high", Category { ag: JRSR, event: Team, free: false }, "A-Sq-Back-tk-s2.5", 1),
+            ("free_ok", Category { ag: JRSR, event: Team, free: true }, "A-Sq-Back-tk-s2.5", 0),
+            ("12u_ok", Category { ag: AG12U, event: Team, free: true }, "P-B-2b/-hp/2ow", 0),
+            ("12u_high", Category { ag: AG12U, event: Team, free: true }, "P-B-2b/-hp/2ow-Pos3", 1),
+            ("youth_ok", Category { ag: Youth, event: Team, free: true }, "P-B-2b/-hp/2ow-Pos3", 0),
+            ("youth_high", Category { ag: Youth, event: Team, free: true }, "P-B-2pBb-qu/2wi", 1),
         ];
-        for (name, cat, group, dd, expected) in tests {
-            assert_eq!(check_dd_limits(*cat, *group, dd).len(), *expected, "{name}");
+        for (name, cat, acro, expected) in TESTS {
+            assert_eq!(check_dd_limits(*cat, &acro.parse().unwrap()).len(), *expected, "{name}");
         }
     }
 
     #[test]
     fn test_check_one_acro_issue() {
-        let tests: &[(&str, fn(&TeamAcrobatic) -> Vec<CardIssue>, &str, usize)] = &[
+        let tests: &[(&str, fn(&TeamAcroKind) -> Box<[CardIssue]>, &str, usize)] = &[
             ("reqs_6_dbl_err", check_num_athletes, "B-2SupD2F-Le-co-Dbl", 1),
             ("reqs_5_dbl_warns", check_num_athletes, "A-Sq-Back-pk/2rg-s1-Dbl", 1),
             ("reqs_4_dbl_warns", check_num_athletes, "A-Thr-Back-pk/2rg-s1-Dbl", 1),
             ("no_dbl_ok", check_num_athletes, "A-Sq-Back-pk/2rg-s1", 0),
-            ("missing_positions", check_team_acro_validity, "A-Sq-Back", 1),
-            ("missing_first_pos", check_team_acro_validity, "A-Sq-Back-2ln", 1),
-            ("duplicate_positions", check_team_acro_validity, "A-Sq-Back-ln/2ln", 1),
             ("missing_2nd_pos", check_team_acro_validity, "A-Sq-Back-pk-Pos3", 1),
             ("pos3_bonus_ok", check_team_acro_validity, "A-Sq-Back-pk/2rg-Pos3", 0),
-            ("bad_2nd_pos", check_team_acro_validity, "A-Sq-Back-pk/3rg", 1),
-            ("back_with_cart_err", check_direction, "A-Sq-Back-ln-ct0.5", 1),
-            ("back_with_cart2_err", check_direction, "A-Sq-Back-ln-C", 1),
-            ("side_with_cart_ok", check_direction, "A-Sq-Side-ln-ct0.5", 0),
-            ("side_with_hand_err", check_direction, "A-Sq-Side-ln-hd", 1),
-            ("side_with_hand2_err", check_direction, "A-Sq-Side-ln-H", 1),
-            ("forw_with_hand_ok", check_direction, "A-Sq-Forw-ln-hd", 0),
-            ("up_with_dive_warn", check_direction, "A-Sq-Up-ln-D", 1),
-            ("up_with_dive_twist_ok", check_direction, "A-Sq-Up-ln-dt1", 0),
-            ("up_with_somersault_warn", check_direction, "A-Sq-Up-ln-ss1", 1),
-            ("two_sup_wrong_dir_err", check_direction, "C-2Sup+-Side-sp", 1),
-            ("turn_wrong_dir_err", check_direction, "C-Thr>Pair>-Side-sp-Turn", 1),
-            ("two_sup_correct_decl_ok", check_direction, "C-2Sup+-Up-sp-Turn", 0),
-            ("hula_with_side_err", check_direction, "A-Shou-Side-rg-Hula", 1),
-            ("hula_with_up_ok", check_direction, "A-Shou-Up-rg-Hula", 0),
-            ("airborne_two_rotations_err", check_rotations, "A-Sq-Side-ln-ct0.5+s1", 1),
-            ("airborne_rotation_ok", check_rotations, "A-Sq-Side-ln-ct0.5", 0),
-            ("three_rotations_err", check_rotations, "C-Thr^2F-Back-ow/2tk-2F0.5+Cs1+Ct1", 1),
-            ("combined_two_rotations_ok", check_rotations, "C-Thr^2F-Back-ow/2tk-2F0.5+Cs1", 0),
-            ("fs_with_r_err", check_rotations, "B-St-FS-sd-r0.5", 1),
-            ("fp_with_r_ok", check_rotations, "B-St-FP-sd-r0.5", 0),
-            ("fp_with_r_slash_err", check_rotations, "B-St-FP-sd-r0.5/", 1),
-            ("fs_with_r_slash_ok", check_rotations, "B-St-FS-sd-r0.5/", 0),
-            ("fs_with_r_plus_err", check_rotations, "B-St-FS-sd-r0.5+", 1),
-            ("fp_with_r_plus_ok", check_rotations, "B-St-FP-sd-r0.5+", 0),
-            ("fp_with_rl_err", check_rotations, "B-St-FP-sd-r0.5L", 1),
-            ("fp_with_rl_err2", check_rotations, "B-St-FP-sd-r/L", 1),
-            ("lih_with_rl_ok", check_rotations, "B-St-LiH-sd-r/L", 0),
-            ("sth_with_cr_err", check_rotations, "C-Thr>StH-Forw-ln-Cr0.5", 1),
-            ("st_with_cr_ok", check_rotations, "C-Thr>St-Forw-ln-Cr0.5", 0),
-            ("st_with_cr_bang_ok", check_rotations, "C-Thr>St-Forw-ln-Cr0.5!", 0),
-            ("sth_with_cr_bang_ok", check_rotations, "C-Thr>StH-Forw-ln-Cr0.5!", 0),
-            ("two_f_with_crl_err", check_rotations, "C-Thr^2F-Back-tk-Cr0.5L+Cs1", 1),
-            ("lh_with_crl_ok", check_rotations, "C-Thr^Lh-Back-tk-Cr0.5L+Cs1", 0),
-            ("pair_with_cp_err", check_rotations, "C-Thr>Pair>-Forw-ln-CP0.5", 1),
-            ("ff_with_cp_ok", check_rotations, "C-Thr>FF-Forw-ln-CP0.5", 0),
-            ("lh_with_2f_err", check_rotations, "C-Thr^Lh-Back-tk-2F0.5+Cs1", 1),
-            ("two_f_with_2f_ok", check_rotations, "C-Thr^2F-Back-tk-2F0.5+Cs1", 0),
-            ("p_with_ph_err", check_rotations, "P-P-F2A-ln-P0.5h", 1),
-            ("p_with_pr_ok", check_rotations, "P-P-F2A-ln-Pr", 0),
-            ("hand_with_pr_err", check_rotations, "P-Hand-F2A-ln-Pr0.5", 1),
-            ("hand_with_ph_ok", check_rotations, "P-Hand-F2A-ln-P0.5h", 0),
-            ("p_with_p2s_err", check_rotations, "P-P-SiA-mo-P2S", 1),
-            ("flower_with_p2s_ok", check_rotations, "P-Flower-SiA-mo-P2S", 0),
-            ("b_with_db_err", check_rotations, "P-B-F2A-ln-PDB1", 1),
-            ("db_with_db_ok", check_rotations, "P-DB-F2A-ln-PDB1", 0),
-            ("only_ln_with_open_warn", check_rotations, "A-Sq-Back-ln-s1.5t0.5o", 1),
-            ("arch_with_open_warn", check_rotations, "A-Sq-Back-ja/2ln-s1.5t0.5o", 1),
-            ("ln_pk_with_open_ok", check_rotations, "A-Sq-Back-pk/2ln-s1.5t0.5o", 0),
-            ("flyabove_with_open_warn", check_rotations, "C-Thr^2F-Bln-ow/2ja-2F1+Cs1t1o-Pos3", 1),
-            ("flyabove_with_open_ok", check_rotations, "C-Thr^2F-Bln-ow/2tk-2F1+Cs1t1o-Pos3", 0),
-            ("ss_without_ln_err", check_rotations, "A-Sq-Back-pk-ss1", 1),
-            ("ss_with_two_positions_err", check_rotations, "A-Sq-Back-pk/2ln-ss1", 1),
-            ("ss_with_ln_ok", check_rotations, "A-Sq-Back-ln-ss1", 0),
-            ("c_ss_with_ln_ok", check_rotations, "C-Thr^2F-Bln-ow/2ln-2F0.5+Css1t1", 0),
-            ("bad_c_mutliple_rotations", check_rotations, "C-Thr^2F-Bln-ow/2tk-Cr1!+Cs1-Pos3", 1),
-            ("good_c_mutliple_rotations", check_rotations, "C-Thr^2F-Bln-ow/2tk-2F1+Cs1-Pos3", 0),
-            ("tuck_just_twist_warn", check_rotations, "A-Sq-Back-tk-t1", 1),
-            ("tuck_with_jay_twist_ok", check_rotations, "A-Sq-Back-tk/2ja-t1", 0),
-            ("line_with_twist_ok", check_rotations, "A-Sq-Up-ln-t1", 0),
-            ("st_trans_e_r_bang_ok", check_rotations, "B-St>-E-bo/2ow-r0.5-Pos3", 0),
-            ("supu_le_r_err", check_rotations, "B-2SupU-Le-bb/2ow-r0.5", 1),
-            ("fp_one_leg_r_ok", check_rotations, "B-St-FP-he/2ba-r0.5", 0),
-            ("sp_with_split_err", check_bonuses, "A-2Sup-Up-sp-Split", 1),
-            ("box_with_porp_err", check_bonuses, "P-Knees-4p-Bo-Porp", 1),
-            ("no_conn_with_c", check_bonuses, "A-Thr-Side-ln-c", 1),
-            ("no_conn_with_c_ok", check_bonuses, "A-Thr-Side-ln-c-Catch/Dbl", 0),
-            ("no_conn_with_c_ok2", check_bonuses, "A-Thr-Side-ln-c-Dbl/Pos3", 0),
-            ("conn_with_c_ok", check_bonuses, "A-Thr-Side-ln-c-Conn", 0),
-            ("three_bonuses", check_bonuses, "B-St-FS-ln/2he-Hold/Mov/Dbl", 1),
-            ("dup_bonuses", check_bonuses, "B-LH-Le-mo-Mov/Mov", 1),
-            ("dup_bonuses_ok", check_bonuses, "C-Thr>FF-Forw-ln-CRoll/CRoll", 0),
-            ("mut_excl_bonuses", check_bonuses, "P-2S-3pA-br-Spider/Climb", 1),
-            ("non_mut_excl_bonuses_ok", check_bonuses, "P-Hand-3pA-ne-Climb/Fall", 0),
-            ("spider_with_p_err", check_bonuses, "P-P-4pAb-br-Spider", 1),
-            ("spider_with_2s_ok", check_bonuses, "P-2S-4pAb-br-Spider", 0),
-            ("spider_without_bridge_err", check_bonuses, "P-2S-4pAb-ne-Spider", 1),
-            ("spider_with_bridge_ok", check_bonuses, "P-2S-4pAb-br-Spider", 0),
-            ("sdup_with_no_head_down_pos", check_bonuses, "B-St-F1S-he/2sa-SdUp", 1),
-            ("sdup_with_head_down_pos", check_bonuses, "B-St-F1S-he/2ow-SdUp", 0),
-            ("feet_with_retpa_err", check_bonuses, "A-Feet-Up-sp-RetPa", 1),
-            ("somersault_with_retpa_err", check_bonuses, "A-Shou-Up-tk-s1-RetPa", 1),
-            ("back_with_retpa_warn", check_bonuses, "A-Shou-Back-ln-RetPa", 1),
-            ("twist_with_retpa_ok", check_bonuses, "A-Shou-Up-ln-t1-RetPa", 0),
-            ("thr_with_retsq_err", check_bonuses, "A-Thr-Up-sp-RetSq", 1),
-            ("somersault_with_retsq_err", check_bonuses, "A-Sq-Up-tk-s1-RetSq", 1),
-            ("back_with_retsq_warn", check_bonuses, "A-Sq-Back-sp-RetSq", 1),
-            ("twist_with_retsq_ok", check_bonuses, "A-Sq-Up-sp-t1-RetSq", 0),
-            ("catch_without_dbl_warn", check_bonuses, "A-Thr-Forw-ln-Catch", 1),
-            ("catch_with_dbl_ok", check_bonuses, "A-Thr-Forw-ln-Catch/Dbl", 0),
-            ("hold_with_rotation_warn", check_bonuses, "B-St-FS-ln-r0.5/-Hold", 1),
-            ("hold_with_no_rotation_ok", check_bonuses, "B-St-FS-ln-Hold", 0),
-            ("rotation_with_no_hold_ok", check_bonuses, "B-St-FS-ln-r0.5", 0),
-            ("hula_with_pike_err", check_bonuses, "A-Shou-Up-pk-Hula", 1),
-            ("hula_with_ja_ok", check_bonuses, "A-Shou-Up-ja-Hula", 0),
-            ("rotf_with_head_down_err", check_bonuses, "B-St-LayF-wi-RotF", 1),
-            ("rotf_with_horizontal_ok", check_bonuses, "B-St-LayF-co-RotF", 0),
-            ("spich_incorrect_pos_err", check_bonuses, "P-Knees-SP+K-sh/2ow-Spich", 1),
-            ("spich_bb_sh_ok", check_bonuses, "P-Knees-SP+K-bb/2sh-Spich", 0),
-            ("spich_sh_bb_ok", check_bonuses, "P-Knees-SP+K-sh/2bb-Spich", 0),
-            ("diva_without_2s_err", check_bonuses, "P-B-3pS-ow-Diva", 1),
-            ("diva_without_3ps_err", check_bonuses, "P-2S-3pbA-ow-Diva", 1),
-            ("diva_with_2s_3ps_ok", check_bonuses, "P-2S-3pS-ow-Diva", 0),
-            ("a_bonus_err", check_bonuses, "A-Thr-Forw-ln-Dbbl", 1),
-            ("b_bonus_err", check_bonuses, "B-St-FS-ln-SdU", 1),
-            ("c_bonus_err", check_bonuses, "C-Thr^2F-Back-ow/2tk-Pos4", 1),
-            ("p_bonus_err", check_bonuses, "P-P-F2A-ln-Pss1", 1),
-            ("st_bad_connection", check_construction, "B-St>-FS-sd", 1),
-            ("st_good_connection", check_construction, "B-St>-F1S-he", 0),
-            ("non_st_bad_connection", check_construction, "B-St-FS-sd", 0),
-            ("one_leg_conn_2_leg_pos", check_connection, "B-St-FS-he", 1),
-            ("two_leg_conn_2_leg_pos", check_connection, "B-St-FS-sd", 0),
-            ("head_down_conn_head_up_pos", check_connection, "B-St-Bp-sd", 1),
-            ("head_down_conn_head_down_pos", check_connection, "B-St-PP-bb", 0),
-            ("head_up_conn_head_down_pos", check_connection, "B-St-FF-bb", 1),
-            ("head_up_conn_head_up_pos", check_connection, "B-St-FF-sd", 0),
-            ("sit_conn_head_up_pos", check_connection, "B-St-S+-sd", 1),
-            ("sit_conn_head_sit_pos", check_connection, "B-St-S+-mo", 0),
-            ("handstand_conn_without_bb", check_connection, "B-St-PP-ow", 1),
-            ("handstand_conn_with_bb", check_connection, "B-St-PP-bb/2ow", 0),
-            ("le_with_ff_warn", check_connection, "B-FF-Le-so", 1),
-            ("le_with_2sup_d_warn", check_connection, "B-2SupD-Le-so", 1),
-            ("le_with_2sup_u_ok", check_connection, "B-2SupU-Le-so", 0),
-            ("ba_with_wi_err", check_connection, "P-DB-BA-wi", 1),
-            ("ba_wtih_br_ok", check_connection, "P-DB-BA-br", 0),
-            ("two_pbb_with_wi_err", check_connection, "P-B-2pBb-wi", 1),
-            ("two_pbb_with_qu_ok", check_connection, "P-B-2pBb-qu", 0),
-            ("invalid_airborne_position", check_positions, "A-Sq-Forw-ar", 1),
-            ("one_leg_pos_two_leg_conn", check_positions, "B-St-FS-he", 1),
-            ("one_leg_pos_one_leg_conn", check_positions, "B-St-F1S-he", 0),
-            ("fly_above_airborne_first", check_positions, "C-Thr^2F-Back-tk/2ow", 1),
-            ("fly_above_balance_first", check_positions, "C-Thr^2F-Back-ow/2tk", 0),
-            ("fly_above_with_spl", check_positions, "C-Thr^2F-Back-spl/2tk", 1),
-            ("fly_above_just_balance", check_positions, "C-Thr^2F-Back-ow", 1),
+            ("same_positions", check_team_acro_validity, "A-Sq-Back-pk/2pk", 1),
+            ("back_with_cart_err", check_reqs, "A-Sq-Back-ln-ct0.5", 1),
+            ("back_with_cart2_err", check_reqs, "A-Sq-Back-ln-C", 1),
+            ("side_with_cart_ok", check_reqs, "A-Sq-Side-ln-ct0.5", 0),
+            ("side_with_hand_err", check_reqs, "A-Sq-Side-ln-hd", 1),
+            ("side_with_hand2_err", check_reqs, "A-Sq-Side-ln-H", 1),
+            ("forw_with_hand_ok", check_reqs, "A-Sq-Forw-ln-hd", 0),
+            ("up_with_dive_warn", check_reqs, "A-Sq-Up-ln-D", 1),
+            ("up_with_twist_ok", check_reqs, "A-Sq-Up-ln-t1", 0),
+            ("up_with_somersault_warn", check_reqs, "A-Sq-Up-ln-ss1", 1),
+            ("two_sup_wrong_dir_err", check_reqs, "C-2Sup+-Side-sp", 1),
+            ("turn_wrong_dir_err", check_reqs, "C-2Sup+-Side-sp-Turn", 2),
+            ("two_sup_correct_decl_ok", check_reqs, "C-2Sup+-Up-sp-Turn", 0),
+            ("hula_with_side_err", check_reqs, "A-Shou-Side-rg-Hula", 1),
+            ("hula_with_up_ok", check_reqs, "A-Shou-Up-rg-Hula", 0),
+            ("fs_with_r_err", check_reqs, "B-St-FS-sd-r0.5", 2),
+            ("fp_with_r_ok", check_reqs, "B-St-FP-ba-r0.5", 0),
+            ("fp_with_r_slash_err", check_reqs, "B-St-FP-ba-r0.5/", 2),
+            ("fs_with_r_slash_ok", check_reqs, "B-St-FS-sd-r0.5/", 0),
+            ("fs_with_r_plus_err", check_reqs, "B-St-FS-sd-r0.5+", 3),
+            ("he_with_r_plus_err", check_reqs, "B-St-FP-he-r0.5+", 1),
+            ("fp_with_r_plus_ok", check_reqs, "B-St-FP-ey-r0.5+", 0),
+            ("fp_with_rl_err", check_reqs, "B-St-FP-ey-r0.5L", 2),
+            ("fp_with_rl_err2", check_reqs, "B-St-FP-ey-r/L", 2),
+            ("lih_with_rl_ok", check_reqs, "B-LH-LiH-br-r/L", 0),
+            ("sth_with_cr_err", check_reqs, "C-Thr>StH-Forw-ln-Cr0.5", 2),
+            ("st_with_cr_ok", check_reqs, "C-Thr>St-Forw-ln-Cr0.5", 0),
+            ("st_with_cr_bang_ok", check_reqs, "C-Thr>St-Forw-ln-Cr0.5!", 0),
+            ("sth_with_cr_bang_ok", check_reqs, "C-Thr>StH-Forw-ln-Cr0.5!", 0),
+            ("two_f_with_crl_err", check_reqs, "C-Thr^2F-Back-br/2tk-Cr0.5L+Cs1", 2),
+            ("lh_with_crl_ok", check_reqs, "C-Thr^Lh-Back-br/2tk-Cr0.5L+Cs1", 0),
+            ("pair_with_cp_err", check_reqs, "C-Thr>Pair>-Forw-ln-CP0.5", 2),
+            ("ff_with_cp_ok", check_reqs, "C-Thr>FF-Forw-ln-CP0.5", 0),
+            ("lh_with_2f_err", check_reqs, "C-Thr^Lh-Back-br/2tk-2F0.5+Cs1", 2),
+            ("two_f_with_2f_ok", check_reqs, "C-Thr^2F-Back-br/2tk-2F0.5+Cs1", 0),
+            ("p_1fa_with_box_err", check_reqs, "P-Box-1FA-he", 2),
+            ("p_with_ph_err", check_reqs, "P-P-F2A-sd-P0.5h", 2),
+            ("p_with_pr_ok", check_reqs, "P-P-F2A-sd-Pr", 0),
+            ("hand_with_pr_err", check_reqs, "P-Hand-F2A-sd-Pr0.5", 2),
+            ("hand_with_ph_ok", check_reqs, "P-Hand-F2A-sd-P0.5h", 0),
+            ("p_with_p2s_err", check_reqs, "P-P-SiA-mo-P2S", 2),
+            ("flower_with_p2s_ok", check_reqs, "P-Flower-SiA-mo-P2S", 0),
+            ("b_with_db_err", check_reqs, "P-B-F2A-sd-PDB1", 2),
+            ("db_with_db_ok", check_reqs, "P-DB-F2A-sd-PDB1", 0),
+            ("only_ln_with_open_warn", check_reqs, "A-Sq-Back-ln-s1.5t0.5o", 2),
+            ("open_wo_2ln_warn", check_reqs, "A-Sq-Back-pk-s1.5t0.5o", 1),
+            ("arch_with_open_warn", check_reqs, "A-Sq-Back-ja/2ln-s1.5t0.5o", 1),
+            ("ln_pk_with_open_ok", check_reqs, "A-Sq-Back-pk/2ln-s1.5t0.5o", 0),
+            ("c_with_open_warn", check_reqs, "C-Thr>St-Back-tk-Cs1t1o", 1),
+            ("flyabove_with_open_ok", check_reqs, "C-Thr^2F-Bln-ow/2tk-2F1+Cs1t1o-Pos3", 0),
+            ("ss_without_ln_err", check_reqs, "A-Sq-Back-pk-ss1", 1),
+            ("ss_with_two_positions_err", check_reqs, "A-Sq-Back-pk/2ln-ss1", 1),
+            ("ss_with_ln_ok", check_reqs, "A-Sq-Back-ln-ss1", 0),
+            ("c_ss_with_ln_ok", check_reqs, "C-Thr^2F-Bln-ow/2ln-2F0.5+Css1t1", 0),
+            ("tuck_just_twist_warn", check_reqs, "A-Sq-Back-tk-t1", 1),
+            ("tuck_with_jay_twist_ok", check_reqs, "A-Sq-Back-tk/2ja-t1", 0),
+            ("line_with_twist_ok", check_reqs, "A-Sq-Up-ln-t1", 0),
+            ("st_trans_e_r_bang_ok", check_reqs, "B-St>-E-bb/2ow-r0.5-Pos3", 0),
+            ("supu_le_r_err", check_reqs, "B-2SupU-Le-bb/2ow-r0.5", 2),
+            ("fp_one_leg_r_ok", check_reqs, "B-St-FP-he/2ba-r0.5", 0),
+            ("sp_with_split_err", check_reqs, "A-2Sup-Up-sp-Split", 1),
+            ("box_with_porp_err", check_reqs, "P-P-4p-bo-Porp", 1),
+            ("dup_bonuses", check_team_acro_validity, "B-LH-LiH-mo-Mov/Mov", 1),
+            ("dup_bonuses_ok", check_team_acro_validity, "C-Thr>FF-Forw-ln-CRoll/CRoll", 0),
+            ("mut_excl_bonuses", check_exclusive_bonuses, "P-2S-3pA-br-Spider/Climb", 1),
+            ("non_mut_excl_bonuses_ok", check_exclusive_bonuses, "P-Hand-3pA-ne-Climb/Fall", 0),
+            ("spider_with_p_err", check_reqs, "P-P-BA-br-Spider", 1),
+            ("spider_with_2s_ok", check_reqs, "P-2S-BA-br-Spider", 0),
+            ("BA_without_bridge_err", check_reqs, "P-2S-BA-sd", 1),
+            ("spider_without_bridge_err", check_reqs, "P-Hand-F2A-sd-Spider", 1),
+            ("spider_with_bridge_ok", check_reqs, "P-2S-BA-br-Spider", 0),
+            ("sdup_with_no_head_down_pos", check_reqs, "B-St-F1S-he/2sa-SdUp", 1),
+            ("sdup_with_head_down_pos", check_reqs, "B-St-F1S-ow/2he-SdUp", 0),
+            ("feet_with_retpa_err", check_reqs, "A-Feet-Up-sp-RetPa", 1),
+            ("somersault_with_retpa_err", check_reqs, "A-Shou-Up-tk-s1-RetPa", 2),
+            ("back_with_retpa_warn", check_reqs, "A-Shou-Back-ln-RetPa", 1),
+            ("twist_with_retpa_ok", check_reqs, "A-Shou-Up-ln-t1-RetPa", 0),
+            ("thr_with_retsq_err", check_reqs, "A-Thr-Up-sp-RetSq", 1),
+            ("somersault_with_retsq_err", check_reqs, "A-Sq-Up-tk-s1-RetSq", 2),
+            ("back_with_retsq_warn", check_reqs, "A-Sq-Back-sp-RetSq", 1),
+            ("twist_with_retsq_ok", check_reqs, "A-Sq-Up-sp-t1-RetSq", 0),
+            ("catch_without_dbl_warn", check_reqs, "A-Thr-Forw-ln-Catch", 1),
+            ("catch_with_dbl_ok", check_reqs, "A-Thr-Forw-ln-Catch/Dbl", 0),
+            ("hold_with_rotation_warn", check_reqs, "B-St-FS-sd-r0.5/-Hold", 1),
+            ("hold_with_no_rotation_ok", check_reqs, "B-St-FS-sd-Hold", 0),
+            ("rotation_with_no_hold_ok", check_reqs, "B-St-FS-sd-r0.5/", 0),
+            ("hula_with_pike_err", check_reqs, "A-Shou-Up-pk-Hula", 1),
+            ("hula_with_ja_ok", check_reqs, "A-Shou-Up-ja-Hula", 0),
+            ("rotf_with_head_down_err", check_reqs, "B-StH-LayF-wi-RotF", 1),
+            ("rotf_with_head_up_conn_err", check_reqs, "B-St-FS-mo-RotF", 1),
+            ("rotf_with_horizontal_ok", check_reqs, "B-StH-LayF-co-RotF", 0),
+            ("spich_incorrect_pos_err", check_reqs, "P-Knees-SP+K-sh/2ow-Spich", 1),
+            ("spich_bb_sh_ok", check_reqs, "P-Knees-SP+K-bb/2sh-Spich", 0),
+            ("spich_sh_bb_ok", check_reqs, "P-Knees-SP+K-sh/2bb-Spich", 0),
+            ("diva_without_2s_err", check_reqs, "P-B-3pS-ow-Diva", 1),
+            ("diva_without_3ps_err", check_reqs, "P-2S-3pbA-ow-Diva", 1),
+            ("diva_with_2s_3ps_ok", check_reqs, "P-2S-3pS-ow-Diva", 0),
+            ("st_bad_connection", check_reqs, "B-St>-FS-sd", 2),
+            ("st_good_connection", check_reqs, "B-St>-F1S-he", 0),
+            ("non_st_bad_connection", check_reqs, "B-St-FS-sd", 0),
+            ("one_leg_conn_2_leg_pos", check_reqs, "B-St-FS-he", 2),
+            ("one_or_two_leg_conn_2_leg_pos", check_reqs, "B-St-FP-sd", 0),
+            ("two_leg_conn_2_leg_pos", check_reqs, "B-St-FS-sd", 0),
+            ("head_down_conn_head_up_pos", check_reqs, "B-St-Bp-sd", 1),
+            ("head_down_conn_head_down_pos", check_reqs, "B-St-PP-bb", 0),
+            ("head_up_conn_head_down_pos", check_reqs, "B-St-FS-bb", 1),
+            ("head_up_conn_head_up_pos", check_reqs, "B-St-FS-sd", 0),
+            ("sit_conn_head_up_pos", check_reqs, "B-St-S+-sd", 1),
+            ("sit_conn_head_sit_pos", check_reqs, "B-St-S+-mo", 0),
+            ("handstand_conn_without_bb", check_reqs, "B-St-PP-ow", 1),
+            ("handstand_conn_with_bb", check_reqs, "B-St-PP-bb/2ow", 0),
+            ("le_with_2sup_d_warn", check_reqs, "B-2SupD-Le-so", 3),
+            ("le_with_2sup_u_ok", check_reqs, "B-2SupU-Le-so", 0),
+            ("ba_with_wi_err", check_reqs, "P-2S-BA-wi", 1),
+            ("ba_wtih_br_ok", check_reqs, "P-2S-BA-br", 0),
+            ("two_pbb_with_wi_err", check_reqs, "P-B-2pBb-wi", 1),
+            ("two_pbb_with_qu_ok", check_reqs, "P-B-2pBb-qu", 0),
+            ("one_leg_pos_two_leg_conn", check_reqs, "B-St-FS-he", 2),
+            ("one_leg_pos_one_leg_conn", check_reqs, "B-St-F1S-he", 0),
+            ("two_leg_pos_one_leg_conn", check_reqs, "B-St-F1S-sd", 1),
+            ("two_leg_pos_two_leg_conn", check_reqs, "B-St-FS-sd", 0),
+            ("fly_above_airborne_first", check_reqs, "C-Thr^2F-Back-tk/2ow", 1),
+            ("fly_above_balance_first", check_reqs, "C-Thr^2F-Back-ow/2tk", 0),
+            ("fly_above_with_spl", check_reqs, "C-Thr^2F-Back-spl/2tk", 1),
+            ("fly_above_just_balance", check_reqs, "C-Thr^2F-Back-ow", 1),
             ("head_up_with_head_down", check_positions, "B-St-FS-sd/2bb", 1),
             ("head_down_with_head_up", check_positions, "P-Knees-SP+K-bb/2spl", 1),
-            ("fly_above_lh_wrong_pos", check_positions, "C-Thr^Lh-Forw-so/2tk", 1),
-            ("fly_above_lh_right_pos", check_positions, "C-Thr^Lh-Forw-br/2tk", 0),
+            ("fly_above_lh_wrong_pos", check_reqs, "C-Thr^Lh-Forw-so/2tk", 1),
+            ("fly_above_lh_right_pos", check_reqs, "C-Thr^Lh-Forw-br/2tk", 0),
             ("head_down_to_up_warn", check_positions, "B-St-F1S-ow/2ne", 1),
-            ("head_down_to_up_ok", check_positions, "B-St-F1S-ow/2ne-SdUp", 0),
-            ("head_down_to_up_ok2", check_positions, "P-P-3pA-ow/2sd-Dive", 0),
-            ("queen_ok", check_positions, "P-B-2pBb-qu", 0),
+            ("head_down_to_up_ok", check_reqs, "B-L-Li-ow/2ne-SdUp", 0),
+            ("head_down_to_up_ok2", check_reqs, "P-P-3pA-ow/2sd-Dive", 0),
+            ("head_up_to_free_ok", check_reqs, "B-L-Li-so/2fl", 0),
+            ("free_to_head_up_ok", check_reqs, "B-L-Li-fl/2co", 0),
+            ("head_up_to_free_ok", check_reqs, "P-DB-L/SiF+P-pi/2hp", 0),
+            ("free_to_head_down_ok", check_reqs, "P-DB-L/SiF+P-hp/2pi", 0),
+            ("queen_ok", check_reqs, "P-B-2pBb-qu", 0),
             ("airborne_ln_as_takeoff", check_positions, "A-Sq-Back-ln/2tk-s1", 1),
         ];
         for (name, check, acro, expected) in tests {
-            assert_eq!(check(&acro.parse().unwrap()).len(), *expected, "{name}");
+            let res = check(&acro.parse().unwrap());
+            assert_eq!(res.len(), *expected, "{name}: {res:#?}");
         }
     }
 
@@ -1454,27 +1216,18 @@ mod tests {
             (Trio, "Jr0.5", 0),
             (Duet, "W!fr1", 1),
             (Trio, "W!fr1", 0),
-            (Duet, "W!s0.5", 0),
+            (Duet, "W!s0.5", 1),
             (Duet, "J", 0),
-            (Duet, "Jd", 0),
+            (Duet, "Jd", 1),
             (Duet, "Jf", 0),
             (Duet, "W!»", 0),
-            (Duet, "Jfs1B", 0),
+            (Duet, "Jfs1B", 1),
         ];
         for (event, acro, expected) in tests {
             let category = Category { event: *event, ..Default::default() };
             let card = CoachCard { category, elements: pair_acros(&[acro]), ..Default::default() };
             assert_eq!(check_pair_acro_common_base_marks(&card).len(), *expected, "{acro}");
         }
-    }
-
-    #[test]
-    fn test_check_pair_validity() {
-        let category = Category { event: Duet, ..Default::default() };
-        let card = CoachCard { category, elements: pair_acros(&["L!F"]), ..Default::default() };
-        assert_eq!(check_pair_acro_validity(&card).len(), 1);
-        let card = CoachCard { category, elements: pair_acros(&["L!f"]), ..Default::default() };
-        assert_eq!(check_pair_acro_validity(&card).len(), 0);
     }
 
     #[test]
@@ -1512,7 +1265,7 @@ mod tests {
             ("C-Thr>St-Forw-ln-Jump", 1),
             ("C-Thr>St-Forw-sd/2ja-Jump", 2),
             ("C-Thr>St-Forw-ln/2ja-Jump>", 0),
-            ("C-Thr^St-Forw-ow/2ln-Jump>", 2),
+            ("C-Thr>St-Forw-ow/2ln-Jump>", 2),
             ("C-Thr>St-Forw-ow/2ln-Jump", 2),
             ("C-Thr>St-Forw-ow/2ln-Jump>", 2),
             ("C-Thr>St-Back-mo/2tk", 1),
@@ -1524,7 +1277,7 @@ mod tests {
         ];
         let cat = Category::default();
         for (s, expected_num_issues) in acros {
-            let ci = check_one_acro(cat, &s.parse().unwrap(), "1.0");
+            let ci = check_one_acro(cat, &s.parse().unwrap());
             assert_eq!(expected_num_issues, ci.len(), "acro {s}: {ci:?}");
         }
     }
