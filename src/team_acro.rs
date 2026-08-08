@@ -532,7 +532,7 @@ impl DD for BConst {
             Self::St => 1000,
             Self::StH => 1100,
             Self::_2SupU => 1150,
-            Self::_2SupD => 1140,
+            Self::_2SupD => 1400,
             Self::_2SupM => 1250,
             Self::_2SupD2F => 1550,
             Self::L => 700,
@@ -830,7 +830,7 @@ impl BConn {
             Self::_1FHPlus1FP => &[], // doesn't say no rotations, but none listed
             Self::SPlus => &[Plain, Bang],
             Self::_1F1P => &[Plain, Plus],
-            Self::_1F1F => &[Plain, Bang],
+            Self::_1F1F => &[Plain, Plus, Bang],
             Self::_1PH => &[Bang],
             Self::PP2 => &[Bang],
             Self::_2pH => &[Bang],
@@ -2104,7 +2104,7 @@ impl DD for PBonus {
         MilliDD(match self {
             Self::Dbl => 300,
             Self::Pos3 => 50,
-            Self::UP => 100,
+            Self::UP => 1000,
             Self::Porp => 150,
             Self::Spich => 500,
             Self::Trav => 200,
