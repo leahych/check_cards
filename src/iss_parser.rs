@@ -1,6 +1,6 @@
 use crate::Events::{Duet, Trio};
 use crate::element::parse_elem_kind;
-use crate::{CardIssue, Category, CoachCard, Element, MilliDD, ci_err, ci_errs};
+use crate::{CardIssue, Category, CoachCard, Element, MilliDD, ci_errs};
 use calamine::{Data, DataType, Range, Reader, Rows, Xls, Xlsx};
 use chrono::NaiveTime;
 use std::io::{Read, Seek};
@@ -8,7 +8,10 @@ use std::io::{Read, Seek};
 type ParsedElements = (Box<[Element]>, NaiveTime, Box<[CardIssue]>);
 type ParsedCard = (String, CoachCard, Box<[CardIssue]>);
 
-fn parse_element(category: Category, element_row: &[Data]) -> (Result<Element, String>, NaiveTime) {
+fn parse_element(
+    category: Category,
+    element_row: &[Data],
+) -> (Result<Element, CardIssue>, NaiveTime) {
     // if we have a DD column, get that value and remove that column
     // from the columns to search for difficulty declarations
     let (dd, element_row) = if let Some(last_col) = element_row.last()
@@ -41,8 +44,8 @@ fn parse_element(category: Category, element_row: &[Data]) -> (Result<Element, S
     // transitions won't have any element number
     let next = row_cols.next().unwrap_or_default().to_uppercase();
     let (num, etype) = match next.parse() {
-        Ok(n) => (n, row_cols.next().unwrap_or_default().to_uppercase()),
-        Err(_) => (row_cols.next().unwrap_or_default().parse().unwrap_or_default(), next),
+        Ok(n) => (Some(n), row_cols.next().unwrap_or_default().to_uppercase()),
+        Err(_) => (row_cols.next().unwrap_or_default().parse().ok(), next),
     };
 
     let code = match etype.trim() {
@@ -57,15 +60,19 @@ fn parse_element(category: Category, element_row: &[Data]) -> (Result<Element, S
         // element type since all we need to parse from them is a stop
         // time. So return an error with an empty string, and the
         // caller will filter that out
-        "" | "TRANS" => return (Err(String::new()), stop_time),
+        "" | "TRANS" => return (Err(CardIssue::warn(None, "")), stop_time),
         &_ => {
-            return (Err(format!("Element {num}: unknown element type '{etype}'")), stop_time);
+            let ci = CardIssue::err(num, format!("unknown element type '{etype}'"));
+            return (Err(ci), stop_time);
         }
     };
 
     match parse_elem_kind(category.event, category.free, code.as_str(), dd) {
-        Ok(kind) => (Ok(Element { number: num, start_time, stop_time, kind }), stop_time),
-        Err(e) => (Err(format!("Element {num}: {e}")), stop_time),
+        Ok(kind) => (
+            Ok(Element { number: num.unwrap_or_default(), start_time, stop_time, kind }),
+            stop_time,
+        ),
+        Err(e) => (Err(CardIssue::err(num, e.to_string())), stop_time),
     }
 }
 
@@ -79,7 +86,7 @@ fn parse_elements(sheet: Rows<Data>, category: Category) -> ParsedElements {
         end_time = NaiveTime::max(stop_time, end_time);
         match ret {
             Ok(element) => elements.push(element),
-            Err(e) if !e.is_empty() => ci_err(&mut ci, e),
+            Err(e) if !e.text.is_empty() => ci.push(e),
             _ => {} // transition, ignore
         }
     }

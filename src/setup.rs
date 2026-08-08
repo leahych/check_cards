@@ -103,6 +103,16 @@ fn add_card_issues(
     Ok(table)
 }
 
+fn sort_issues(mut issues: Vec<(String, Box<[CardIssue]>)>) -> Box<[(String, Box<[CardIssue]>)]> {
+    // this makes it so the order in which we run checks does not matter
+    // this isn't required, but does make the output easier to read
+    // no element number should appear before any elements with numbers
+    for (_, unsorted) in &mut issues {
+        unsorted.sort_by_key(|a| a.elem_num);
+    }
+    issues.into()
+}
+
 fn blob_to_issues(
     fname: &str,
     file: Result<Vec<u8>, gloo::file::FileReadError>,
@@ -129,7 +139,7 @@ fn blob_to_issues(
             issues.push((fname.into(), ci_errs(format!("could not read file: {e}"))));
         }
     }
-    issues.into()
+    sort_issues(issues)
 }
 
 fn text_to_issues(
@@ -162,7 +172,7 @@ fn text_to_issues(
         }
     }
 
-    issues.into()
+    sort_issues(issues)
 }
 
 fn clear_issues(document: &Document) {

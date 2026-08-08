@@ -1,5 +1,5 @@
 use crate::element::{ElementKind, parse_elem_kind};
-use crate::{CardIssue, Category, CoachCard, Element, IssueLevel, get_expected_routine_time};
+use crate::{CardIssue, Category, CoachCard, Element, get_expected_routine_time};
 use anyhow::Error;
 use chrono::NaiveTime;
 
@@ -35,7 +35,7 @@ pub fn parse_text(ag: &str, free: bool, evt: &str, input: &str) -> Result<ParseR
                 });
             }
             Err(e) => {
-                ci.push(CardIssue::new(IssueLevel::Error, e.to_string()));
+                ci.push(CardIssue::err(Some(i + 1), e.to_string()));
             }
         }
     }

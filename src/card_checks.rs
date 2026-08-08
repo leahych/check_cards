@@ -1,6 +1,5 @@
 use crate::AgeGroups::{AG12U, JRSR, Youth};
 use crate::Events::{Acrobatic, Combo, Duet, MixedDuet, Solo, Team, Trio};
-use crate::IssueLevel::Error;
 use crate::hybrid::AwLC::*;
 use crate::hybrid::ConnLC::*;
 use crate::hybrid::FlexLC::*;
@@ -536,7 +535,7 @@ fn check_expected_dd(elem: &ElementKind) -> Option<CardIssue> {
     if let Some(r) = elem.reported_dd()
         && &dd != r
     {
-        Some(CardIssue::new(Error, format!("card reports a DD of {r}, calculated a DD of {dd}")))
+        Some(CardIssue::err(None, format!("card reports a DD of {r}, calculated a DD of {dd}")))
     } else {
         None
     }
@@ -574,7 +573,7 @@ fn check_elements(card: &CoachCard) -> Box<[CardIssue]> {
     let mut ci = Vec::new();
     for elem in &card.elements {
         for i in check_one_element(card.category, &elem.kind) {
-            ci.push(CardIssue::new(i.level, format!("Element {}: {}", elem.number, i.text)));
+            ci.push(i.clone_with_elem_num(elem.number));
         }
     }
     ci.into()

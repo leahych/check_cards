@@ -99,7 +99,7 @@ fn check_duplicate_pair_acros(card: &CoachCard) -> Box<[CardIssue]> {
     let mut prev_acros = HashSet::new();
     for (num, acro) in card.pair_acros() {
         if prev_acros.contains(&acro) {
-            ci_err(&mut ci, format!("Element {num}: repeated acrobatic"));
+            ci.push(CardIssue::err(Some(num), "repeated acrobatic"));
         }
         prev_acros.insert(acro);
     }
@@ -122,11 +122,8 @@ where
     for (num, acro) in acros {
         for part in map_fn(acro) {
             if prev_parts.contains(&part) {
-                let msg = format!(
-                    "Element {num}: {part} can only be used once in a {} acrobatic",
-                    A::family()
-                );
-                ci_err(&mut ci, msg);
+                let msg = format!("{part} can only be used once in a {} acrobatic", A::family());
+                ci.push(CardIssue::err(Some(num), msg));
             } else {
                 prev_parts.insert(part);
             }
@@ -446,12 +443,9 @@ fn check_pair_acro_common_base_marks(card: &CoachCard) -> Box<[CardIssue]> {
     }
 
     for (num, acro) in card.pair_acros().filter(|(_, a)| a.is_airborne() && !a.is_crash()) {
-        ci_warn(
-            &mut ci,
-            format!(
-                "Element {num}: {acro} requires the featured-swimmer must be completely in the AIR (top of the head and toes must be above the surface at the same time)"
-            ),
-        );
+        ci.push(CardIssue::warn(Some(num), format!(
+                "{acro} requires the featured-swimmer must be completely in the AIR (top of the head and toes must be above the surface at the same time)"
+            )));
     }
 
     ci.into()
@@ -938,7 +932,7 @@ pub fn run_acro_checks(card: &CoachCard) -> Box<[CardIssue]> {
     let mut ci = checks.iter().flat_map(|check| check(card)).collect::<Vec<_>>();
     for (num, acro) in card.team_acros() {
         for i in check_one_acro(card.category, acro) {
-            ci.push(CardIssue::new(i.level, format!("Element {num}: {}", i.text)));
+            ci.push(i.clone_with_elem_num(num));
         }
     }
     ci.into()

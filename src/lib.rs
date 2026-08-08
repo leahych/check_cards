@@ -244,34 +244,44 @@ impl fmt::Display for IssueLevel {
 pub struct CardIssue {
     pub level: IssueLevel,
     pub text: String,
+    pub elem_num: Option<usize>,
 }
 
 impl CardIssue {
-    fn new<T: Into<String>>(level: IssueLevel, text: T) -> Self {
-        Self { level, text: text.into() }
+    fn err<T: Into<String>>(elem_num: Option<usize>, text: T) -> Self {
+        Self { level: Error, text: text.into(), elem_num }
+    }
+
+    fn warn<T: Into<String>>(elem_num: Option<usize>, text: T) -> Self {
+        Self { level: Warning, text: text.into(), elem_num }
+    }
+
+    fn clone_with_elem_num(&self, elem_num: usize) -> Self {
+        Self { level: self.level, text: self.text.clone(), elem_num: Some(elem_num) }
     }
 }
 
 impl fmt::Display for CardIssue {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{} {}", self.level, self.text)
+        let elem_txt = self.elem_num.map_or(String::new(), |num| format!("Element {num}: "));
+        write!(f, "{} {elem_txt}{}", self.level, self.text)
     }
 }
 
 pub fn ci_err<T: Into<String>>(ci: &mut Vec<CardIssue>, text: T) {
-    ci.push(CardIssue::new(Error, text));
+    ci.push(CardIssue::err(None, text));
 }
 
 pub fn ci_errs<T: Into<String>>(text: T) -> Box<[CardIssue]> {
-    [CardIssue::new(Error, text)].into()
+    [CardIssue::err(None, text)].into()
 }
 
 pub fn ci_warn<T: Into<String>>(ci: &mut Vec<CardIssue>, text: T) {
-    ci.push(CardIssue::new(Warning, text));
+    ci.push(CardIssue::warn(None, text));
 }
 
 pub fn ci_warns<T: Into<String>>(text: T) -> Box<[CardIssue]> {
-    [CardIssue::new(Warning, text)].into()
+    [CardIssue::warn(None, text)].into()
 }
 
 const fn routine_time(min: u32, secs: u32) -> NaiveTime {
