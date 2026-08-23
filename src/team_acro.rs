@@ -494,7 +494,7 @@ impl DD for AcroA {
             + self.dir.dd()
             + self.positions.dd()
             + self.bonuses.iter().map(DD::dd).sum::<MilliDD>()
-            + self.rotation.as_ref().map_or(MilliDD(0), DD::dd)
+            + self.rotation.as_ref().map_or_default(DD::dd)
     }
 }
 
@@ -733,9 +733,11 @@ impl BConn {
     #[must_use]
     pub const fn expects_head_up_pos(&self) -> bool {
         // TODO is this over aggressive? Ex. can owl be done with some of these?
+        // B-St-F1S-ow/2he-SdUp is probably not a good idea, but could be coded
         matches!(
             self,
-            Self::FP
+            Self::FS
+                | Self::FP
                 | Self::FF
                 | Self::FFSlash
                 | Self::SiSb
@@ -1154,6 +1156,10 @@ impl DD for BBonus {
     }
 }
 
+// TODO AQUA calculator says Moon, Mov, Hold, Wave can only be performed
+// with L, L2F+, LH, Lh2f
+// this seems to be based on assumptions rather than requirements
+
 #[derive(Debug, Eq, PartialEq)]
 pub struct AcroB {
     pub construction: BConst,
@@ -1169,7 +1175,7 @@ impl DD for AcroB {
             + self.conn.dd()
             + self.positions.dd()
             + self.bonuses.iter().map(DD::dd).sum::<MilliDD>()
-            + self.rotation.as_ref().map_or(MilliDD(0), DD::dd)
+            + self.rotation.as_ref().map_or_default(DD::dd)
     }
 }
 
@@ -1590,9 +1596,9 @@ pub enum CBonus {
     Turn,
     Run,
     Ju,
-    #[strum(to_string = "1P^H")]
+    #[strum(to_string = "1P>H")]
     _1POntoH,
-    #[strum(to_string = "H^1P")]
+    #[strum(to_string = "H>1P")]
     HOnto1P,
     Jump,
     #[strum(to_string = "Jump>")]
@@ -1690,8 +1696,8 @@ impl DD for AcroC {
             + self.dir.dd()
             + self.positions.dd()
             + self.bonuses.iter().map(DD::dd).sum::<MilliDD>()
-            + self.base.as_ref().map_or(MilliDD(0), DD::dd)
-            + self.featured.as_ref().map_or(MilliDD(0), DD::dd)
+            + self.base.as_ref().map_or_default(DD::dd)
+            + self.featured.as_ref().map_or_default(DD::dd)
     }
 }
 
@@ -1856,7 +1862,7 @@ pub enum PConn {
     DBB,
     #[strum(to_string = "2pK")]
     _2pK,
-    #[strum(to_string = ">F1p")]
+    #[strum(to_string = ">F1P")]
     _F1P,
     #[strum(to_string = "2pBb")]
     _2pBb,
@@ -1909,19 +1915,18 @@ impl DD for PConn {
 
 impl PConn {
     #[must_use]
-    pub const fn is_one_leg(&self) -> bool {
-        matches!(
-            self,
-            Self::FAb
-                | Self::_3pA
-                | Self::_1FA
-                | Self::_3pS
-                | Self::_3pbA
-                | Self::FAPlusPF
-                | Self::_F1P
-                | Self::ShiShiPlus
-                | Self::_2pBb
-        )
+    pub const fn definitely_one_leg(&self) -> bool {
+        matches!(self, |Self::_3pA| Self::_1FA
+            | Self::FAPlusPF
+            | Self::_F1P
+            | Self::ShiShiPlus
+            | Self::_2pBb)
+    }
+
+    #[must_use]
+    pub const fn could_be_one_leg(&self) -> bool {
+        self.definitely_one_leg()
+            || matches!(self, Self::FAb | Self::_2pK | Self::_3pK | Self::_3pS | Self::_3pbA)
     }
 
     #[must_use]
@@ -2092,7 +2097,7 @@ pub enum PBonus {
     Pf1o,
     Mov,
     Mov1,
-    #[strum(to_string = "Mov1+T")]
+    #[strum(to_string = "Mov1+t")]
     Mov1PlusT,
     Fall,
     FTurn,
@@ -2139,6 +2144,8 @@ impl PBonus {
     pub const fn required_consts(&self) -> &'static [PConst] {
         use PConst::*;
         match self {
+            // AQUA calculator says Fall can't be used with 2S?
+            // mistake on acro calculator?
             Self::Spider | Self::Climb | Self::Fall | Self::FTurn => &[_2S, Flower, Hand],
             Self::Diva => &[_2S],
             _ => &[],
@@ -2178,7 +2185,7 @@ impl DD for AcroP {
             + self.conn.dd()
             + self.positions.dd()
             + self.bonuses.iter().map(DD::dd).sum::<MilliDD>()
-            + self.rotation.as_ref().map_or(MilliDD(0), DD::dd)
+            + self.rotation.as_ref().map_or_default(DD::dd)
     }
 }
 
@@ -2232,9 +2239,7 @@ impl<GroupPos: DD + FromStr> FromStr for Positions<GroupPos> {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let parts = s.split('/').collect::<Vec<_>>();
-        if parts.is_empty() {
-            return Err(anyhow!("no positions"));
-        } else if parts.len() > 2 {
+        if parts.len() > 2 {
             return Err(anyhow!("acros can only have 2 declared positions, found {}", parts.len()));
         }
 
@@ -2397,22 +2402,36 @@ mod tests {
     #[test]
     fn test_parse_team_acro() {
         assert!("Q-Sq-Forw-ln".parse::<TeamAcroKind>().is_err());
+        assert!("A-S-Back-ln".parse::<TeamAcroKind>().is_err());
         assert!("A-Sq-Bln-ln".parse::<TeamAcroKind>().is_err());
         assert!("A-Sq-Down-ln".parse::<TeamAcroKind>().is_err());
         assert!("A-Sq-Back-sd".parse::<TeamAcroKind>().is_err());
         assert!("P-Hand-HA-bb/2ow-Ph0.5".parse::<TeamAcroKind>().is_err());
         assert!("A-Sq-Back".parse::<TeamAcroKind>().is_err());
+        assert!("A-Sq-Back-".parse::<TeamAcroKind>().is_err());
+        assert!("A-Sq-Back-ja/2ln/2tk".parse::<TeamAcroKind>().is_err());
         assert!("A-Sq-Back-2ln".parse::<TeamAcroKind>().is_err());
         assert!("A-Sq-Back-pk/3rg".parse::<TeamAcroKind>().is_err());
+        assert!("A-Sq-Back-pk/2r".parse::<TeamAcroKind>().is_err());
         assert!("A-Thr-Forw-ln-Dbbl".parse::<TeamAcroKind>().is_err());
-        assert!("B-St-FS-ln-SdU".parse::<TeamAcroKind>().is_err());
+        assert!("B-S-FS-sd".parse::<TeamAcroKind>().is_err());
+        assert!("B-St-F-sd".parse::<TeamAcroKind>().is_err());
+        assert!("B-St-FS-ln".parse::<TeamAcroKind>().is_err());
+        assert!("B-St-FS-sd-SdU".parse::<TeamAcroKind>().is_err());
+        assert!("C-Thr^3F-Back-ow/2tk".parse::<TeamAcroKind>().is_err());
+        assert!("C-Thr^2F-Bac-ow/2tk".parse::<TeamAcroKind>().is_err());
+        assert!("C-Thr^2F-Back-ow2tk".parse::<TeamAcroKind>().is_err());
         assert!("C-Thr^2F-Back-ow/2tk-Pos4".parse::<TeamAcroKind>().is_err());
-        assert!("P-P-F2A-ln-Pss1".parse::<TeamAcroKind>().is_err());
+        assert!("P-O-F2A-sd".parse::<TeamAcroKind>().is_err());
+        assert!("P-P-F2-sd".parse::<TeamAcroKind>().is_err());
+        assert!("P-P-F2A-ln".parse::<TeamAcroKind>().is_err());
+        assert!("P-P-F2A-sd-Pss1".parse::<TeamAcroKind>().is_err());
         assert!("A-Sq-Side-ln-ct0.5+s1".parse::<TeamAcroKind>().is_err());
         assert!("C-Thr^2F-Back-ow/2tk-2F0.5+2F1+Ct1".parse::<TeamAcroKind>().is_err());
         assert!("C-Thr^2F-Back-ow/2tk-2F0.5+Cs1+Ct1".parse::<TeamAcroKind>().is_err());
         assert!("C-Thr^2F-Back-ow/2tk-Cs1+Ct1".parse::<TeamAcroKind>().is_err());
         assert!("B-St-FS-ln/2he-Hold/Mov/Dbl".parse::<TeamAcroKind>().is_err());
+        assert!("C-Thr^2F-Back-ow/2tk-Pos3/Dbl/Cx".parse::<TeamAcroKind>().is_err());
 
         assert_eq!(
             "A-Sq-Back-ln-D".parse::<TeamAcroKind>().unwrap(),
@@ -2523,7 +2542,7 @@ mod tests {
             ("A-Sq-Back-tk/2kt", 1950),
             ("P-P-F2A-sd", 1750),
             ("C-Thr^2F-Bln-ow/2tk-Cs1", 2537),
-            ("B-StH-FF-sd", 2250),
+            ("B-StH-FF-sd-Dbl", 2450),
             ("P-Knees-SP+K-bb/2ow-Porp/Pos3", 2325),
             ("C-Thr>StH-Forw-he-1F>1F", 2575),
             ("B-St-FP-vs/2he", 2562),

@@ -344,16 +344,6 @@ fn check_group_c_positions(acro: &TeamAcroKind) -> Box<[CardIssue]> {
         return ci.into();
     };
 
-    if acro.construction == CConst::ThrAbove2F
-        && let CPos::B(pos1) = &acro.positions.first
-        && pos1.is_head_up()
-    {
-        ci_warn(
-            &mut ci,
-            "head-up position in fly-above construction, should that be a head-down position?",
-        );
-    }
-
     if AIRBORNE_CONSTRUCTIONS.contains(&acro.construction)
         && (matches!(acro.positions.first, CPos::B(_))
             || matches!(acro.positions.second, Some(CPos::B(_))))
@@ -504,7 +494,7 @@ fn check_featured_rotation(
                 ci_warn(&mut ci, "Somersault with open, but 2ln not declared");
             }
             SecondAirborne::Has(pos2) if pos2 != &APos::ln => {
-                ci_err(&mut ci, format!("Somersault with open, but {pos2} declared not 2ln"));
+                ci_err(&mut ci, format!("Somersault with open, but 2{pos2} declared not 2ln"));
             }
             _ => {}
         }
@@ -756,6 +746,19 @@ fn check_reqs_c(acro: &AcroC) -> Box<[CardIssue]> {
             };
             Some((pos1, pos2))
         } else {
+            // FUTURE this could be something to warn about but getting
+            // it right would be tricky. In most cases if the featured
+            // athlete is rotating, they probably are not going to
+            // remain on the 2nd formation until submergence. But doing
+            // something like a twist while doing a "dirty-dancing"
+            // acro is possible so we shouldn't warn until we can make
+            // it really clear.
+            //
+            // Related - doing a rotation of the base without balance
+            // positions is probably similar. Possible but not likely.
+            //
+            // ex of cases where we shouldn't warn:
+            // C-Thr>St-Forw-co-Ct1
             None
         };
 
@@ -857,7 +860,7 @@ fn check_reqs_p(acro: &AcroP) -> Box<[CardIssue]> {
         acro_reqs!(ci, r.group().required_consts(), r.group(), acro.construction);
     }
 
-    if pos1.is_one_foot() && !acro.conn.is_one_leg() {
+    if pos1.is_one_foot() && !acro.conn.could_be_one_leg() {
         ci_warn(
             &mut ci,
             format!(
@@ -867,7 +870,7 @@ fn check_reqs_p(acro: &AcroP) -> Box<[CardIssue]> {
         );
     }
 
-    if acro.conn.is_one_leg() && pos1.is_two_foot() {
+    if acro.conn.definitely_one_leg() && pos1.is_two_foot() {
         ci_warn(
             &mut ci,
             format!("one leg connection, {}, declared but {pos1} is a two leg position", acro.conn),
@@ -1015,29 +1018,54 @@ mod tests {
 
     #[test]
     fn test_check_dd_limits() {
+        const FTEAM: Category = Category { ag: JRSR, event: Team, free: true };
+        const TTEAM: Category = Category { ag: JRSR, event: Team, free: false };
         const TESTS: &[(&str, Category, &str, usize)] = &[
-            ("tech_high", Category { ag: JRSR, event: Team, free: false }, "A-Sq-Back-tk-s2.5", 1),
-            ("free_ok", Category { ag: JRSR, event: Team, free: true }, "A-Sq-Back-tk-s2.5", 0),
+            ("free_ok", FTEAM, "A-Sq-Back-tk-s2.5", 0),
+            ("tech_ok_a", TTEAM, "A-Sq-Back-tk-s1t2", 0),
+            ("tech_high_a", TTEAM, "A-Sq-Back-tk-s2.5", 1),
+            ("tech_high_b", TTEAM, "B-LH-LiH-br/2wi-r0.5L-Pos3", 1),
+            ("tech_high_c", TTEAM, "C-Thr>StH>1F-Forw-he/2ba-1F>1F+", 1),
+            ("tech_high_p", TTEAM, "P-2S-2pBb-qu-Dive", 1),
             ("12u_ok", Category { ag: AG12U, event: Team, free: true }, "P-B-2b/-hp/2ow", 0),
+            ("12u_high_a", Category { ag: AG12U, event: Team, free: true }, "A-Sq-Rev-tk-s1", 1),
+            ("12u_high_b", Category { ag: AG12U, event: Team, free: true }, "B-St-FP-ne", 1),
             ("12u_high", Category { ag: AG12U, event: Team, free: true }, "P-B-2b/-hp/2ow-Pos3", 1),
             ("youth_ok", Category { ag: Youth, event: Team, free: true }, "P-B-2b/-hp/2ow-Pos3", 0),
-            ("youth_high", Category { ag: Youth, event: Team, free: true }, "P-B-2pBb-qu/2wi", 1),
+            ("youth_ok", Category { ag: Youth, event: Team, free: true }, "A-Sq-Rev-rg-s1", 0),
+            (
+                "youth_high",
+                Category { ag: Youth, event: Team, free: true },
+                "A-Sq-Rev-pk/2sp-s1",
+                1,
+            ),
+            ("youth_high_b", Category { ag: Youth, event: Team, free: true }, "B-StH-1F1F-he", 1),
+            ("youth_high_p", Category { ag: Youth, event: Team, free: true }, "P-B-2pBb-qu/2wi", 1),
         ];
         for (name, cat, acro, expected) in TESTS {
-            assert_eq!(check_dd_limits(*cat, &acro.parse().unwrap()).len(), *expected, "{name}");
+            let res = check_dd_limits(*cat, &acro.parse().unwrap());
+            assert_eq!(res.len(), *expected, "{name}: {res:#?}");
         }
     }
 
     #[test]
     fn test_check_one_acro_issue() {
         let tests: &[(&str, fn(&TeamAcroKind) -> Box<[CardIssue]>, &str, usize)] = &[
-            ("reqs_6_dbl_err", check_num_athletes, "B-2SupD2F-Le-co-Dbl", 1),
-            ("reqs_5_dbl_warns", check_num_athletes, "A-Sq-Back-pk/2rg-s1-Dbl", 1),
+            ("reqs_6_dbl_err_b", check_num_athletes, "B-2SupD2F-Le-co-Dbl", 1),
+            ("reqs_6_dbl_err_c", check_num_athletes, "C-2Sup+-Up-spl-Dbl", 1),
+            ("reqs_5_dbl_warns_a", check_num_athletes, "A-Sq-Back-pk/2rg-s1-Dbl", 1),
+            ("reqs_5_dbl_warns_p", check_num_athletes, "P-2S-F2A-sd-Dbl", 1),
             ("reqs_4_dbl_warns", check_num_athletes, "A-Thr-Back-pk/2rg-s1-Dbl", 1),
             ("no_dbl_ok", check_num_athletes, "A-Sq-Back-pk/2rg-s1", 0),
-            ("missing_2nd_pos", check_team_acro_validity, "A-Sq-Back-pk-Pos3", 1),
+            ("missing_2nd_pos_a", check_team_acro_validity, "A-Sq-Back-pk-Pos3", 1),
+            ("missing_2nd_pos_b", check_team_acro_validity, "B-St-FS-sd-Pos3", 1),
+            ("missing_2nd_pos_c", check_team_acro_validity, "C-Sn-Back-ja-Pos3", 1),
+            ("missing_2nd_pos_p", check_team_acro_validity, "P-B-F2A-sd-Pos3", 1),
             ("pos3_bonus_ok", check_team_acro_validity, "A-Sq-Back-pk/2rg-Pos3", 0),
-            ("same_positions", check_team_acro_validity, "A-Sq-Back-pk/2pk", 1),
+            ("same_positions_a", check_team_acro_validity, "A-Sq-Back-pk/2pk", 1),
+            ("same_positions_b", check_team_acro_validity, "B-St-FS-sd/2sd", 1),
+            ("same_positions_c", check_team_acro_validity, "C-Sn-Back-ja/2ja", 1),
+            ("same_positions_p", check_team_acro_validity, "P-B-F2A-sd/2sd", 1),
             ("back_with_cart_err", check_reqs, "A-Sq-Back-ln-ct0.5", 1),
             ("back_with_cart2_err", check_reqs, "A-Sq-Back-ln-C", 1),
             ("side_with_cart_ok", check_reqs, "A-Sq-Side-ln-ct0.5", 0),
@@ -1058,6 +1086,7 @@ mod tests {
             ("fs_with_r_slash_ok", check_reqs, "B-St-FS-sd-r0.5/", 0),
             ("fs_with_r_plus_err", check_reqs, "B-St-FS-sd-r0.5+", 3),
             ("he_with_r_plus_err", check_reqs, "B-St-FP-he-r0.5+", 1),
+            ("r_plus_pos_err", check_reqs, "B-St-FP-ey/2ba-r0.5+", 1),
             ("fp_with_r_plus_ok", check_reqs, "B-St-FP-ey-r0.5+", 0),
             ("fp_with_rl_err", check_reqs, "B-St-FP-ey-r0.5L", 2),
             ("fp_with_rl_err2", check_reqs, "B-St-FP-ey-r/L", 2),
@@ -1084,8 +1113,15 @@ mod tests {
             ("only_ln_with_open_warn", check_reqs, "A-Sq-Back-ln-s1.5t0.5o", 2),
             ("open_wo_2ln_warn", check_reqs, "A-Sq-Back-pk-s1.5t0.5o", 1),
             ("arch_with_open_warn", check_reqs, "A-Sq-Back-ja/2ln-s1.5t0.5o", 1),
-            ("ln_pk_with_open_ok", check_reqs, "A-Sq-Back-pk/2ln-s1.5t0.5o", 0),
+            ("pk_ja_with_open_warn", check_reqs, "A-Sq-Back-pk/2ja-s1.5t0.5o", 1),
+            ("pk_ln_with_open_ok", check_reqs, "A-Sq-Back-pk/2ln-s1.5t0.5o", 0),
             ("c_with_open_warn", check_reqs, "C-Thr>St-Back-tk-Cs1t1o", 1),
+            ("c_with_open_ok", check_reqs, "C-Thr>St-Back-tk/2ln-Cs1t1o", 0),
+            ("c_balance_with_featured_ok", check_reqs, "C-Thr>St-Forw-co-Ct1", 0),
+            ("ju_wrong_const", check_reqs, "C-Thr>StH-Forw-co-Ju", 1),
+            ("ju_okay_const", check_reqs, "C-Thr>F-Forw-sd-Ju", 0),
+            ("jump_wrong_const", check_reqs, "C-Thr>F-Forw-sd-Jump", 1),
+            ("jump_okay_const", check_reqs, "C-Thr>StH-Forw-co-Jump", 0),
             ("flyabove_with_open_ok", check_reqs, "C-Thr^2F-Bln-ow/2tk-2F1+Cs1t1o-Pos3", 0),
             ("ss_without_ln_err", check_reqs, "A-Sq-Back-pk-ss1", 1),
             ("ss_with_two_positions_err", check_reqs, "A-Sq-Back-pk/2ln-ss1", 1),
@@ -1099,7 +1135,8 @@ mod tests {
             ("fp_one_leg_r_ok", check_reqs, "B-St-FP-he/2ba-r0.5", 0),
             ("sp_with_split_err", check_reqs, "A-2Sup-Up-sp-Split", 1),
             ("box_with_porp_err", check_reqs, "P-P-4p-bo-Porp", 1),
-            ("dup_bonuses", check_team_acro_validity, "B-LH-LiH-mo-Mov/Mov", 1),
+            ("dup_bonuses_a", check_team_acro_validity, "A-Feet-Back-tk-Feet/Feet", 1),
+            ("dup_bonuses_b", check_team_acro_validity, "B-LH-LiH-mo-Mov/Mov", 1),
             ("dup_bonuses_ok", check_team_acro_validity, "C-Thr>FF-Forw-ln-CRoll/CRoll", 0),
             ("mut_excl_bonuses", check_exclusive_bonuses, "P-2S-3pA-br-Spider/Climb", 1),
             ("non_mut_excl_bonuses_ok", check_exclusive_bonuses, "P-Hand-3pA-ne-Climb/Fall", 0),
@@ -1127,7 +1164,10 @@ mod tests {
             ("hula_with_ja_ok", check_reqs, "A-Shou-Up-ja-Hula", 0),
             ("rotf_with_head_down_err", check_reqs, "B-StH-LayF-wi-RotF", 1),
             ("rotf_with_head_up_conn_err", check_reqs, "B-St-FS-mo-RotF", 1),
+            ("rotf_with_multiple_pos_err", check_reqs, "B-StH-LayF-sd/2wi-RotF", 2),
             ("rotf_with_horizontal_ok", check_reqs, "B-StH-LayF-co-RotF", 0),
+            ("rotf_with_horizontal2_ok", check_reqs, "B-StH-LayF-wi/2co-RotF", 0),
+            ("rotf_with_horizontal3_ok", check_reqs, "B-StH-LayF-co/2so-RotF", 0),
             ("spich_incorrect_pos_err", check_reqs, "P-Knees-SP+K-sh/2ow-Spich", 1),
             ("spich_bb_sh_ok", check_reqs, "P-Knees-SP+K-bb/2sh-Spich", 0),
             ("spich_sh_bb_ok", check_reqs, "P-Knees-SP+K-sh/2bb-Spich", 0),
@@ -1142,8 +1182,9 @@ mod tests {
             ("two_leg_conn_2_leg_pos", check_reqs, "B-St-FS-sd", 0),
             ("head_down_conn_head_up_pos", check_reqs, "B-St-Bp-sd", 1),
             ("head_down_conn_head_down_pos", check_reqs, "B-St-PP-bb", 0),
-            ("head_up_conn_head_down_pos", check_reqs, "B-St-FS-bb", 1),
+            ("head_up_conn_head_down_pos", check_reqs, "B-St-FS-bb", 2),
             ("head_up_conn_head_up_pos", check_reqs, "B-St-FS-sd", 0),
+            ("head_up_conn_free_pos", check_reqs, "B-St-FP-mo", 0),
             ("sit_conn_head_up_pos", check_reqs, "B-St-S+-sd", 1),
             ("sit_conn_head_sit_pos", check_reqs, "B-St-S+-mo", 0),
             ("handstand_conn_without_bb", check_reqs, "B-St-PP-ow", 1),
@@ -1158,6 +1199,15 @@ mod tests {
             ("one_leg_pos_one_leg_conn", check_reqs, "B-St-F1S-he", 0),
             ("two_leg_pos_one_leg_conn", check_reqs, "B-St-F1S-sd", 1),
             ("two_leg_pos_two_leg_conn", check_reqs, "B-St-FS-sd", 0),
+            ("head_up_with_head_down_p", check_reqs, "P-P->2P2P-sd", 1),
+            ("head_down_with_head_down_p", check_reqs, "P-P->2P2P-bb", 0),
+            ("head_down_with_head_up_p", check_reqs, "P-Chariot-FAb-bb", 1),
+            ("head_up_with_head_up_p", check_reqs, "P-Chariot-FAb-sd", 0),
+            ("stand_with_sitlay_p", check_reqs, "P-B-SiA-sd", 1),
+            ("sit_with_sitlay_p", check_reqs, "P-B-SiA-mo", 0),
+            ("one_leg_pos_two_leg_conn_p", check_reqs, "P-P-F2A-he", 2),
+            ("one_leg_pos_one_leg_conn_p", check_reqs, "P-P-1FA-he", 0),
+            ("two_leg_pos_one_leg_conn_p", check_reqs, "P-P-1FA-sd", 1),
             ("fly_above_airborne_first", check_reqs, "C-Thr^2F-Back-tk/2ow", 1),
             ("fly_above_balance_first", check_reqs, "C-Thr^2F-Back-ow/2tk", 0),
             ("fly_above_with_spl", check_reqs, "C-Thr^2F-Back-spl/2tk", 1),
@@ -1184,7 +1234,19 @@ mod tests {
 
     #[test]
     fn test_check_age_restrictions() {
+        let acro = "C-Thr>StH-Forw-ln-2F>2F".parse().unwrap();
+        assert_eq!(check_age_restrictions(AG12U, &acro).len(), 0);
+        assert_eq!(check_age_restrictions(Youth, &acro).len(), 0);
+        assert_eq!(check_age_restrictions(JRSR, &acro).len(), 0);
         let acro = "C-Thr>StH-Forw-ln-1F>1F".parse().unwrap();
+        assert_eq!(check_age_restrictions(AG12U, &acro).len(), 1);
+        assert_eq!(check_age_restrictions(Youth, &acro).len(), 1);
+        assert_eq!(check_age_restrictions(JRSR, &acro).len(), 0);
+        let acro = "A-Sq-Up-rg-Hula".parse().unwrap();
+        assert_eq!(check_age_restrictions(AG12U, &acro).len(), 0);
+        assert_eq!(check_age_restrictions(Youth, &acro).len(), 0);
+        assert_eq!(check_age_restrictions(JRSR, &acro).len(), 0);
+        let acro = "A-Sq-Up-ln-RetSq".parse().unwrap();
         assert_eq!(check_age_restrictions(AG12U, &acro).len(), 1);
         assert_eq!(check_age_restrictions(Youth, &acro).len(), 1);
         assert_eq!(check_age_restrictions(JRSR, &acro).len(), 0);
@@ -1264,8 +1326,10 @@ mod tests {
             ("C-Thr>St-Forw-ow/2ln-Jump>", 2),
             ("C-Thr>St-Back-mo/2tk", 1),
             ("C-2Sup+-Up-spl", 1),
+            ("C-2Sup+-Up-sp/2co", 2),
             ("C-2Sup+-Up-sp", 0),
             ("C-Thr>F-Side-ln", 1),
+            ("C-Thr>F-Side-sd/2ja", 2),
             ("C-Thr>F-Side-sd", 0),
             ("P-B-L/SiF+P-wi/2ow-Dive", 0),
         ];

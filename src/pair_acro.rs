@@ -144,7 +144,7 @@ impl DD for PairAcroKind {
             Self::Js0_5t0_5 => 1700,
             Self::WHeadDowns0_5t0_5 => 1700,
             Self::Js1B => 1900,
-            Self::WHeadDownFlexr1_5 => 19000,
+            Self::WHeadDownFlexr1_5 => 1900,
             Self::JBs1t0_5 => 2100,
             Self::Jfs1B => 2100,
             Self::Js1F => 2100,

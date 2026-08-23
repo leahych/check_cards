@@ -692,7 +692,7 @@ mod tests {
             ("front_layout_in_middle_warn", check_hybrid_start_end, def, "R1 F4a T4e", 1),
             ("front_layout_at_start_ok", check_hybrid_start_end, def, "F4a R1 T4e", 0),
             ("no_decls_ok", check_hybrid_start_end, def, "", 0),
-            ("just_pc2_ok", check_hybrid_start_end, def, "4PC", 0),
+            ("just_pc_ok", check_hybrid_start_end, def, "4PC", 0),
             ("duet_c4plus", check_connections_in_non_team, FDUET, "C4+", 1),
             ("combo_c4plus_ok", check_connections_in_non_team, COMBO, "C4+", 0),
             ("duet_c4_ok", check_connections_in_non_team, FDUET, "C4", 0),
@@ -747,6 +747,8 @@ mod tests {
             ("same_conn", check_mixduet_elems, TMIXED, &["C1a T9a C1a"], 1),
             ("2_C_1_factored_T", check_mixduet_elems, TMIXED, &["CB T9a*0.5 C1a"], 1),
             ("2_C_1_T_ok", check_mixduet_elems, TMIXED, &["CB T9a C1a"], 0),
+            ("2_C_1_T_ok2", check_mixduet_elems, TMIXED, &["T9a CB C1a"], 0),
+            ("2_C_1_T_ok3", check_mixduet_elems, TMIXED, &["CB C1a T9a"], 0),
             ("solo_no_f", check_families, ysolo, &["TB SCD1 2R2", "A3b"], 1),
             ("solo_no_r", check_families, ysolo, &["FB SCD1 TB", "A3b"], 1),
             ("solo_no_s", check_families, ysolo, &["FB TB 2R2", "A3b"], 1),
@@ -769,6 +771,16 @@ mod tests {
         let card = CoachCard { category: COMBO, theme: "foo".into(), ..Default::default() };
         assert!(check_theme(&card).is_empty());
         assert!(check_theme(&CoachCard { category: FSOLO, ..Default::default() }).is_empty());
+        assert!(
+            check_theme(&CoachCard { category: FSOLO, theme: "bar".into(), ..Default::default() })
+                .is_empty()
+        );
+    }
+
+    #[test]
+    fn test_check_small_bonuses() {
+        assert_eq!(check_small_bonuses(FDUET, &"4PC".parse().unwrap()).len(), 1);
+        assert_eq!(check_small_bonuses(FTEAM, &"4PC".parse().unwrap()).len(), 0);
     }
 
     #[test]

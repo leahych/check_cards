@@ -19,6 +19,7 @@ pub use crate::hybrid::*;
 pub use crate::iss_parser::parse_excel;
 pub use crate::pair_acro::PairAcroKind;
 pub use crate::team_acro::*;
+pub use crate::tre::parse_tre;
 use chrono::NaiveTime;
 use std::fmt;
 use std::fmt::Display;
@@ -99,7 +100,6 @@ fn is_jrsr(txt: &str) -> bool {
         || txt.contains("JUNIOR")
         || txt.contains("SR")
         || txt.contains("SENIOR")
-        || txt.contains("1517")
         || txt.contains("15") && txt.contains("17")
         || (txt.contains("16") && txt.contains("17"))
         || (txt.contains("16") && txt.contains("19"))
@@ -263,7 +263,7 @@ impl CardIssue {
 
 impl fmt::Display for CardIssue {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let elem_txt = self.elem_num.map_or(String::new(), |num| format!("Element {num}: "));
+        let elem_txt = self.elem_num.map_or_default(|num| format!("Element {num}: "));
         write!(f, "{} {elem_txt}{}", self.level, self.text)
     }
 }
@@ -330,6 +330,8 @@ mod tests {
     #[test]
     fn test_age_groups_from() {
         assert_eq!(Into::<AgeGroups>::into("12u"), AG12U);
+        assert_eq!(Into::<AgeGroups>::into("12_under"), AG12U);
+        assert_eq!(Into::<AgeGroups>::into("11-12"), AG12U);
         assert_eq!(Into::<AgeGroups>::into("Youth"), Youth);
         assert_eq!(Into::<AgeGroups>::into("13-15"), Youth);
         assert_eq!(Into::<AgeGroups>::into("1517"), JRSR);

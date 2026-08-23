@@ -155,6 +155,8 @@ mod tests {
             // anymore check on the hybrid. See the comment in the
             // hybrid parsing code.
             (Solo, true, "F9a"),
+            (Duet, false, "TRE6a"),
+            (Duet, true, "L!fr10"),
         ];
         for (evt, free, s) in BAD_CASES {
             parse_elem_kind(*evt, *free, *s, None)

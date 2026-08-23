@@ -506,7 +506,7 @@ impl DD for HybridDecl {
         const BASE_DD: MilliDD = MilliDD(500);
         BASE_DD
             + self.decls.iter().map(DD::dd).sum::<MilliDD>()
-            + self.pc_bonus.as_ref().map_or(MilliDD(0), DD::dd)
+            + self.pc_bonus.as_ref().map_or_default(DD::dd)
     }
 }
 
@@ -572,13 +572,15 @@ mod tests {
             s.parse::<HybridDecl>().expect(format!("{name}: failed to parse '{s}'").as_str());
         }
 
-        const BASE_CASES: &[(&str, &str)] = &[
+        const BAD_CASES: &[(&str, &str)] = &[
             ("factored_pc", "2PC*0.3"),
             ("too_many_pc", "7PC"),
             ("spin_factor", "S5*0.4"),
             ("combined_spin_invalid_level", "SC8"),
             ("two_dir_spin_level", "SCD7"),
             ("conn_bad_option", "C4a"),
+            ("conn_bad_option", "C4a+"),
+            ("thrust", "T9c"),
             ("flex", "F4k"),
             ("air", "A7a"),
             ("swirl", "R5"),
@@ -588,7 +590,7 @@ mod tests {
             ("one_leg", "1R7"),
             ("capital_letter", "A3B"),
         ];
-        for (name, s) in BASE_CASES {
+        for (name, s) in BAD_CASES {
             s.parse::<HybridDecl>()
                 .err()
                 .expect(format!("{name}: unexpectedly parsed '{s}'").as_str());
