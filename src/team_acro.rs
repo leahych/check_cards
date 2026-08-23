@@ -1484,7 +1484,7 @@ impl FromStr for CFRotation {
             "Ct1" => Ok(Self::Ct1),
             "Ct1.5" => Ok(Self::Ct1_5),
             "Ct2" => Ok(Self::Ct2),
-            "Ct2_5" => Ok(Self::Ct2_5),
+            "Ct2.5" => Ok(Self::Ct2_5),
             "Ct3" => Ok(Self::Ct3),
             "Cd" => Ok(Self::Cd),
             "Cdt0.5" => Ok(Self::Cdt0_5),
@@ -1493,7 +1493,7 @@ impl FromStr for CFRotation {
             "Cs1" => Ok(Self::Cs1),
             "Css1" => Ok(Self::Css1),
             "Cs1.5" => Ok(Self::Cs1_5),
-            "Cs1.50.5" => Ok(Self::Cs1_5o),
+            "Cs1.5o" => Ok(Self::Cs1_5o),
             "Cf1" => Ok(Self::Cf1),
             "Cf1.5" => Ok(Self::Cf1_5),
             "Cc" => Ok(Self::Cc),
@@ -1511,7 +1511,7 @@ impl FromStr for CFRotation {
             "Css1t1.5" => Ok(Self::Css1t1_5),
             "Css1t2" => Ok(Self::Css1t2),
             "Cs1t1o" => Ok(Self::Cs1t1o),
-            "Cs1t1_5o" => Ok(Self::Cs1t1_5o),
+            "Cs1t1.5o" => Ok(Self::Cs1t1_5o),
             "Cs1t2o" => Ok(Self::Cs1t2o),
             "Chs0.5" => Ok(Self::Chs0_5),
             _ => Err(anyhow!("unknown rotation: '{s}'")),
@@ -2014,7 +2014,7 @@ pub enum PRotation {
     #[strum(to_string = "Pr0.5")]
     Pr0_5,
     Pr1,
-    #[strum(to_string = "Prq.5")]
+    #[strum(to_string = "Pr1.5")]
     Pr1_5,
     Ph,
     #[strum(to_string = "P0.5h")]
