@@ -17,10 +17,14 @@ crate-type = ["cdylib", "lib"]
 debug = false
 
 [profile.release]
+#debug = true
+strip = true
 codegen-units = 1
 lto = true
 opt-level = 'z'
-strip = true
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = ["-Oz", "--enable-nontrapping-float-to-int", "--enable-bulk-memory"]
 
 [lints.rust]
 future-incompatible = "warn"
