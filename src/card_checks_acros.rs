@@ -594,7 +594,7 @@ fn check_reqs_b(acro: &AcroB) -> Box<[CardIssue]> {
     }
 
     // TODO is this over aggressive? Ex. can owl be done with some of these?
-    if acro.conn.expects_head_up_pos() && !pos1.is_head_up() && !pos1.is_free() {
+    if acro.conn.expects_head_up_pos() && !pos1.could_be_head_up() {
         ci_warn(&mut ci, format!("expected head-up position with {}, but found {pos1}", acro.conn));
     }
 
@@ -1135,6 +1135,7 @@ mod tests {
             ("fp_one_leg_r_ok", check_reqs, "B-St-FP-he/2ba-r0.5", 0),
             ("sp_with_split_err", check_reqs, "A-2Sup-Up-sp-Split", 1),
             ("box_with_porp_err", check_reqs, "P-P-4p-bo-Porp", 1),
+            ("drop_with_fs_ok", check_reqs, "B-St-FS-dr", 0),
             ("dup_bonuses_a", check_team_acro_validity, "A-Feet-Back-tk-Feet/Feet", 1),
             ("dup_bonuses_b", check_team_acro_validity, "B-LH-LiH-mo-Mov/Mov", 1),
             ("dup_bonuses_ok", check_team_acro_validity, "C-Thr>FF-Forw-ln-CRoll/CRoll", 0),

@@ -955,6 +955,15 @@ impl BPos {
     }
 
     #[must_use]
+    pub const fn could_be_head_up(&self) -> bool {
+        // the name isn't great but this is intended for things that
+        // could be done with legs vertical/standing-ish. For example,
+        // queen with F1S or drop with FS. The head is down in those
+        // cases, but the athlete is not fully inverted.
+        self.is_head_up() || self.is_free() || matches!(self, Self::qu | Self::dr)
+    }
+
+    #[must_use]
     pub const fn could_be_head_down(&self) -> bool {
         self.is_free() || self.definitely_head_down()
     }
