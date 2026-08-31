@@ -201,7 +201,7 @@ fn test_parse_iss_team() {
                 },
             ]
             .into(),
-            theme: "Test".to_string(),
+            theme: "Test".into(),
             iss_ver: Some(Version::new(3, 0, 6)),
             end_time: NaiveTime::from_hms_opt(0, 3, 29).unwrap(),
         },
@@ -224,7 +224,7 @@ fn test_parse_iss_combo() {
                 kind: ChoHy(Some(MilliDD(1000))),
             }]
             .into(),
-            theme: String::new(),
+            theme: "".into(),
             end_time: NaiveTime::from_hms_opt(0, 0, 1).unwrap(),
             iss_ver: Some(Version::new(3, 0, 2)),
         },
@@ -271,7 +271,7 @@ fn test_parse_iss_mixed_duet() {
                 },
             ]
             .into(),
-            theme: String::new(),
+            theme: "".into(),
             end_time: NaiveTime::from_hms_opt(0, 0, 3).unwrap(),
             iss_ver: Some(Version::new(3, 0, 2)),
         },
@@ -288,7 +288,7 @@ fn test_parse_iss_report() {
 
     assert_eq!(
         (
-            "1 MCA - MAD CITY AQUASTARS".to_string(),
+            "1 MCA - MAD CITY AQUASTARS".into(),
             CoachCard {
                 category: Category { ag: AgeGroups::JRSR, free: true, event: Events::Combo },
                 elements: vec![
@@ -478,7 +478,7 @@ fn test_parse_iss_report() {
                     },
                 ]
                 .into(),
-                theme: "foo".to_string(),
+                theme: "foo".into(),
                 end_time: NaiveTime::from_hms_opt(0, 3, 34).unwrap(),
                 iss_ver: None,
             },
@@ -489,7 +489,7 @@ fn test_parse_iss_report() {
 
     assert_eq!(
         (
-            "2 HEA - HEARTLAND".to_string(),
+            "2 HEA - HEARTLAND".into(),
             CoachCard {
                 category: Category { ag: AgeGroups::JRSR, free: true, event: Events::Combo },
                 elements: vec![
@@ -656,7 +656,7 @@ fn test_parse_iss_report() {
                     }
                 ]
                 .into(),
-                theme: "foo".to_string(),
+                theme: "foo".into(),
                 end_time: NaiveTime::from_hms_opt(0, 3, 22).unwrap(),
                 iss_ver: None,
             },

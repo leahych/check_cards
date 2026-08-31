@@ -236,7 +236,7 @@ fn check_factoring(category: Category, decls: &[Decl]) -> Box<[CardIssue]> {
     let mut ci = Vec::new();
 
     if category.event == Solo && decls.iter().any(|d| d.f != No) {
-        ci_err(&mut ci, "cannot factor in a Solo`");
+        ci_err(&mut ci, "cannot factor in a Solo");
     }
 
     if matches!(category.event, Duet | MixedDuet) {

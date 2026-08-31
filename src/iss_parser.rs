@@ -6,7 +6,7 @@ use chrono::NaiveTime;
 use std::io::{Read, Seek};
 
 type ParsedElements = (Box<[Element]>, NaiveTime, Box<[CardIssue]>);
-type ParsedCard = (String, CoachCard, Box<[CardIssue]>);
+type ParsedCard = (Box<str>, CoachCard, Box<[CardIssue]>);
 
 fn parse_element(
     category: Category,
@@ -96,7 +96,7 @@ fn parse_elements(sheet: Rows<Data>, category: Category) -> ParsedElements {
 fn parse_report(sheet: &Range<Data>) -> Box<[ParsedCard]> {
     let mut cards = Vec::new();
     let mut category = Category::default();
-    let mut name = String::new();
+    let mut name: Box<str> = Box::default();
 
     let mut elements_start = (0u32, 0u32);
     for (i, row) in (0u32..).zip(sheet.rows()) {
@@ -110,7 +110,7 @@ fn parse_report(sheet: &Range<Data>) -> Box<[ParsedCard]> {
         } else if first_col == "ROUTINE #" {
             let draw = cols.next().unwrap_or_default();
             let routine_name = cols.next().unwrap_or_default();
-            name = format!("{draw} {routine_name}");
+            name = format!("{draw} {routine_name}").into();
         } else if first_col == "TIME" {
             elements_start = (i + 1, 0u32);
         }
@@ -134,7 +134,7 @@ fn parse_report(sheet: &Range<Data>) -> Box<[ParsedCard]> {
                 ci,
             ));
             elements_start = (0u32, 0u32);
-            name = String::new();
+            name = Box::default();
         }
     }
     cards.into()
@@ -211,18 +211,18 @@ fn parse_sheet(name: &str, sheet: &Range<Data>) -> Box<[ParsedCard]> {
 pub fn parse_excel<R: Read + Seek>(
     name: &str,
     reader: &mut R,
-) -> Result<Box<[ParsedCard]>, String> {
+) -> Result<Box<[ParsedCard]>, Box<str>> {
     let sheets = if name.to_lowercase().ends_with(".xls") {
         let workbook: Result<Xls<_>, _> = calamine::open_workbook_from_rs(reader);
         match workbook {
             Ok(mut sheet) => sheet.worksheets(),
-            Err(e) => return Err(format!("Failed to open workbook: {name}: {e}")),
+            Err(e) => return Err(format!("Failed to open workbook: {name}: {e}").into()),
         }
     } else {
         let workbook: Result<Xlsx<_>, _> = calamine::open_workbook_from_rs(reader);
         match workbook {
             Ok(mut sheet) => sheet.worksheets(),
-            Err(e) => return Err(format!("Failed to open workbook: {name}: {e}")),
+            Err(e) => return Err(format!("Failed to open workbook: {name}: {e}").into()),
         }
     };
 

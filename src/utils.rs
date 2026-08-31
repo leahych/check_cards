@@ -1,11 +1,11 @@
-pub fn oxford_join<I, T>(iter: I) -> String
+pub fn oxford_join<I, T>(iter: I) -> Box<str>
 where
     T: ToString,
     I: IntoIterator<Item = T>,
 {
     let mut iter = iter.into_iter();
     let Some(next) = iter.next() else {
-        return String::new();
+        return Box::default();
     };
 
     let mut out = String::new();
@@ -32,7 +32,7 @@ where
         out.push_str(buf.to_string().as_ref());
     }
 
-    out
+    out.into()
 }
 
 #[cfg(test)]
@@ -41,8 +41,8 @@ mod tests {
 
     #[test]
     fn test_oxford_join() {
-        assert_eq!(oxford_join(["foo"]), "foo");
-        assert_eq!(oxford_join(["foo", "bar"]), "foo or bar");
-        assert_eq!(oxford_join(["foo", "bar", "baz"]), "foo, bar, or baz");
+        assert_eq!(oxford_join(["foo"]), "foo".into());
+        assert_eq!(oxford_join(["foo", "bar"]), "foo or bar".into());
+        assert_eq!(oxford_join(["foo", "bar", "baz"]), "foo, bar, or baz".into());
     }
 }

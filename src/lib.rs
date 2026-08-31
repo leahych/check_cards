@@ -192,7 +192,7 @@ impl fmt::Display for Category {
 pub struct CoachCard {
     pub category: Category,
     pub elements: Box<[Element]>,
-    pub theme: String,
+    pub theme: Box<str>,
     pub end_time: NaiveTime,
     pub iss_ver: Option<semver::Version>,
 }
@@ -243,16 +243,16 @@ impl fmt::Display for IssueLevel {
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct CardIssue {
     pub level: IssueLevel,
-    pub text: String,
+    pub text: Box<str>,
     pub elem_num: Option<usize>,
 }
 
 impl CardIssue {
-    fn err<T: Into<String>>(elem_num: Option<usize>, text: T) -> Self {
+    fn err<T: Into<Box<str>>>(elem_num: Option<usize>, text: T) -> Self {
         Self { level: Error, text: text.into(), elem_num }
     }
 
-    fn warn<T: Into<String>>(elem_num: Option<usize>, text: T) -> Self {
+    fn warn<T: Into<Box<str>>>(elem_num: Option<usize>, text: T) -> Self {
         Self { level: Warning, text: text.into(), elem_num }
     }
 
@@ -268,19 +268,19 @@ impl fmt::Display for CardIssue {
     }
 }
 
-pub fn ci_err<T: Into<String>>(ci: &mut Vec<CardIssue>, text: T) {
+pub fn ci_err<T: Into<Box<str>>>(ci: &mut Vec<CardIssue>, text: T) {
     ci.push(CardIssue::err(None, text));
 }
 
-pub fn ci_errs<T: Into<String>>(text: T) -> Box<[CardIssue]> {
+pub fn ci_errs<T: Into<Box<str>>>(text: T) -> Box<[CardIssue]> {
     [CardIssue::err(None, text)].into()
 }
 
-pub fn ci_warn<T: Into<String>>(ci: &mut Vec<CardIssue>, text: T) {
+pub fn ci_warn<T: Into<Box<str>>>(ci: &mut Vec<CardIssue>, text: T) {
     ci.push(CardIssue::warn(None, text));
 }
 
-pub fn ci_warns<T: Into<String>>(text: T) -> Box<[CardIssue]> {
+pub fn ci_warns<T: Into<Box<str>>>(text: T) -> Box<[CardIssue]> {
     [CardIssue::warn(None, text)].into()
 }
 

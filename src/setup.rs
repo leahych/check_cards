@@ -103,7 +103,9 @@ fn add_card_issues(
     Ok(table)
 }
 
-fn sort_issues(mut issues: Vec<(String, Box<[CardIssue]>)>) -> Box<[(String, Box<[CardIssue]>)]> {
+type CardsIssues = Box<[(Box<str>, Box<[CardIssue]>)]>;
+
+fn sort_issues(mut issues: Vec<(Box<str>, Box<[CardIssue]>)>) -> CardsIssues {
     // this makes it so the order in which we run checks does not matter
     // this isn't required, but does make the output easier to read
     // no element number should appear before any elements with numbers
@@ -113,11 +115,8 @@ fn sort_issues(mut issues: Vec<(String, Box<[CardIssue]>)>) -> Box<[(String, Box
     issues.into()
 }
 
-fn blob_to_issues(
-    fname: &str,
-    file: Result<Vec<u8>, gloo::file::FileReadError>,
-) -> Box<[(String, Box<[CardIssue]>)]> {
-    let mut issues: Vec<(String, Box<[CardIssue]>)> = Vec::new();
+fn blob_to_issues(fname: &str, file: Result<Vec<u8>, gloo::file::FileReadError>) -> CardsIssues {
+    let mut issues: Vec<(Box<str>, Box<[CardIssue]>)> = Vec::new();
     match file {
         Ok(buf) => {
             let mut c = Cursor::new(buf);
@@ -142,18 +141,13 @@ fn blob_to_issues(
     sort_issues(issues)
 }
 
-fn text_to_issues(
-    ag: &str,
-    free: bool,
-    event: &str,
-    input: &str,
-) -> Box<[(String, Box<[CardIssue]>)]> {
+fn text_to_issues(ag: &str, free: bool, event: &str, input: &str) -> CardsIssues {
     let mut issues = Vec::new();
 
     let result = parse_text(ag, free, event, input);
     match result {
         Ok(ParseResult::Element(category, element)) => issues.push((
-            String::new(),
+            Box::default(),
             match element {
                 // TODO make this split out part of check_one_element?
                 // reported DD is ignored because there is none for text input
@@ -163,12 +157,12 @@ fn text_to_issues(
         )),
         Ok(ParseResult::Card(card, ci)) => {
             issues.push((
-                String::new(),
+                Box::default(),
                 [ci, run_checks(&card), run_acro_checks(&card)].concat().into(),
             ));
         }
         Err(e) => {
-            issues.push((String::new(), ci_errs(e.to_string())));
+            issues.push((Box::default(), ci_errs(e.to_string())));
         }
     }
 
@@ -186,7 +180,7 @@ fn clear_issues(document: &Document) {
     }
 }
 
-fn show_issues(document: &Document, issues: &[(String, Box<[CardIssue]>)]) {
+fn show_issues(document: &Document, issues: &[(Box<str>, Box<[CardIssue]>)]) {
     if let Some(results) = document.get_element_by_id("results") {
         for (card_name, ci) in issues {
             let table = add_card_issues(document, card_name, ci);
