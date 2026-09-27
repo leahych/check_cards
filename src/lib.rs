@@ -27,6 +27,10 @@ use std::iter::Sum;
 use std::ops::{Add, Div, Mul};
 use strum_macros::Display;
 
+// used when parsing and when filling in for older cards, put in a
+// common spot so we can't mess up what variation is used for parsing
+const SUCON_TEXT: &str = "SuCon";
+
 #[derive(Debug, Default, Eq, Ord, PartialEq, PartialOrd)]
 pub struct MilliDD(pub u32);
 
@@ -296,22 +300,23 @@ pub const fn get_expected_routine_time(category: &Category) -> Option<NaiveTime>
     match category {
         // 12-U
         Category { ag: AG12U, event: Solo,      free: true } => Some(routine_time(2,  0)),
-        Category { ag: AG12U, event: Duet,      free: true } => Some(routine_time(2, 30)),
+        Category { ag: AG12U, event: Duet,      free: true } => Some(routine_time(2, 10)),
         Category { ag: AG12U, event: MixedDuet, free: true } => Some(routine_time(2, 30)),
-        Category { ag: AG12U, event: Team,      free: true } => Some(routine_time(3,  0)),
-        Category { ag: AG12U, event: Combo,     free: true } => Some(routine_time(3,  0)),
+        Category { ag: AG12U, event: Team,      free: true } => Some(routine_time(2, 50)),
+        Category { ag: AG12U, event: Combo,     free: true } => Some(routine_time(2, 45)),
         // Youth
         Category { ag: Youth, event: Solo,      free: true } => Some(routine_time(2,  0)),
-        Category { ag: Youth, event: Duet,      free: true } => Some(routine_time(2, 30)),
+        Category { ag: Youth, event: Duet,      free: true } => Some(routine_time(2, 10)),
         Category { ag: Youth, event: MixedDuet, free: true } => Some(routine_time(2, 30)),
-        Category { ag: Youth, event: Team,      free: true } => Some(routine_time(3,  0)),
-        Category { ag: Youth, event: Combo,     free: true } => Some(routine_time(3,  0)),
+        Category { ag: Youth, event: Team,      free: true } => Some(routine_time(2, 50)),
+        Category { ag: Youth, event: Combo,     free: true } => Some(routine_time(2, 45)),
+        Category { ag: Youth, event: Acrobatic, free: true } => Some(routine_time(2, 30)),
         // JR/SR free
-        Category { ag: JRSR, event: Solo,       free: true } => Some(routine_time(2, 15)),
-        Category { ag: JRSR, event: Duet,       free: true } => Some(routine_time(2, 45)),
+        Category { ag: JRSR, event: Solo,       free: true } => Some(routine_time(2, 10)),
+        Category { ag: JRSR, event: Duet,       free: true } => Some(routine_time(2, 25)),
         Category { ag: JRSR, event: MixedDuet,  free: true } => Some(routine_time(2, 45)),
         Category { ag: JRSR, event: Trio,       free: true } => Some(routine_time(2, 45)),
-        Category { ag: JRSR, event: Team,       free: true } => Some(routine_time(3, 30)),
+        Category { ag: JRSR, event: Team,       free: true } => Some(routine_time(3, 10)),
         Category { ag: JRSR, event: Acrobatic,  free: true } => Some(routine_time(3,  0)),
         Category { ag: JRSR, event: Combo,      free: true } => Some(routine_time(3, 30)),
         // JR/SR tech

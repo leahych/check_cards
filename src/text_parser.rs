@@ -48,12 +48,20 @@ mod tests {
     use crate::AgeGroups::{JRSR, Youth};
     use crate::Category;
     use crate::Events::{Combo, Duet, MixedDuet, Solo, Team};
-    use crate::element::ElementKind::{ChoHy, Hybrid, PairAcro, SuConn, TRE, TeamAcro};
+    use crate::element::ElementKind::{ChoHy, Hybrid, PairAcro, SuCon, TRE, TeamAcro};
     use crate::hybrid::{AwLC, ConnLC, Decl, Factor, HybridDecl, LevelCode, TwistLC};
     use crate::pair_acro::PairAcroKind;
     use crate::team_acro::{AConst, ADir, APos, ARotation, AcroA, Positions, TeamAcroKind};
     use crate::text_parser::{ParseResult, parse_text};
     use crate::tre::{SoloTRE, TREKind};
+
+    #[test]
+    fn test_parse_text_err() {
+        let ParseResult::Card(_card, ci) = parse_text("Youth", true, "", "TRE1A\n").unwrap() else {
+            panic!("Expected a card result");
+        };
+        assert_eq!(ci.len(), 1);
+    }
 
     #[test]
     fn test_parse_text_chohy() {
@@ -66,8 +74,8 @@ mod tests {
     #[test]
     fn test_parse_text_suconn() {
         assert_eq!(
-            parse_text("SR", true, "Mixed Duet", "SuConn").unwrap(),
-            ParseResult::Element(Category { ag: JRSR, free: true, event: MixedDuet }, SuConn)
+            parse_text("SR", true, "Mixed Duet", "SuCon").unwrap(),
+            ParseResult::Element(Category { ag: JRSR, free: true, event: MixedDuet }, SuCon(1))
         );
     }
 

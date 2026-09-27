@@ -1,4 +1,3 @@
-use crate::AgeGroups::JRSR;
 use crate::Events::{Acrobatic, Combo, Duet, MixedDuet, Solo, Team, Trio};
 use crate::team_acro::TeamAcroKind::{Airborne, Balance, Combined, Platform};
 use crate::team_acro::{Positions, TeamAcroKind};
@@ -16,37 +15,17 @@ use std::str::FromStr;
 
 fn check_dd_limits(category: Category, acro: &TeamAcroKind) -> Box<[CardIssue]> {
     use AgeGroups::*;
-
-    const COMBO_12U: Category = Category { ag: AG12U, event: Combo, free: true };
-    const COMBO_YOUTH: Category = Category { ag: Youth, event: Combo, free: true };
-    const TEAM_12U: Category = Category { ag: AG12U, event: Team, free: true };
-    const TEAM_YOUTH: Category = Category { ag: Youth, event: Team, free: true };
-    const TEAM_JRSR_TECH: Category = Category { ag: JRSR, event: Team, free: false };
-
-    #[rustfmt::skip]
-    const fn get_max_dd(category: Category, acro: &TeamAcroKind) -> Option<MilliDD> {
+    const fn get_max_dd(ag: AgeGroups, acro: &TeamAcroKind) -> Option<MilliDD> {
         #[allow(clippy::match_same_arms)]
-        match (category, acro) {
-            (TEAM_12U,       Airborne(_)) => Some(MilliDD(2500)),
-            (COMBO_12U,      Airborne(_)) => Some(MilliDD(2500)),
-            (TEAM_YOUTH,     Airborne(_)) => Some(MilliDD(2700)),
-            (COMBO_YOUTH,    Airborne(_)) => Some(MilliDD(2700)),
-            (TEAM_JRSR_TECH, Airborne(_)) => Some(MilliDD(3000)),
-            (TEAM_12U,       Balance(_))  => Some(MilliDD(2600)),
-            (COMBO_12U,      Balance(_))  => Some(MilliDD(2600)),
-            (TEAM_YOUTH,     Balance(_))  => Some(MilliDD(2800)),
-            (COMBO_YOUTH,    Balance(_))  => Some(MilliDD(2800)),
-            (TEAM_JRSR_TECH, Balance(_))  => Some(MilliDD(3000)),
-            (TEAM_12U,       Combined(_)) => Some(MilliDD(2600)),
-            (COMBO_12U,      Combined(_)) => Some(MilliDD(2600)),
-            (TEAM_YOUTH,     Combined(_)) => Some(MilliDD(2800)),
-            (COMBO_YOUTH,    Combined(_)) => Some(MilliDD(2800)),
-            (TEAM_JRSR_TECH, Combined(_)) => Some(MilliDD(3000)),
-            (TEAM_12U,       Platform(_)) => Some(MilliDD(2800)),
-            (COMBO_12U,      Platform(_)) => Some(MilliDD(2800)),
-            (TEAM_YOUTH,     Platform(_)) => Some(MilliDD(3000)),
-            (COMBO_YOUTH,    Platform(_)) => Some(MilliDD(3000)),
-            (TEAM_JRSR_TECH, Platform(_)) => Some(MilliDD(3000)),
+        match (ag, acro) {
+            (AG12U, Airborne(_)) => Some(MilliDD(2500)),
+            (AG12U, Balance(_)) => Some(MilliDD(2600)),
+            (AG12U, Combined(_)) => Some(MilliDD(2600)),
+            (AG12U, Platform(_)) => Some(MilliDD(2800)),
+            (Youth, Airborne(_)) => Some(MilliDD(2700)),
+            (Youth, Balance(_)) => Some(MilliDD(2800)),
+            (Youth, Combined(_)) => Some(MilliDD(2800)),
+            (Youth, Platform(_)) => Some(MilliDD(3000)),
             _ => None,
         }
     }
@@ -57,7 +36,7 @@ fn check_dd_limits(category: Category, acro: &TeamAcroKind) -> Box<[CardIssue]> 
     // error even if the calculation is wrong. Using the calculated DD
     // makes this work from the text entry mode where there is no
     // reported DD to check against.
-    if let Some(max) = get_max_dd(category, acro)
+    if let Some(max) = get_max_dd(category.ag, acro)
         && acro.dd() > max
     {
         ci_err(
@@ -78,15 +57,17 @@ fn check_groups_for_acro_routine(card: &CoachCard) -> Box<[CardIssue]> {
     ];
 
     let mut ci = Vec::new();
-    if card.category.event != Acrobatic {
-        return ci.into();
-    }
 
     for (name, matcher) in MATCHERS {
         let num = card.team_acros().filter(|(_, a)| matcher(a)).count();
-        if num == 0 {
+        if num == 0
+            && !(card.category.ag == AgeGroups::Youth && name == &"Combined")
+            && card.category.event == Acrobatic
+        {
             ci_err(&mut ci, format!("Missing {name} acrobatic"));
-        } else if num > 2 {
+        } else if num > 1 && card.category.free == false {
+            ci_err(&mut ci, "tech team acrobatics must be from different families".to_string());
+        } else if num > 2 && card.category.event == Acrobatic {
             ci_err(&mut ci, format!("may not have more than 2 {name} acrobatics"));
         }
     }
@@ -613,16 +594,6 @@ fn check_reqs_b(acro: &AcroB) -> Box<[CardIssue]> {
         );
     }
 
-    if acro.conn == BConn::Le && !matches!(acro.construction, BConst::_2SupU | BConst::_2SupM) {
-        ci_warn(
-            &mut ci,
-            format!(
-                "Lemur connections require 2 support athletes with at least 1 head-up. A construction of 2SupU or 2SupM should be used instead of {}",
-                acro.construction
-            ),
-        );
-    }
-
     let req_r_for_conn = acro.conn.required_rotations();
     if let Some(r) = &acro.rotation
         && !req_r_for_conn.contains(&r.group())
@@ -945,7 +916,6 @@ pub fn run_acro_checks(card: &CoachCard) -> Box<[CardIssue]> {
 #[cfg_attr(test, allow(clippy::too_many_lines))]
 mod tests {
     use super::*;
-    use crate::AgeGroups::{AG12U, Youth};
     use crate::{Element, ElementKind};
 
     fn elements(acros: &[&str], to_element: fn(&str) -> ElementKind) -> Box<[Element]> {
@@ -998,17 +968,26 @@ mod tests {
         let ex_c = "C-Thr^2F-Forw-bb";
         let ex_p = "P-P-HA-bb/2wi-Porp/Trav";
 
-        let acat = Category { ag: JRSR, event: Acrobatic, free: true };
-        let tcat = Category { ag: JRSR, event: Team, free: true };
+        let ycat = Category { ag: AgeGroups::Youth, event: Acrobatic, free: true };
+        let acat = Category { ag: AgeGroups::JRSR, event: Acrobatic, free: true };
+        let tfcat = Category { ag: AgeGroups::JRSR, event: Team, free: true };
+        let ttcat = Category { ag: AgeGroups::JRSR, event: Team, free: false };
 
         let tests: &[(&str, Category, &[&str], usize)] = &[
             ("all_groups", acat, &[ex_a, ex_b, ex_c, ex_p], 0),
+            ("all_groups_youth", ycat, &[ex_a, ex_b, ex_c, ex_p], 0),
             ("missing_a", acat, &[ex_b, ex_c, ex_p], 1),
-            ("missing_a_team", tcat, &[ex_b, ex_c, ex_p], 0),
+            ("missing_a_youth", ycat, &[ex_b, ex_c, ex_p], 1),
+            ("missing_a_team", tfcat, &[ex_b, ex_c, ex_p], 0),
             ("missing_b", acat, &[ex_a, ex_c, ex_p], 1),
             ("missing_c", acat, &[ex_a, ex_b, ex_p], 1),
+            ("missing_c_youth", ycat, &[ex_a, ex_b, ex_p], 0),
             ("missing_p", acat, &[ex_a, ex_b, ex_c], 1),
             ("too_many_a", acat, &[ex_a, ex_a, ex_a, ex_b, ex_c, ex_p], 1),
+            ("too_many_a_youth", ycat, &[ex_a, ex_a, ex_a, ex_b, ex_c, ex_p], 1),
+            ("same_family_tteam", ttcat, &[ex_a, ex_a], 1),
+            ("same_family_fteam", tfcat, &[ex_a, ex_a], 0),
+            ("diff_family_tteam", ttcat, &[ex_a, ex_b], 0),
         ];
         for (name, cat, a, expected) in tests {
             let card = &CoachCard { category: *cat, elements: team_acros(a), ..Default::default() };
@@ -1018,29 +997,21 @@ mod tests {
 
     #[test]
     fn test_check_dd_limits() {
-        const FTEAM: Category = Category { ag: JRSR, event: Team, free: true };
-        const TTEAM: Category = Category { ag: JRSR, event: Team, free: false };
+        const TEAM_12U: Category = Category { ag: AgeGroups::AG12U, event: Team, free: true };
+        const TEAM_YOUTH: Category = Category { ag: AgeGroups::Youth, event: Team, free: true };
+
         const TESTS: &[(&str, Category, &str, usize)] = &[
-            ("free_ok", FTEAM, "A-Sq-Back-tk-s2.5", 0),
-            ("tech_ok_a", TTEAM, "A-Sq-Back-tk-s1t2", 0),
-            ("tech_high_a", TTEAM, "A-Sq-Back-tk-s2.5", 1),
-            ("tech_high_b", TTEAM, "B-LH-LiH-br/2wi-r0.5L-Pos3", 1),
-            ("tech_high_c", TTEAM, "C-Thr>StH>1F-Forw-he/2ba-1F>1F+", 1),
-            ("tech_high_p", TTEAM, "P-2S-2pBb-qu-Dive", 1),
-            ("12u_ok", Category { ag: AG12U, event: Team, free: true }, "P-B-2b/-hp/2ow", 0),
-            ("12u_high_a", Category { ag: AG12U, event: Team, free: true }, "A-Sq-Rev-tk-s1", 1),
-            ("12u_high_b", Category { ag: AG12U, event: Team, free: true }, "B-St-FP-ne", 1),
-            ("12u_high", Category { ag: AG12U, event: Team, free: true }, "P-B-2b/-hp/2ow-Pos3", 1),
-            ("youth_ok", Category { ag: Youth, event: Team, free: true }, "P-B-2b/-hp/2ow-Pos3", 0),
-            ("youth_ok", Category { ag: Youth, event: Team, free: true }, "A-Sq-Rev-rg-s1", 0),
-            (
-                "youth_high",
-                Category { ag: Youth, event: Team, free: true },
-                "A-Sq-Rev-pk/2sp-s1",
-                1,
-            ),
-            ("youth_high_b", Category { ag: Youth, event: Team, free: true }, "B-StH-1F1F-he", 1),
-            ("youth_high_p", Category { ag: Youth, event: Team, free: true }, "P-B-2pBb-qu/2wi", 1),
+            ("12u_hi_a", TEAM_12U, "A-Sq-Rev-tk-s1", 1),
+            ("12u_hi_b", TEAM_12U, "B-St-FP-ne", 1),
+            ("12u_hi_c", TEAM_12U, "C-Thr^Lh-Bln-br/2ln", 1),
+            ("12u_hi_p", TEAM_12U, "P-B-2b/-hp/2ow-Pos3", 1),
+            ("12u_ok_p", TEAM_12U, "P-B-2b/-hp/2ow", 0),
+            ("youth_hi_a", TEAM_YOUTH, "A-Sq-Rev-pk/2sp-s1", 1),
+            ("youth_hi_b", TEAM_YOUTH, "B-StH-1F1F-he", 1),
+            ("youth_hi_c", TEAM_YOUTH, "C-Thr^Lh-Bln-br/2ln-Ct1.5", 1),
+            ("youth_hi_p", TEAM_YOUTH, "P-B-2pBb-qu/2wi", 1),
+            ("youth_ok_a", TEAM_YOUTH, "A-Sq-Rev-rg-s1", 0),
+            ("youth_ok_p", TEAM_YOUTH, "P-B-2b/-hp/2ow-Pos3", 0),
         ];
         for (name, cat, acro, expected) in TESTS {
             let res = check_dd_limits(*cat, &acro.parse().unwrap());
@@ -1082,6 +1053,8 @@ mod tests {
             ("hula_with_up_ok", check_reqs, "A-Shou-Up-rg-Hula", 0),
             ("fs_with_r_err", check_reqs, "B-St-FS-sd-r0.5", 2),
             ("fp_with_r_ok", check_reqs, "B-St-FP-ba-r0.5", 0),
+            ("fs_with_r_bang_err", check_reqs, "B-St-FS-sd-r0.5!", 2),
+            ("1p1p_with_r_bang_ok", check_reqs, "B-St-1P1P-bb-r0.5!", 0),
             ("fp_with_r_slash_err", check_reqs, "B-St-FP-ba-r0.5/", 2),
             ("fs_with_r_slash_ok", check_reqs, "B-St-FS-sd-r0.5/", 0),
             ("fs_with_r_plus_err", check_reqs, "B-St-FS-sd-r0.5+", 3),
@@ -1134,6 +1107,8 @@ mod tests {
             ("supu_le_r_err", check_reqs, "B-2SupU-Le-bb/2ow-r0.5", 2),
             ("fp_one_leg_r_ok", check_reqs, "B-St-FP-he/2ba-r0.5", 0),
             ("sp_with_split_err", check_reqs, "A-2Sup-Up-sp-Split", 1),
+            ("feet_with_shou_err", check_reqs, "A-Shou-Back-tk-Feet", 1),
+            ("feet_with_feet_ok", check_reqs, "A-Feet-Back-tk-Feet", 0),
             ("box_with_porp_err", check_reqs, "P-P-4p-bo-Porp", 1),
             ("drop_with_fs_ok", check_reqs, "B-St-FS-dr", 0),
             ("dup_bonuses_a", check_team_acro_validity, "A-Feet-Back-tk-Feet/Feet", 1),
@@ -1190,8 +1165,12 @@ mod tests {
             ("sit_conn_head_sit_pos", check_reqs, "B-St-S+-mo", 0),
             ("handstand_conn_without_bb", check_reqs, "B-St-PP-ow", 1),
             ("handstand_conn_with_bb", check_reqs, "B-St-PP-bb/2ow", 0),
-            ("le_with_2sup_d_warn", check_reqs, "B-2SupD-Le-so", 3),
+            ("le_with_2sup_d_warn", check_reqs, "B-2SupD-Le-so", 2),
             ("le_with_2sup_u_ok", check_reqs, "B-2SupU-Le-so", 0),
+            ("tow_with_2SupM_err", check_reqs, "B-2SupM-Tow-so", 2),
+            ("le_with_2SupM_ok", check_reqs, "B-2SupM-Le-so", 0),
+            ("le_with_2SupD2F_err", check_reqs, "B-2SupD2F-Le-so", 2),
+            ("two_with_2SupD2F_ok", check_reqs, "B-2SupD2F-Tow-so", 0),
             ("ba_with_wi_err", check_reqs, "P-2S-BA-wi", 1),
             ("ba_wtih_br_ok", check_reqs, "P-2S-BA-br", 0),
             ("two_pbb_with_wi_err", check_reqs, "P-B-2pBb-wi", 1),
@@ -1235,6 +1214,7 @@ mod tests {
 
     #[test]
     fn test_check_age_restrictions() {
+        use AgeGroups::*;
         let acro = "C-Thr>StH-Forw-ln-2F>2F".parse().unwrap();
         assert_eq!(check_age_restrictions(AG12U, &acro).len(), 0);
         assert_eq!(check_age_restrictions(Youth, &acro).len(), 0);

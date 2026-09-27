@@ -97,6 +97,31 @@ pub enum PairAcroKind {
     #[strum(to_string = "W!s1F")]
     WHeadDowns1F,
     JsF1B,
+    #[strum(to_string = "Js1.5B")]
+    Js1_5B,
+    Js1Ro,
+    Js1R,
+    #[strum(to_string = "SL!2+2")]
+    SLHeadDown2Plusr2,
+    Js1Bo,
+    #[strum(to_string = "W!+catchSL")]
+    WHeadDownPluscatchSL,
+    #[strum(to_string = "W!+catchSL+r1")]
+    WHeadDownPluscatchSLPlusr1,
+    Js1p,
+    #[strum(to_string = "Js1t0.5B+pt")]
+    Js1t0_5BPluspt,
+    #[strum(to_string = "Js1B+pt")]
+    Js1BPluspt,
+    #[strum(to_string = "SL!f2r0.5+r1>")]
+    SLHeadDownf2r0_5Plusr1Travel,
+    #[strum(to_string = "W!s0.5p")]
+    WHeadDowns0_5p,
+    JBs1t1,
+    JBss1t1,
+    #[strum(to_string = "SL!f2r1+r1")]
+    SLHeadDownf2r1Plusr1,
+    Jdt1,
 }
 
 impl DD for PairAcroKind {
@@ -153,6 +178,22 @@ impl DD for PairAcroKind {
             Self::Js1BPluspFlex => 2250,
             Self::WHeadDowns1F => 2300,
             Self::JsF1B => 2300,
+            Self::SLHeadDownf2r0_5Plusr1Travel => 2300,
+            Self::WHeadDowns0_5p => 1550,
+            Self::JBs1t1 => 2500,
+            Self::JBss1t1 => 2900,
+            Self::SLHeadDownf2r1Plusr1 => 2300,
+            Self::Jdt1 => 1900,
+            Self::Js1_5B => 2300,
+            Self::Js1Ro => 2900,
+            Self::Js1R => 2300,
+            Self::SLHeadDown2Plusr2 => 2500,
+            Self::Js1Bo => 2500,
+            Self::WHeadDownPluscatchSL => 2500,
+            Self::WHeadDownPluscatchSLPlusr1 => 2600,
+            Self::Js1p => 2300,
+            Self::Js1t0_5BPluspt => 2200,
+            Self::Js1BPluspt => 2000,
         })
     }
 }
@@ -206,6 +247,18 @@ impl PairAcroKind {
             | Self::Js1BPlusFlex => true,
             Self::SLHeadDownFlex2Plusr1Travel => false,
             Self::Js1BPluspFlex | Self::WHeadDowns1F | Self::JsF1B => true,
+            Self::Js1_5B | Self::Js1Ro | Self::Js1R => true,
+            Self::SLHeadDown2Plusr2 => false,
+            Self::Js1Bo
+            | Self::WHeadDownPluscatchSL
+            | Self::WHeadDownPluscatchSLPlusr1
+            | Self::Js1p
+            | Self::Js1t0_5BPluspt
+            | Self::Js1BPluspt => true,
+            Self::SLHeadDownf2r0_5Plusr1Travel => false,
+            Self::WHeadDowns0_5p | Self::JBs1t1 | Self::JBss1t1 => true,
+            Self::SLHeadDownf2r1Plusr1 => false,
+            Self::Jdt1 => true,
         }
     }
 

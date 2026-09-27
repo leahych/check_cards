@@ -1,6 +1,6 @@
 use crate::Events::{Duet, Trio};
 use crate::element::parse_elem_kind;
-use crate::{CardIssue, Category, CoachCard, Element, MilliDD, ci_errs};
+use crate::{CardIssue, Category, CoachCard, Element, MilliDD, SUCON_TEXT, ci_errs};
 use calamine::{Data, DataType, Range, Reader, Rows, Xls, Xlsx};
 use chrono::NaiveTime;
 use std::io::{Read, Seek};
@@ -54,7 +54,9 @@ fn parse_element(
         "ACRO" | "ACROBATIC" | "ACRO-A" | "ACRO-B" | "ACRO-C" | "ACRO-P" => row_cols
             .find(|x| !matches!(x.as_str(), "ACRO" | "ACRO-A" | "ACRO-B" | "ACRO-C" | "ACRO-P"))
             .unwrap_or_default(),
-        "SUCONN" | "TRANS-SUCONN" => "SuConn".to_owned(),
+        "SUCON" | "SUCONN" | "TRANS-SUCON" | "TRANS-SUCONN" => {
+            row_cols.next().unwrap_or_else(|| SUCON_TEXT.into())
+        }
         "HYBRID" | "REQHY" => row_cols.collect::<Vec<_>>().join(" "),
         // not really an error, but we don't want transitions to be an
         // element type since all we need to parse from them is a stop

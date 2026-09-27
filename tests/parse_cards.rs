@@ -180,30 +180,11 @@ fn test_parse_iss_team() {
                         Some(MilliDD(2550))
                     ),
                 },
-                Element {
-                    number: 9,
-                    start_time: NaiveTime::from_hms_opt(0, 3, 15).unwrap(),
-                    stop_time: NaiveTime::from_hms_opt(0, 3, 26).unwrap(),
-                    kind: Hybrid(
-                        HybridDecl {
-                            decls: Box::from([
-                                Decl { lc: Aw(AB), f: Factor::No },
-                                Decl { lc: Aw(A6), f: Factor::No },
-                                Decl { lc: Twist(RB), f: Factor::No },
-                                Decl { lc: Aw(A1c), f: Factor::No },
-                                Decl { lc: Twist(RO1), f: Factor::No },
-                                Decl { lc: Flex(F2b), f: Factor::No },
-                            ]),
-                            pc_bonus: Some(PatternChanges(3))
-                        },
-                        Some(MilliDD(3250))
-                    ),
-                },
             ]
             .into(),
             theme: "Test".into(),
             iss_ver: Some(Version::new(3, 0, 6)),
-            end_time: NaiveTime::from_hms_opt(0, 3, 29).unwrap(),
+            end_time: NaiveTime::from_hms_opt(0, 3, 14).unwrap(),
         },
         issues.first().unwrap().1
     );
@@ -245,7 +226,7 @@ fn test_parse_iss_mixed_duet() {
                     number: 0,
                     start_time: NaiveTime::from_hms_opt(0, 0, 0).unwrap(),
                     stop_time: NaiveTime::from_hms_opt(0, 0, 1).unwrap(),
-                    kind: SuConn,
+                    kind: SuCon(1),
                 },
                 Element {
                     number: 1,
@@ -254,7 +235,7 @@ fn test_parse_iss_mixed_duet() {
                     kind: Hybrid(
                         HybridDecl {
                             decls: Box::from([
-                                Decl { lc: Thrust(T9a), f: Factor::No },
+                                Decl { lc: Thrust(T9), f: Factor::No },
                                 Decl { lc: Conn(CB, false), f: Factor::No },
                                 Decl { lc: Conn(C3, false), f: Factor::No }
                             ]),

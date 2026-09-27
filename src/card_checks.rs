@@ -134,25 +134,26 @@ const fn element_maxes(category: &Category) -> Option<EMax> {
     match (category.ag, category.event, category.free) {
         (AG12U, Solo, true) =>      Some(EMax { chohy: 0, suconn: 0, tre: 0, acro: 0, hybrid: 4 }),
         (AG12U, Duet, true) =>      Some(EMax { chohy: 0, suconn: 0, tre: 0, acro: 1, hybrid: 4 }),
-        (AG12U, MixedDuet, true) => Some(EMax { chohy: 0, suconn: 3, tre: 0, acro: 2, hybrid: 3 }),
+        (AG12U, MixedDuet, true) => Some(EMax { chohy: 1, suconn: 3, tre: 0, acro: 2, hybrid: 3 }),
         (AG12U, Team, true) =>      Some(EMax { chohy: 0, suconn: 0, tre: 0, acro: 3, hybrid: 4 }),
         (AG12U, Combo, true) =>     Some(EMax { chohy: 1, suconn: 0, tre: 0, acro: 3, hybrid: 4 }),
-        (Youth, Solo, true) =>      Some(EMax { chohy: 0, suconn: 0, tre: 0, acro: 0, hybrid: 5 }),
-        (Youth, Duet, true) =>      Some(EMax { chohy: 0, suconn: 0, tre: 0, acro: 1, hybrid: 5 }),
+        (Youth, Solo, true) =>      Some(EMax { chohy: 0, suconn: 0, tre: 0, acro: 0, hybrid: 4 }),
+        (Youth, Duet, true) =>      Some(EMax { chohy: 0, suconn: 0, tre: 0, acro: 1, hybrid: 4 }),
         (Youth, MixedDuet, true) => Some(EMax { chohy: 0, suconn: 3, tre: 0, acro: 2, hybrid: 3 }),
-        (Youth, Team, true) =>      Some(EMax { chohy: 0, suconn: 0, tre: 0, acro: 3, hybrid: 5 }),
+        (Youth, Team, true) =>      Some(EMax { chohy: 0, suconn: 0, tre: 0, acro: 3, hybrid: 4 }),
         (Youth, Combo, true) =>     Some(EMax { chohy: 1, suconn: 0, tre: 0, acro: 4, hybrid: 4 }),
-        (JRSR, Solo, true) =>       Some(EMax { chohy: 0, suconn: 0, tre: 0, acro: 0, hybrid: 6 }),
-        (JRSR, Duet, true) =>       Some(EMax { chohy: 0, suconn: 0, tre: 0, acro: 2, hybrid: 6 }),
-        (JRSR, MixedDuet, true) =>  Some(EMax { chohy: 0, suconn: 4, tre: 0, acro: 3, hybrid: 4 }),
+        (Youth, Acrobatic, true) => Some(EMax { chohy: 0, suconn: 0, tre: 0, acro: 5, hybrid: 0 }),
+        (JRSR, Solo, true) =>       Some(EMax { chohy: 1, suconn: 0, tre: 0, acro: 0, hybrid: 4 }),
+        (JRSR, Duet, true) =>       Some(EMax { chohy: 0, suconn: 0, tre: 0, acro: 2, hybrid: 4 }),
+        (JRSR, MixedDuet, true) =>  Some(EMax { chohy: 1, suconn: 4, tre: 0, acro: 3, hybrid: 3 }),
         (JRSR, Trio, true) =>       Some(EMax { chohy: 0, suconn: 0, tre: 0, acro: 3, hybrid: 5 }),
-        (JRSR, Team, true) =>       Some(EMax { chohy: 0, suconn: 0, tre: 0, acro: 3, hybrid: 6 }),
+        (JRSR, Team, true) =>       Some(EMax { chohy: 0, suconn: 0, tre: 0, acro: 3, hybrid: 5 }),
         (JRSR, Acrobatic, true) =>  Some(EMax { chohy: 0, suconn: 0, tre: 0, acro: 7, hybrid: 0 }),
         (JRSR, Combo, true) =>      Some(EMax { chohy: 1, suconn: 0, tre: 0, acro: 4, hybrid: 5 }),
         (JRSR, Solo, false) =>      Some(EMax { chohy: 0, suconn: 0, tre: 5, acro: 0, hybrid: 1 }),
         (JRSR, Duet, false) =>      Some(EMax { chohy: 0, suconn: 0, tre: 5, acro: 1, hybrid: 1 }),
         (JRSR, MixedDuet, false) => Some(EMax { chohy: 0, suconn: 3, tre: 3, acro: 2, hybrid: 2 }),
-        (JRSR, Team, false) =>      Some(EMax { chohy: 0, suconn: 0, tre: 5, acro: 1, hybrid: 2 }),
+        (JRSR, Team, false) =>      Some(EMax { chohy: 0, suconn: 0, tre: 5, acro: 2, hybrid: 1 }),
         _ => None,
     }
 }
@@ -169,7 +170,7 @@ fn check_routine_maxes(card: &CoachCard) -> Box<[CardIssue]> {
         for element in elements {
             match element.kind {
                 ElementKind::ChoHy(_) => el.chohy += 1,
-                ElementKind::SuConn => el.suconn += 1,
+                ElementKind::SuCon(count) => el.suconn += count,
                 ElementKind::TRE(..) => el.tre += 1,
                 ElementKind::PairAcro(..) | ElementKind::TeamAcro(..) => el.acro += 1,
                 ElementKind::Hybrid(..) => el.hybrid += 1,
@@ -247,6 +248,13 @@ fn check_factoring(category: Category, decls: &[Decl]) -> Box<[CardIssue]> {
         if decls.iter().any(|d| d.f != No && matches!(d.lc, Conn(_, _))) {
             ci_err(&mut ci, "factoring connections in a Duet seems suspicious");
         }
+    }
+
+    if decls.iter().filter(|d| d.f == _0_3).count() > 5 {
+        ci_err(&mut ci, "cannot factor by 0.3 more than 5 times in one hybrid");
+    }
+    if decls.iter().filter(|d| d.f == _0_5).count() > 5 {
+        ci_err(&mut ci, "cannot factor by 0.5 more than 5 times in one hybrid");
     }
 
     // don't warn about C4+*0.5 C2*0.3 since that is valid for a
@@ -413,10 +421,10 @@ fn check_hybrid_common_base_marks(category: Category, decls: &[Decl]) -> Box<[Ca
             );
         }
 
-        if lc == Thrust(T9b) {
+        if lc == Thrust(T9) {
             ci_warn(
                 &mut ci,
-                "T9b has a high risk of base marking, it needs 8.5 height and a 1 second hold",
+                "T9 has a high risk of base marking, it needs 8.5 height and a 1 second hold",
             );
         }
 
@@ -564,7 +572,7 @@ pub fn check_one_element(category: Category, element: &ElementKind) -> Box<[Card
             ci.extend(check_dd_limits(category, element));
             ci.extend(check_small_bonuses(category, hybrid));
         }
-        ChoHy(_) | PairAcro(_, _) | TeamAcro(_, _) | SuConn | TRE(_, _) => {}
+        ChoHy(_) | PairAcro(_, _) | TeamAcro(_, _) | SuCon(_) | TRE(_, _) => {}
     }
     ci.into()
 }
@@ -684,6 +692,10 @@ mod tests {
             ("repeat_decl_warn", check_factoring, FTEAM, "2R1*0.5 2R1*0.3", 1),
             ("non_repeat_decl_ok", check_factoring, FTEAM, "2R1*0.5 1R1*0.5", 0),
             ("cplus_less_half_warn", check_factoring, FTEAM, "C1a+*0.3", 1),
+            ("x5_0.3_ok", check_factoring, FTEAM, "R1*0.3 R2*0.3 R1*0.3 R2*0.3 R1*0.3", 0),
+            ("x5_0.3_err", check_factoring, FTEAM, "R1*0.3 R2*0.3 R1*0.3 R2*0.3 R1*0.3 R2*0.3", 1),
+            ("x5_0.3_ok", check_factoring, FTEAM, "R1*0.5 R2*0.5 R1*0.5 R2*0.5 R1*0.5", 0),
+            ("x5_0.3_err", check_factoring, FTEAM, "R1*0.5 R2*0.5 R1*0.5 R2*0.5 R1*0.5 R2*0.5", 1),
             ("walkout_in_middle_err", check_hybrid_start_end, def, "F1a F2a R1", 1),
             ("walkout_at_end_ok", check_hybrid_start_end, def, "R1 F1a F2a", 0),
             ("walkout_at_end_pc", check_hybrid_start_end, def, "R1 F1a F2a 2PC", 0),
@@ -698,6 +710,8 @@ mod tests {
             ("duet_c4_ok", check_connections_in_non_team, FDUET, "C4", 0),
             ("solo_cb", check_connections_in_non_team, FSOLO, "CB", 1),
             ("a5_warn", check_hybrid_common_base_marks, def, "A4b", 1),
+            ("t10_ok", check_hybrid_common_base_marks, def, "T10", 0),
+            ("t9_warn", check_hybrid_common_base_marks, def, "T9", 1),
             ("f10_warn", check_hybrid_common_base_marks, def, "F10*0.5", 1),
             ("other_decls_ok", check_hybrid_common_base_marks, def, "A5 F6a*0.5 F6c", 0),
             ("c4_trio_warn", check_hybrid_common_base_marks, TRIO, "C4", 1),
@@ -727,28 +741,26 @@ mod tests {
 
     #[test]
     fn test_routine_issue() {
-        let five_hybrids: &[&str] = &["R1", "R1", "R1", "R1", "R1"];
-
         let ag12solo = Category { ag: AG12U, event: Solo, free: true };
         let ysolo = Category { ag: Youth, event: Solo, free: true };
 
         let tests: &[(&str, fn(&CoachCard) -> Box<[CardIssue]>, Category, &[&str], usize)] = &[
-            ("too_many_hybrids", check_routine_maxes, ag12solo, five_hybrids, 1),
-            ("too_few_hybrids", check_routine_maxes, FSOLO, five_hybrids, 1),
-            ("ok_hybrids", check_routine_maxes, ysolo, five_hybrids, 0),
+            ("too_many_hybrids", check_routine_maxes, ag12solo, &["R1", "R1", "R1", "R1", "R1"], 1),
+            ("too_few_hybrids", check_routine_maxes, FSOLO, &["R1", "R1", "R1", "ChoHy"], 1),
+            ("ok_hybrids", check_routine_maxes, ysolo, &["R1", "R1", "R1", "R1"], 0),
             ("unk_evt", check_routine_maxes, Category { ag: AG12U, ..Default::default() }, &[], 1),
             ("no_thrust_err", check_mixduet_elems, TMIXED, &["CB  C4"], 1),
             ("no_thrust_in_free_ok", check_mixduet_elems, FMDUET, &["CB  C4"], 0),
             ("no_thrust_in_duet_ok", check_mixduet_elems, TDUET, &["CB  C4"], 0),
-            ("1_C_1_T", check_mixduet_elems, TMIXED, &["C4  T9a"], 1),
-            ("2_C_2_T", check_mixduet_elems, TMIXED, &["T4a  T9a  CB  C4"], 1),
-            ("3_C_1_T", check_mixduet_elems, TMIXED, &["C1a  T9a  CB C4"], 1),
-            ("extra_decls", check_mixduet_elems, TMIXED, &["C1a T9a R2 CB"], 1),
-            ("same_conn", check_mixduet_elems, TMIXED, &["C1a T9a C1a"], 1),
-            ("2_C_1_factored_T", check_mixduet_elems, TMIXED, &["CB T9a*0.5 C1a"], 1),
-            ("2_C_1_T_ok", check_mixduet_elems, TMIXED, &["CB T9a C1a"], 0),
-            ("2_C_1_T_ok2", check_mixduet_elems, TMIXED, &["T9a CB C1a"], 0),
-            ("2_C_1_T_ok3", check_mixduet_elems, TMIXED, &["CB C1a T9a"], 0),
+            ("1_C_1_T", check_mixduet_elems, TMIXED, &["C4  T9"], 1),
+            ("2_C_2_T", check_mixduet_elems, TMIXED, &["T4a  T9  CB  C4"], 1),
+            ("3_C_1_T", check_mixduet_elems, TMIXED, &["C1a  T9  CB C4"], 1),
+            ("extra_decls", check_mixduet_elems, TMIXED, &["C1a T9 R2 CB"], 1),
+            ("same_conn", check_mixduet_elems, TMIXED, &["C1a T9 C1a"], 1),
+            ("2_C_1_factored_T", check_mixduet_elems, TMIXED, &["CB T9*0.5 C1a"], 1),
+            ("2_C_1_T_ok", check_mixduet_elems, TMIXED, &["CB T9 C1a"], 0),
+            ("2_C_1_T_ok2", check_mixduet_elems, TMIXED, &["T9 CB C1a"], 0),
+            ("2_C_1_T_ok3", check_mixduet_elems, TMIXED, &["CB C1a T9"], 0),
             ("solo_no_f", check_families, ysolo, &["TB SCD1 2R2", "A3b"], 1),
             ("solo_no_r", check_families, ysolo, &["FB SCD1 TB", "A3b"], 1),
             ("solo_no_s", check_families, ysolo, &["FB TB 2R2", "A3b"], 1),
@@ -790,13 +802,10 @@ mod tests {
             &["Js1B", "L!fr1", "R1", "TRE1a", "TRE2a", "TRE3", "TRE4a", "TRE5a"],
         ));
         assert_eq!(too_many_pair_acros.len(), 1);
-        let too_few_pair_acros =
-            check_routine_maxes(&new_card(FDUET, &["R1", "R1", "R1", "R1", "R1", "R1"]));
+        let too_few_pair_acros = check_routine_maxes(&new_card(FDUET, &["R1", "R1", "R1", "R1"]));
         assert_eq!(too_few_pair_acros.len(), 1);
-        let ok_pair_acros = check_routine_maxes(&new_card(
-            FDUET,
-            &["Js1B", "L!fr1", "R1", "R1", "R1", "R1", "R1", "R1"],
-        ));
+        let ok_pair_acros =
+            check_routine_maxes(&new_card(FDUET, &["Js1B", "L!fr1", "R1", "R1", "R1", "R1"]));
         assert_eq!(ok_pair_acros.len(), 0);
 
         let too_many_chohy = check_routine_maxes(&new_card(
@@ -818,8 +827,8 @@ mod tests {
         let too_many_suconn = check_routine_maxes(&new_card(
             TMIXED,
             &[
-                "Js1B", "L!fr1", "R1", "R1", "TRE1a", "TRE2a", "TRE3", "SuConn", "SuConn",
-                "SuConn", "SuConn",
+                "Js1B", "L!fr1", "R1", "R1", "TRE1a", "TRE2a", "TRE3a", "SuCon", "SuCon", "SuConn",
+                "SuConn",
             ],
         ));
         assert_eq!(too_many_suconn.len(), 1);
@@ -827,8 +836,8 @@ mod tests {
         let too_many_tres = check_routine_maxes(&new_card(
             TMIXED,
             &[
-                "Js1B", "L!fr1", "R1", "R1", "TRE1a", "TRE2a", "TRE3", "TRE1b", "SuConn", "SuConn",
-                "SuConn",
+                "Js1B", "L!fr1", "R1", "R1", "TRE1a", "TRE2a", "TRE3a", "TRE1b", "SuConn",
+                "SuConn", "SuConn",
             ],
         ));
         assert_eq!(too_many_tres.len(), 1);
@@ -952,9 +961,9 @@ mod tests {
 
     #[test]
     fn test_check_dd_limits() {
-        let bl = ElementKind::Hybrid("T9b A7 A7 A7 A1c".parse().unwrap(), Some(MilliDD(6950)));
-        let at = ElementKind::Hybrid("T9b A7 A7 A7 A1c AB".parse().unwrap(), Some(MilliDD(7000)));
-        let ab = ElementKind::Hybrid("T9b A7 A7 A7 A1c RB".parse().unwrap(), Some(MilliDD(7050)));
+        let bl = ElementKind::Hybrid("T9 A9 A9 A9 A1c".parse().unwrap(), Some(MilliDD(6950)));
+        let at = ElementKind::Hybrid("T9 A9 A9 A9 A1c AB".parse().unwrap(), Some(MilliDD(7000)));
+        let ab = ElementKind::Hybrid("T9 A9 A9 A9 A1c RB".parse().unwrap(), Some(MilliDD(7050)));
 
         assert_eq!(check_dd_limits(Category { ag: AG12U, event: Solo, free: true }, &ab).len(), 1);
         assert!(check_dd_limits(Category { ag: AG12U, event: Solo, free: true }, &bl).is_empty());
@@ -993,7 +1002,7 @@ mod tests {
             (Team, true, "P-P-F2A-sd", 1750),
             (Duet, true, "L!fr1", 1300),
             (Combo, true, "ChoHy", 1000),
-            (Combo, true, "A5 A8", 2800),
+            (Combo, true, "A5 A10", 2800),
             (Solo, false, "TRE1a", 2700),
         ];
         for (evt, free, s, dd) in ELEMS {

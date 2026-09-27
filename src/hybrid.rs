@@ -1,5 +1,6 @@
 use crate::{DD, MilliDD};
 use anyhow::anyhow;
+use std::fmt::Display;
 use std::str::FromStr;
 use strum_macros::{Display, EnumString};
 
@@ -28,8 +29,8 @@ pub enum ThrustLC {
     T6c,
     T7,
     T8,
-    T9a,
-    T9b,
+    T9,
+    T10,
 }
 
 impl DD for ThrustLC {
@@ -39,12 +40,13 @@ impl DD for ThrustLC {
             Self::T1 => 450,
             Self::T2a | Self::T2b => 500,
             Self::T3a | Self::T3b | Self::T3c | Self::T3d => 650,
-            Self::T4a | Self::T4b | Self::T4c | Self::T4d | Self::T4e => 800,
+            Self::T4a | Self::T4b | Self::T4c | Self::T4d | Self::T4e => 850,
             Self::T5a | Self::T5b | Self::T5c | Self::T5d | Self::T5e => 900,
-            Self::T6a | Self::T6b | Self::T6c => 1100,
-            Self::T7 => 1500,
-            Self::T8 => 1700,
-            Self::T9a | Self::T9b => 2000,
+            Self::T6a | Self::T6b | Self::T6c => 1200,
+            Self::T7 => 1600,
+            Self::T8 => 1900,
+            Self::T9 => 2000,
+            Self::T10 => 2300,
         })
     }
 }
@@ -84,30 +86,30 @@ impl DD for SpinLC {
         #[allow(clippy::match_same_arms)]
         MilliDD(match self {
             Self::SB => 150,
-            Self::SCB => 350,
-            Self::SCDB => 400,
-            Self::S1 => 350,
-            Self::SC1 => 800,
-            Self::SCD1 => 850,
-            Self::S2 => 750,
-            Self::SC2 => 1600,
-            Self::SCD2 => 1650,
-            Self::S3 => 1150,
-            Self::SC3 => 2400,
-            Self::SCD3 => 2450,
-            Self::S4 => 1550,
-            Self::SC4 => 3200,
-            Self::SCD4 => 3250,
-            Self::S5 => 1950,
-            Self::SC5 => 4000,
-            Self::SCD5 => 4050,
-            Self::S6 => 2350,
-            Self::SC6 => 4800,
-            Self::SCD6 => 4850,
-            Self::S7 => 2750,
-            Self::S8 => 3150,
-            Self::S9 => 3550,
-            Self::S10 => 3950,
+            Self::SCB => 400,
+            Self::SCDB => 450,
+            Self::S1 => 400,
+            Self::SC1 => 950,
+            Self::SCD1 => 1000,
+            Self::S2 => 900,
+            Self::SC2 => 1950,
+            Self::SCD2 => 2000,
+            Self::S3 => 1400,
+            Self::SC3 => 2950,
+            Self::SCD3 => 3000,
+            Self::S4 => 1900,
+            Self::SC4 => 3950,
+            Self::SCD4 => 4000,
+            Self::S5 => 2400,
+            Self::SC5 => 4950,
+            Self::SCD5 => 5000,
+            Self::S6 => 2900,
+            Self::SC6 => 5750,
+            Self::SCD6 => 5800,
+            Self::S7 => 3400,
+            Self::S8 => 3900,
+            Self::S9 => 4400,
+            Self::S10 => 4900,
         })
     }
 }
@@ -242,20 +244,24 @@ pub enum AwLC {
     A6,
     A7,
     A8,
+    A9,
+    A10,
 }
 
 impl DD for AwLC {
     fn dd(&self) -> MilliDD {
         MilliDD(match self {
-            Self::AB => 50,
+            Self::AB => 50, // TYPO on chart? Table is 0.05, chart was changed to 0.1
             Self::A1a | Self::A1b | Self::A1c | Self::A1d => 100,
             Self::A2a | Self::A2b => 150,
             Self::A3a | Self::A3b => 200,
             Self::A4a | Self::A4b => 450,
             Self::A5 => 650,
-            Self::A6 => 1150,
-            Self::A7 => 1450,
-            Self::A8 => 1650,
+            Self::A6 => 800,
+            Self::A7 => 900,
+            Self::A8 => 1150,
+            Self::A9 => 1450,
+            Self::A10 => 1650,
         })
     }
 }
@@ -272,6 +278,7 @@ pub enum FlexLC {
     F3a,
     F3b,
     F3c,
+    F3d,
     F4a,
     F4b,
     F4c,
@@ -298,14 +305,14 @@ impl DD for FlexLC {
             Self::FB => 50,
             Self::F1a | Self::F1b | Self::F1c => 100,
             Self::F2a | Self::F2b | Self::F2c => 200,
-            Self::F3a | Self::F3b | Self::F3c => 300,
-            Self::F4a | Self::F4b | Self::F4c | Self::F4d | Self::F4e | Self::F4f => 400,
-            Self::F5a | Self::F5b | Self::F5c => 500,
-            Self::F6a | Self::F6b | Self::F6c | Self::F6d => 650,
-            Self::F7 => 750,
-            Self::F8a | Self::F8b => 900,
-            Self::F9 => 1000,
-            Self::F10 => 1300,
+            Self::F3a | Self::F3b | Self::F3c | Self::F3d => 300,
+            Self::F4a | Self::F4b | Self::F4c | Self::F4d | Self::F4e | Self::F4f => 350,
+            Self::F5a | Self::F5b | Self::F5c => 400,
+            Self::F6a | Self::F6b | Self::F6c | Self::F6d => 450,
+            Self::F7 => 500,
+            Self::F8a | Self::F8b => 650,
+            Self::F9 => 750,
+            Self::F10 => 1000,
         })
     }
 }
@@ -473,6 +480,12 @@ impl std::fmt::Display for Decl {
 #[derive(Debug, Eq, PartialEq)]
 pub struct PatternChanges(pub u8);
 
+impl Display for PatternChanges {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}PC", self.0)
+    }
+}
+
 impl DD for PatternChanges {
     fn dd(&self) -> MilliDD {
         MilliDD(u32::from(self.0)) * MilliDD(200)
@@ -499,6 +512,17 @@ impl FromStr for PatternChanges {
 pub struct HybridDecl {
     pub decls: Box<[Decl]>,
     pub pc_bonus: Option<PatternChanges>,
+}
+
+impl Display for HybridDecl {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
+        let mut s = self.decls.iter().map(ToString::to_string).collect::<Vec<String>>().join(" ");
+        if let Some(pc) = &self.pc_bonus {
+            s.push(' ');
+            s += &pc.to_string();
+        }
+        f.write_str(&s)
+    }
 }
 
 impl DD for HybridDecl {
@@ -600,97 +624,97 @@ mod tests {
     #[test]
     fn test_cacl_hybrid_dd() {
         const CASES: &[(&str, u32)] = &[
-            ("FB F1c F5a F6c A7 A6 RC1 S1 T6a", 6400),
-            ("C4 C3 C4 F6a A8 F1a RCB", 4550),
-            ("A1a A6*0.5 A7*0.5 F1b F5a T4e", 3300),
-            ("C4+ AB A6 A1d AB F4f F5a SB	1PC", 3700),
-            ("A1a A6 A1c F1a RCB", 2200),
-            ("A3a SB S1 A1d SB T4b", 2250),
-            ("CB+ AB A6 RB F1b F5a", 2600),
-            ("T4b AB A6 F1a F2a", 2800),
-            ("FB F1c F5a AB A6 A7	1PC", 4000),
-            ("A1a F4f F5a F4c A6 F1a RCB	1PC", 3600),
-            ("A1c C4+ C4+ AB A6 A1d S1	2PC", 3850),
-            ("T5c AB A6 F1b F5a	2PC", 3600),
-            ("T6a S1 F1b F5a 2RB RB A1c A8 2RB", 4800),
-            ("F4a F3b F6c A6 RB F7 ROB F2a", 4300),
-            ("CB C4 C3 C4 AB F4f F5a F5a AB SC2 A1d", 5200),
-            ("T6a F7 2RB A1c A7 F8b F7 2RB", 5950),
-            ("A3a AB 1R2 A6 A1d F1a RCB", 3100),
-            ("CB C4 C3 C4 F6a A3a ROB F2a", 3300),
-            ("T5c A3b F4f F5a S1", 2850),
-            ("AB SC1 A7 F1a RCB F1a RCB", 3500),
-            ("A3a SC1 A6 A1d 2RB F1b F5a", 3550),
-            ("F1c F5a F6c A8 2RB F1a F2a", 3900),
-            ("T6a S1 A1c A7 F1a RCB", 3850),
-            ("CB C4 C3 C4 A1c A8 F6a", 4400),
-            ("F4c A6 F1a RC1 F2c*0.5 A1c*0.3 A7*0.3 A1d*0.5 F1b F6c	1PC", 4265),
-            ("RB A4b A8 2RB F9 F9 2R1", 5350),
-            ("RB A6 A1d A8 A1c RU1 A1c RU1 S2 T4e", 6350),
-            ("CB C3 CB AB*0.5 A1c*0.5 A6*0.5 A8*0.5 F7 F7 2RB	1PC", 4475),
-            ("T4e A4b F1a RC1 F1a RC1 AB A6 A1d 2RB", 4550),
-            ("F7 A6 A1d ROB RC1 T4e", 4100),
-            ("A1c S2 S2 F1b F6c", 2850),
-            ("CB+ A1a A6 C4+ C4+ A1c	2PC", 3650),
-            ("T4e A8 A1c 2RB A1c 2RB A6 A1d	2PC", 5200),
-            ("A1c A8 CB C4 CB C4 F1b F8a F1b F8a A1c S2 TB", 6600),
-            ("F1b F8a F1b F8a C2b C2b A1c A7 2R1", 5100),
-            ("T4e A1c A7 F7 F7", 4350),
-            ("RB A1c A7 F1b F8a F1b F8a F2a", 4350),
-            ("A1c S2 S1 A1c A7 F7 F7", 4750),
-            ("A4b 2RB A1c A7 S1 F1b F6c F1b F6c T4e", 5350),
-            ("AB F4e F5a F4f F8a SC1 RC1 F8a", 5000),
-            ("F7 F7 S2 S1 A1c A8 2RB", 5050),
-            ("CB C4 CB C4 C3 AB SC2 A1d F1a RC1 F2a", 4700),
-            ("T4e F6c F6c F6c A1c A7 2R1", 5250),
-            ("T3d A1c F1a A1d F1a F1b F6c AB A6", 3500),
-            ("A1c A6 1RB SC2 AB F4f F5a F4f F5a", 5350),
-            ("CB C3 C5 F1b F6c F6c T6a A3b F1a RC1 F2a", 5550),
-            ("F8b F6a F3a A1d SC1 F3a F6c", 4200),
-            ("F3b RC1 RB A1c A7 AB A6 A1d S1 T6c", 5750),
-            ("F1b F6c F1b F6c RC1 A8 A6 C4+ C4+ C4+ F1b*0.5 F5a*0.5 2R1*0.5 RC1*0.5	2PC", 8350),
-            ("A1a A6 A1d 2R1 A1c A7 F4f F6c", 4900),
-            ("A4b F1b F6c A1c A7 A1c C4+ C4+ S2*0.5 A1c*0.5 F1a*0.5 RC1*0.5	2PC", 5700),
-            ("A1c S2*0.5 A7*0.5 S1 A1d*0.5", 2100),
-            ("C4 C3 C4 C3 2R1 F7 F1b F5a 2R1 A7	1PC", 6200),
-            ("T4e A8 A6", 4100),
-            ("A1a A6 A1c A7 A6", 4450),
-            ("2RB AB A6 A8 RC1", 4100),
-            ("F7 F1b F5a F1b F5a A8 A1c C3 A1c A8 A1c RD1", 6950),
-            ("C4 C3 C4 C3 A1c A7 F7 F1b F5a RD1 S1", 6050),
-            ("A4b A7 RD1 A1c 2R1 AB F4f F6c", 4550),
-            ("A3a A7 F1b F5a F4f F6c A1c RD1 A1c 2R1", 4950),
-            ("A1c A7 A6 F1b F5a F1b F5a", 4400),
-            ("A1c RD1 A1c A7 C2b C2b A1c 1RB 2RB A6 F4f F8a", 6150),
-            ("A3a A8 RU1 A1c RU1 A1c F1a A1d F1a RC1 F1b F6c", 5250),
-            ("T6a S1 F1a RC1 AB F4e F6c AB F4e F6c", 4800),
-            ("A6 F1b F6c A7 RU1 2RB", 4600),
-            ("A1a F4f F5a F5a F4f F5a 2R1", 3350),
-            ("T5e S1 F7 F1b F5a F1b F5a AB A1d A7 2RB", 5500),
-            ("RC1 A7 F4e F4e F6c", 3950),
-            ("T8 A3b A1d A7 A8 F1b F5a F1b F6c", 6950),
-            ("A4b F1b F5a 2R1 F1b F5a RD1 A1a A7 A8", 6300),
-            ("A3b A7 RD1 A8 F1b F5a F1b F5a A1d", 5600),
-            ("T4e AB A6 A7 RD1", 4450),
-            ("S2 S1 S2 A3b A8 2RB", 4400),
-            ("T4e AB A1d S2", 2200),
-            ("T8 S1 F7 A7 RU2 F7 A3a F9 F8a RC1 RC1 F7 A8 RU2 A1c 2R3 A4b", 15400),
-            ("F7 RC1 F7 AB F8a F7 A7 A1c RD1 AB F6c", 7000),
-            ("RC1 F7 RU2 AB F4f F5a RC1 F7 A7 F7 RU1 A3a", 8150),
-            ("A4b F6c A1c A8 2R1 F7 F5a F7 A7 F5a", 7750),
-            ("A1a F4f F5a F6c F7 A8 RU1 F7 RU1", 6400),
-            ("RC1 F7 RU1 AB F6c AB F6c F7 A4b A1c A8 F7", 7450),
-            ("T8 S1 A1c A8 F7 A7 C2b C2b F7 F5a F7 F5a", 9600),
-            ("A4b AB F4f F6c F7 F5a A8 C4 C4 C3 A3a F6c", 7200),
-            ("C4 C3 C4 C3 A1c A7 S1 A3b F7 F7 F1b F5a", 6500),
-            ("F7 A3a A8 F9 F9 A1c A8 C2b C3 C2b C3", 8250),
-            ("A1c A7 AB F8a F7 F5a F7 F5a A4b 2RB", 6150),
-            ("F7 F1b F8a F7 A7 A1c A8 C4 C3 C4 C3 F7", 8750),
-            ("A1c A7 F7 F1b F8a A1d A8 F1a RC1 2RB", 6400),
+            ("FB F1c F5a F6c A9 A8 RC1 S1 T6a", 6250),
+            ("C4 C3 C4 F6a A10 F1a RCB", 4350),
+            ("A1a A8*0.5 A9*0.5 F1b F5a T4e", 3250),
+            ("C4+ AB A8 A1d AB F4f F5a SB	1PC", 3550),
+            ("A1a A8 A1c F1a RCB", 2200),
+            ("A3a SB S1 A1d SB T4b", 2350),
+            ("CB+ AB A8 RB F1b F5a", 2500),
+            ("T4b AB A8 F1a F2a", 2850),
+            ("FB F1c F5a AB A8 A9	1PC", 3900),
+            ("A1a F4f F5a F4c A8 F1a RCB	1PC", 3400),
+            ("A1c C4+ C4+ AB A8 A1d S1	2PC", 3900),
+            ("T5c AB A8 F1b F5a	2PC", 3500),
+            ("T6a S1 F1b F5a 2RB RB A1c A10 2RB", 4850),
+            ("F4a F3b F6c A8 RB F7 ROB F2a", 3800),
+            ("CB C4 C3 C4 AB F4f F5a F5a AB SC2 A1d", 5300),
+            ("T6a F7 2RB A1c A9 F8b F7 2RB", 5300),
+            ("A3a AB 1R2 A8 A1d F1a RCB", 3100),
+            ("CB C4 C3 C4 F6a A3a ROB F2a", 3100),
+            ("T5c A3b F4f F5a S1", 2750),
+            ("AB SC1 A9 F1a RCB F1a RCB", 3650),
+            ("A3a SC1 A8 A1d 2RB F1b F5a", 3600),
+            ("F1c F5a F6c A10 2RB F1a F2a", 3600),
+            ("T6a S1 A1c A9 F1a RCB", 4000),
+            ("CB C4 C3 C4 A1c A10 F6a", 4200),
+            ("F4c A8 F1a RC1 F2c*0.5 A1c*0.3 A9*0.3 A1d*0.5 F1b F6c	1PC", 4015),
+            ("RB A4b A10 2RB F9 F9 2R1", 4850),
+            ("RB A8 A1d A10 A1c RU1 A1c RU1 S2 T4e", 6550),
+            ("CB C3 CB AB*0.5 A1c*0.5 A8*0.5 A10*0.5 F7 F7 2RB	1PC", 3975),
+            ("T4e A4b F1a RC1 F1a RC1 AB A8 A1d 2RB", 4600),
+            ("F7 A8 A1d ROB RC1 T4e", 3900),
+            ("A1c S2 S2 F1b F6c", 2950),
+            ("CB+ A1a A8 C4+ C4+ A1c	2PC", 3650),
+            ("T4e A10 A1c 2RB A1c 2RB A8 A1d	2PC", 5250),
+            ("A1c A10 CB C4 CB C4 F1b F8a F1b F8a A1c S2 TB", 6250),
+            ("F1b F8a F1b F8a C2b C2b A1c A9 2R1", 4600),
+            ("T4e A1c A9 F7 F7", 3900),
+            ("RB A1c A9 F1b F8a F1b F8a F2a", 3850),
+            ("A1c S2 S1 A1c A9 F7 F7", 4450),
+            ("A4b 2RB A1c A9 S1 F1b F6c F1b F6c T4e", 5050),
+            ("AB F4e F5a F4f F8a SC1 RC1 F8a", 4450),
+            ("F7 F7 S2 S1 A1c A10 2RB", 4750),
+            ("CB C4 CB C4 C3 AB SC2 A1d F1a RC1 F2a", 5050),
+            ("T4e F6c F6c F6c A1c A9 2R1", 4700),
+            ("T3d A1c F1a A1d F1a F1b F6c AB A8", 3300),
+            ("A1c A8 1RB SC2 AB F4f F5a F4f F5a", 5400),
+            ("CB C3 C5 F1b F6c F6c T6a A3b F1a RC1 F2a", 5250),
+            ("F8b F6a F3a A1d SC1 F3a F6c", 3700),
+            ("F3b RC1 RB A1c A9 AB A8 A1d S1 T6c", 5900),
+            ("F1b F6c F1b F6c RC1 A10 A8 C4+ C4+ C4+ F1b*0.5 F5a*0.5 2R1*0.5 RC1*0.5	2PC", 7900),
+            ("A1a A8 A1d 2R1 A1c A9 F4f F6c", 4650),
+            ("A4b F1b F6c A1c A9 A1c C4+ C4+ S2*0.5 A1c*0.5 F1a*0.5 RC1*0.5	2PC", 5575),
+            ("A1c S2*0.5 A9*0.5 S1 A1d*0.5", 2225),
+            ("C4 C3 C4 C3 2R1 F7 F1b F5a 2R1 A9	1PC", 5850),
+            ("T4e A10 A8", 4150),
+            ("A1a A8 A1c A9 A8", 4450),
+            ("2RB AB A8 A10 RC1", 4100),
+            ("F7 F1b F5a F1b F5a A10 A1c C3 A1c A10 A1c RD1", 6500),
+            ("C4 C3 C4 C3 A1c A9 F7 F1b F5a RD1 S1", 5750),
+            ("A4b A9 RD1 A1c 2R1 AB F4f F6c", 4300),
+            ("A3a A9 F1b F5a F4f F6c A1c RD1 A1c 2R1", 4600),
+            ("A1c A9 A8 F1b F5a F1b F5a", 4200),
+            ("A1c RD1 A1c A9 C2b C2b A1c 1RB 2RB A8 F4f F8a", 5850),
+            ("A3a A10 RU1 A1c RU1 A1c F1a A1d F1a RC1 F1b F6c", 5050),
+            ("T6a S1 F1a RC1 AB F4e F6c AB F4e F6c", 4450),
+            ("A8 F1b F6c A9 RU1 2RB", 4400),
+            ("A1a F4f F5a F5a F4f F5a 2R1", 2950),
+            ("T5e S1 F7 F1b F5a F1b F5a AB A1d A9 2RB", 5100),
+            ("RC1 A9 F4e F4e F6c", 3650),
+            ("T8 A3b A1d A9 A10 F1b F5a F1b F6c", 6850),
+            ("A4b F1b F5a 2R1 F1b F5a RD1 A1a A9 A10", 6100),
+            ("A3b A9 RD1 A10 F1b F5a F1b F5a A1d", 5400),
+            ("T4e AB A8 A9 RD1", 4500),
+            ("S2 S1 S2 A3b A10 2RB", 4750),
+            ("T4e AB A1d S2", 2400),
+            ("T8 S1 F7 A9 RU2 F7 A3a F9 F8a RC1 RC1 F7 A10 RU2 A1c 2R3 A4b", 14400),
+            ("F7 RC1 F7 AB F8a F7 A9 A1c RD1 AB F6c", 5800),
+            ("RC1 F7 RU2 AB F4f F5a RC1 F7 A9 F7 RU1 A3a", 7250),
+            ("A4b F6c A1c A10 2R1 F7 F5a F7 A9 F5a", 6850),
+            ("A1a F4f F5a F6c F7 A10 RU1 F7 RU1", 5550),
+            ("RC1 F7 RU1 AB F6c AB F6c F7 A4b A1c A10 F7", 6300),
+            ("T8 S1 A1c A10 F7 A9 C2b C2b F7 F5a F7 F5a", 8900),
+            ("A4b AB F4f F6c F7 F5a A10 C4 C4 C3 A3a F6c", 6400),
+            ("C4 C3 C4 C3 A1c A9 S1 A3b F7 F7 F1b F5a", 5950),
+            ("F7 A3a A10 F9 F9 A1c A10 C2b C3 C2b C3", 7500),
+            ("A1c A9 AB F8a F7 F5a F7 F5a A4b 2RB", 5200),
+            ("F7 F1b F8a F7 A9 A1c A10 C4 C3 C4 C3 F7", 7750),
+            ("A1c A9 F7 F1b F8a A1d A10 F1a RC1 2RB", 5900),
         ];
         for (s, expected) in CASES {
             let dd = s.parse::<HybridDecl>().unwrap().dd();
-            assert_eq!(MilliDD(*expected), dd, "{s} expected {expected} got {dd}");
+            assert_eq!(MilliDD(*expected), dd, "{s} expected {expected} calculated {dd}");
         }
     }
 }

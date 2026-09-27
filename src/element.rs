@@ -2,7 +2,7 @@ use crate::hybrid::HybridDecl;
 use crate::pair_acro::PairAcroKind;
 use crate::team_acro::TeamAcroKind;
 use crate::tre::{TREKind, parse_tre};
-use crate::{DD, Events, MilliDD};
+use crate::{DD, Events, MilliDD, SUCON_TEXT};
 use anyhow::anyhow;
 
 #[allow(clippy::upper_case_acronyms)]
@@ -13,7 +13,7 @@ pub enum ElementKind {
     ChoHy(Option<MilliDD>),
     Hybrid(HybridDecl, Option<MilliDD>),
     TRE(TREKind, Option<MilliDD>),
-    SuConn,
+    SuCon(usize),
 }
 
 impl DD for ElementKind {
@@ -24,7 +24,7 @@ impl DD for ElementKind {
             Self::ChoHy(_) => MilliDD(1000),
             Self::Hybrid(h, _) => h.dd(),
             Self::TRE(t, _) => t.dd(),
-            Self::SuConn => MilliDD(0),
+            Self::SuCon(_) => MilliDD(0),
         }
     }
 }
@@ -36,7 +36,7 @@ impl ElementKind {
                 r.as_ref()
             }
             Self::ChoHy(r) => r.as_ref(),
-            Self::SuConn => None,
+            Self::SuCon(_) => None,
         }
     }
 }
@@ -56,8 +56,13 @@ pub fn parse_elem_kind(
         return Ok(ChoHy(dd));
     }
 
-    if s == "SuConn" {
-        return if evt == MixedDuet { Ok(SuConn) } else { Err(anyhow!("found SuConn in {evt}")) };
+    if s.starts_with(SUCON_TEXT) {
+        let count = s.matches(SUCON_TEXT).count();
+        return if evt == MixedDuet {
+            Ok(SuCon(count))
+        } else {
+            Err(anyhow!("found SuCon in {evt}"))
+        };
     }
 
     if s.starts_with("TRE") {
@@ -100,7 +105,7 @@ mod tests {
         use Events::*;
         let good_cases: &[(Events, bool, &str, ElementKind)] = &[
             (Combo, true, "ChoHy", ChoHy(Some(MilliDD(123)))),
-            (MixedDuet, true, "SuConn", SuConn),
+            (MixedDuet, true, "SuConn SuCon", SuCon(2)),
             (Solo, false, "TRE1a", TRE(TREKind::Solo(SoloTRE::_1a), Some(MilliDD(123)))),
             (Duet, true, "L!fr1", PairAcro(PairAcroKind::LHeadDownFlexr1, Some(MilliDD(123)))),
             (Trio, true, "Jfs1B", PairAcro(PairAcroKind::Jfs1B, Some(MilliDD(123)))),
@@ -147,7 +152,7 @@ mod tests {
         const BAD_CASES: &[(Events, bool, &str)] = &[
             (Combo, true, "chohy"),
             (MixedDuet, true, "suconn"),
-            (Duet, true, "SuConn"),
+            (Duet, true, "SuCon"),
             (Solo, true, "TRE1a"),
             (Team, true, "Js1F"),
             (Trio, true, "A-Sq-Back-tk"),
