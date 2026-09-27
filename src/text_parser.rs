@@ -48,6 +48,7 @@ mod tests {
     use crate::AgeGroups::{JRSR, Youth};
     use crate::Category;
     use crate::Events::{Combo, Duet, MixedDuet, Solo, Team};
+    use crate::Gender::Woman;
     use crate::element::ElementKind::{ChoHy, Hybrid, PairAcro, SuCon, TRE, TeamAcro};
     use crate::hybrid::{AwLC, ConnLC, Decl, Factor, HybridDecl, LevelCode, TwistLC};
     use crate::pair_acro::PairAcroKind;
@@ -84,7 +85,7 @@ mod tests {
         assert_eq!(
             parse_text("SR", false, "Solo", "TRE1a").unwrap(),
             ParseResult::Element(
-                Category { ag: JRSR, free: false, event: Solo },
+                Category { ag: JRSR, free: false, event: Solo(Woman) },
                 TRE(TREKind::Solo(SoloTRE::_1a), None)
             )
         );
@@ -126,7 +127,7 @@ mod tests {
         assert_eq!(
             parse_text("SR", true, "Solo", "A4b C4+ 2R1").unwrap(),
             ParseResult::Element(
-                Category { ag: JRSR, free: true, event: Solo },
+                Category { ag: JRSR, free: true, event: Solo(Woman) },
                 Hybrid(
                     HybridDecl {
                         decls: Box::from([

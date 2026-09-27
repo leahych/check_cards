@@ -95,9 +95,10 @@ pub fn parse_elem_kind(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::Gender::{Man, Woman};
     use crate::hybrid::{Decl, Factor, FlexLC, LevelCode, PatternChanges};
     use crate::team_acro::{ABonus, AConst, ADir, APos, ARotation, AcroA, Positions};
-    use crate::tre::SoloTRE;
+    use crate::tre::{MensSoloTRE, SoloTRE};
 
     #[test]
     fn test_parse_elem_kind() {
@@ -106,7 +107,13 @@ mod tests {
         let good_cases: &[(Events, bool, &str, ElementKind)] = &[
             (Combo, true, "ChoHy", ChoHy(Some(MilliDD(123)))),
             (MixedDuet, true, "SuConn SuCon", SuCon(2)),
-            (Solo, false, "TRE1a", TRE(TREKind::Solo(SoloTRE::_1a), Some(MilliDD(123)))),
+            (
+                Solo(Man),
+                false,
+                "TRE2b",
+                TRE(TREKind::MensSolo(MensSoloTRE::_2b), Some(MilliDD(123))),
+            ),
+            (Solo(Woman), false, "TRE1a", TRE(TREKind::Solo(SoloTRE::_1a), Some(MilliDD(123)))),
             (Duet, true, "L!fr1", PairAcro(PairAcroKind::LHeadDownFlexr1, Some(MilliDD(123)))),
             (Trio, true, "Jfs1B", PairAcro(PairAcroKind::Jfs1B, Some(MilliDD(123)))),
             (
@@ -153,13 +160,14 @@ mod tests {
             (Combo, true, "chohy"),
             (MixedDuet, true, "suconn"),
             (Duet, true, "SuCon"),
-            (Solo, true, "TRE1a"),
+            (Solo(Man), true, "TRE2"),
+            (Solo(Woman), true, "TRE1a"),
             (Team, true, "Js1F"),
             (Trio, true, "A-Sq-Back-tk"),
             // yes this will bail out at parse time, and we won't do
             // anymore check on the hybrid. See the comment in the
             // hybrid parsing code.
-            (Solo, true, "F9a"),
+            (Solo(Woman), true, "F9a"),
             (Duet, false, "TRE6a"),
             (Duet, true, "L!fr10"),
         ];

@@ -65,7 +65,7 @@ fn check_groups_for_acro_routine(card: &CoachCard) -> Box<[CardIssue]> {
             && card.category.event == Acrobatic
         {
             ci_err(&mut ci, format!("Missing {name} acrobatic"));
-        } else if num > 1 && card.category.free == false {
+        } else if num > 1 && !card.category.free {
             ci_err(&mut ci, "tech team acrobatics must be from different families".to_string());
         } else if num > 2 && card.category.event == Acrobatic {
             ci_err(&mut ci, format!("may not have more than 2 {name} acrobatics"));
@@ -283,7 +283,7 @@ fn check_age_restrictions(ag: AgeGroups, acro: &TeamAcroKind) -> Box<[CardIssue]
         }
     }
 
-    if ag == JRSR {
+    if ag == AgeGroups::JRSR {
         return [].into();
     }
 
@@ -898,7 +898,7 @@ type CardCheckFn = fn(&CoachCard) -> Box<[CardIssue]>;
 
 pub fn run_acro_checks(card: &CoachCard) -> Box<[CardIssue]> {
     let checks: &[CardCheckFn] = match card.category.event {
-        Solo | Events::Unknown => &[],
+        Solo(_) | Events::Unknown => &[],
         Duet | MixedDuet | Trio => &[check_duplicate_pair_acros, check_pair_acro_common_base_marks],
         Acrobatic | Combo | Team => &[check_groups_for_acro_routine, check_team_duplicate_acros],
     };
@@ -916,6 +916,7 @@ pub fn run_acro_checks(card: &CoachCard) -> Box<[CardIssue]> {
 #[cfg_attr(test, allow(clippy::too_many_lines))]
 mod tests {
     use super::*;
+    use crate::Gender::Woman;
     use crate::{Element, ElementKind};
 
     fn elements(acros: &[&str], to_element: fn(&str) -> ElementKind) -> Box<[Element]> {
@@ -1279,7 +1280,7 @@ mod tests {
         assert_eq!(run_acro_checks(&duet).len(), 1);
 
         let solo = &CoachCard {
-            category: Category { event: Solo, ..Default::default() },
+            category: Category { event: Solo(Woman), ..Default::default() },
             ..Default::default()
         };
         assert_eq!(run_acro_checks(solo).len(), 0);

@@ -132,25 +132,25 @@ struct EMax {
 const fn element_maxes(category: &Category) -> Option<EMax> {
     #[allow(clippy::match_same_arms)]
     match (category.ag, category.event, category.free) {
-        (AG12U, Solo, true) =>      Some(EMax { chohy: 0, suconn: 0, tre: 0, acro: 0, hybrid: 4 }),
+        (AG12U, Solo(_), true) =>   Some(EMax { chohy: 0, suconn: 0, tre: 0, acro: 0, hybrid: 4 }),
         (AG12U, Duet, true) =>      Some(EMax { chohy: 0, suconn: 0, tre: 0, acro: 1, hybrid: 4 }),
         (AG12U, MixedDuet, true) => Some(EMax { chohy: 1, suconn: 3, tre: 0, acro: 2, hybrid: 3 }),
         (AG12U, Team, true) =>      Some(EMax { chohy: 0, suconn: 0, tre: 0, acro: 3, hybrid: 4 }),
         (AG12U, Combo, true) =>     Some(EMax { chohy: 1, suconn: 0, tre: 0, acro: 3, hybrid: 4 }),
-        (Youth, Solo, true) =>      Some(EMax { chohy: 0, suconn: 0, tre: 0, acro: 0, hybrid: 4 }),
+        (Youth, Solo(_), true) =>   Some(EMax { chohy: 0, suconn: 0, tre: 0, acro: 0, hybrid: 4 }),
         (Youth, Duet, true) =>      Some(EMax { chohy: 0, suconn: 0, tre: 0, acro: 1, hybrid: 4 }),
         (Youth, MixedDuet, true) => Some(EMax { chohy: 0, suconn: 3, tre: 0, acro: 2, hybrid: 3 }),
         (Youth, Team, true) =>      Some(EMax { chohy: 0, suconn: 0, tre: 0, acro: 3, hybrid: 4 }),
         (Youth, Combo, true) =>     Some(EMax { chohy: 1, suconn: 0, tre: 0, acro: 4, hybrid: 4 }),
         (Youth, Acrobatic, true) => Some(EMax { chohy: 0, suconn: 0, tre: 0, acro: 5, hybrid: 0 }),
-        (JRSR, Solo, true) =>       Some(EMax { chohy: 1, suconn: 0, tre: 0, acro: 0, hybrid: 4 }),
+        (JRSR, Solo(_), true) =>    Some(EMax { chohy: 1, suconn: 0, tre: 0, acro: 0, hybrid: 4 }),
         (JRSR, Duet, true) =>       Some(EMax { chohy: 0, suconn: 0, tre: 0, acro: 2, hybrid: 4 }),
         (JRSR, MixedDuet, true) =>  Some(EMax { chohy: 1, suconn: 4, tre: 0, acro: 3, hybrid: 3 }),
         (JRSR, Trio, true) =>       Some(EMax { chohy: 0, suconn: 0, tre: 0, acro: 3, hybrid: 5 }),
         (JRSR, Team, true) =>       Some(EMax { chohy: 0, suconn: 0, tre: 0, acro: 3, hybrid: 5 }),
         (JRSR, Acrobatic, true) =>  Some(EMax { chohy: 0, suconn: 0, tre: 0, acro: 7, hybrid: 0 }),
         (JRSR, Combo, true) =>      Some(EMax { chohy: 1, suconn: 0, tre: 0, acro: 4, hybrid: 5 }),
-        (JRSR, Solo, false) =>      Some(EMax { chohy: 0, suconn: 0, tre: 5, acro: 0, hybrid: 1 }),
+        (JRSR, Solo(_), false) =>   Some(EMax { chohy: 0, suconn: 0, tre: 5, acro: 0, hybrid: 1 }),
         (JRSR, Duet, false) =>      Some(EMax { chohy: 0, suconn: 0, tre: 5, acro: 1, hybrid: 1 }),
         (JRSR, MixedDuet, false) => Some(EMax { chohy: 0, suconn: 3, tre: 3, acro: 2, hybrid: 2 }),
         (JRSR, Team, false) =>      Some(EMax { chohy: 0, suconn: 0, tre: 5, acro: 2, hybrid: 1 }),
@@ -236,7 +236,7 @@ fn check_factoring(category: Category, decls: &[Decl]) -> Box<[CardIssue]> {
 
     let mut ci = Vec::new();
 
-    if category.event == Solo && decls.iter().any(|d| d.f != No) {
+    if matches!(category.event, Solo(_)) && decls.iter().any(|d| d.f != No) {
         ci_err(&mut ci, "cannot factor in a Solo");
     }
 
@@ -326,7 +326,7 @@ fn check_connections_in_non_team(c: Category, decls: &[Decl]) -> Box<[CardIssue]
         && decls.iter().any(|d| matches!(d.lc, Conn(_, true)))
     {
         ci_errs("C+ connections can only be used in team routines")
-    } else if c.event == Solo && decls.iter().any(|d| matches!(d.lc, Conn(_, _))) {
+    } else if matches!(c.event, Solo(_)) && decls.iter().any(|d| matches!(d.lc, Conn(_, _))) {
         ci_errs("connections can not be used in solos")
     } else {
         [].into()
@@ -347,7 +347,7 @@ fn check_families(card: &CoachCard) -> Box<[CardIssue]> {
         ("Flexibility", flex_matcher),
         ("Connection", connection_matcher),
     ];
-    if card.category.event == Solo {
+    if matches!(card.category.event, Solo(_)) {
         families = &families[..families.len() - 1];
     }
 
@@ -608,6 +608,7 @@ pub fn run_checks(card: &CoachCard) -> Box<[CardIssue]> {
 #[cfg_attr(test, allow(clippy::too_many_lines))]
 mod tests {
     use super::*;
+    use crate::Gender::Woman;
     use crate::element::parse_elem_kind;
     use chrono::NaiveTime;
 
@@ -637,7 +638,7 @@ mod tests {
     }
 
     const TMIXED: Category = Category { ag: JRSR, event: MixedDuet, free: false };
-    const FSOLO: Category = Category { ag: JRSR, event: Solo, free: true };
+    const FSOLO: Category = Category { ag: JRSR, event: Solo(Woman), free: true };
     const FDUET: Category = Category { ag: JRSR, event: Duet, free: true };
     const FTEAM: Category = Category { ag: JRSR, event: Team, free: true };
     const TDUET: Category = Category { ag: JRSR, event: Duet, free: false };
@@ -741,8 +742,8 @@ mod tests {
 
     #[test]
     fn test_routine_issue() {
-        let ag12solo = Category { ag: AG12U, event: Solo, free: true };
-        let ysolo = Category { ag: Youth, event: Solo, free: true };
+        let ag12solo = Category { ag: AG12U, event: Solo(Woman), free: true };
+        let ysolo = Category { ag: Youth, event: Solo(Woman), free: true };
 
         let tests: &[(&str, fn(&CoachCard) -> Box<[CardIssue]>, Category, &[&str], usize)] = &[
             ("too_many_hybrids", check_routine_maxes, ag12solo, &["R1", "R1", "R1", "R1", "R1"], 1),
@@ -769,7 +770,13 @@ mod tests {
             ("duet_no_C", check_families, FDUET, &["TB SC1 2R2", "A3b F4f"], 1),
             ("tduet_no_C_ok", check_families, TDUET, &["TB SC1 2R2", "A3b F4f"], 0),
             ("duet_no_F", check_families, FDUET, &["TB S1 R2 A5 F9*0.5 CB"], 1),
-            ("unk_ag", check_category, Category { event: Solo, ..Default::default() }, &[], 1),
+            (
+                "unk_ag",
+                check_category,
+                Category { event: Solo(Woman), ..Default::default() },
+                &[],
+                1,
+            ),
             ("unk_evt", check_category, Category { ag: JRSR, ..Default::default() }, &[], 1),
         ];
         for (name, check, cat, hybrids, expected) in tests {
@@ -902,21 +909,21 @@ mod tests {
         assert_eq!(unknown_event.len(), 1);
 
         let under = check_routine_times(&CoachCard {
-            category: Category { ag: AG12U, event: Solo, free: true },
+            category: Category { ag: AG12U, event: Solo(Woman), free: true },
             end_time: NaiveTime::from_hms_opt(0, 1, 15).unwrap(),
             ..Default::default()
         });
         assert_eq!(under.len(), 1);
 
         let over = check_routine_times(&CoachCard {
-            category: Category { ag: AG12U, event: Solo, free: true },
+            category: Category { ag: AG12U, event: Solo(Woman), free: true },
             end_time: NaiveTime::from_hms_opt(0, 2, 15).unwrap(),
             ..Default::default()
         });
         assert_eq!(over.len(), 1);
 
         let within_time = check_routine_times(&CoachCard {
-            category: Category { ag: AG12U, event: Solo, free: true },
+            category: Category { ag: AG12U, event: Solo(Woman), free: true },
             end_time: NaiveTime::from_hms_opt(0, 2, 3).unwrap(),
             ..Default::default()
         });
@@ -961,14 +968,16 @@ mod tests {
 
     #[test]
     fn test_check_dd_limits() {
+        let cat_12u = Category { ag: AG12U, event: Solo(Woman), free: true };
+        let cat_yth = Category { ag: Youth, event: Solo(Woman), free: true };
         let bl = ElementKind::Hybrid("T9 A9 A9 A9 A1c".parse().unwrap(), Some(MilliDD(6950)));
         let at = ElementKind::Hybrid("T9 A9 A9 A9 A1c AB".parse().unwrap(), Some(MilliDD(7000)));
         let ab = ElementKind::Hybrid("T9 A9 A9 A9 A1c RB".parse().unwrap(), Some(MilliDD(7050)));
 
-        assert_eq!(check_dd_limits(Category { ag: AG12U, event: Solo, free: true }, &ab).len(), 1);
-        assert!(check_dd_limits(Category { ag: AG12U, event: Solo, free: true }, &bl).is_empty());
-        assert!(check_dd_limits(Category { ag: AG12U, event: Solo, free: true }, &at).is_empty());
-        assert!(check_dd_limits(Category { ag: Youth, event: Solo, free: true }, &ab).is_empty());
+        assert_eq!(check_dd_limits(cat_12u, &ab).len(), 1);
+        assert!(check_dd_limits(cat_12u, &bl).is_empty());
+        assert!(check_dd_limits(cat_12u, &at).is_empty());
+        assert!(check_dd_limits(cat_yth, &ab).is_empty());
     }
 
     #[test]
@@ -1003,7 +1012,7 @@ mod tests {
             (Duet, true, "L!fr1", 1300),
             (Combo, true, "ChoHy", 1000),
             (Combo, true, "A5 A10", 2800),
-            (Solo, false, "TRE1a", 2700),
+            (Solo(Woman), false, "TRE1a", 2700),
         ];
         for (evt, free, s, dd) in ELEMS {
             let elem = parse_elem_kind(*evt, *free, s, Some(MilliDD(*dd))).unwrap();

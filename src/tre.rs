@@ -1,4 +1,4 @@
-use crate::{DD, Events, MilliDD};
+use crate::{DD, Events, Gender, MilliDD};
 use anyhow::anyhow;
 use std::str::FromStr;
 
@@ -40,6 +40,58 @@ impl FromStr for SoloTRE {
             "TRE1a" => Ok(Self::_1a),
             "TRE1b" => Ok(Self::_1b),
             "TRE2" => Ok(Self::_2),
+            "TRE3a" => Ok(Self::_3a),
+            "TRE3b" => Ok(Self::_3b),
+            "TRE4a" => Ok(Self::_4a),
+            "TRE4b" => Ok(Self::_4b),
+            "TRE5a" => Ok(Self::_5a),
+            "TRE5b" => Ok(Self::_5b),
+            _ => Err(anyhow!("unknown Solo TRE '{s}'")),
+        }
+    }
+}
+
+#[derive(Debug, Eq, PartialEq)]
+pub enum MensSoloTRE {
+    _1a,
+    _1b,
+    _2a,
+    _2b,
+    _3a,
+    _3b,
+    _4a,
+    _4b,
+    _5a,
+    _5b,
+}
+
+impl DD for MensSoloTRE {
+    fn dd(&self) -> MilliDD {
+        #[allow(clippy::match_same_arms)]
+        MilliDD(match self {
+            Self::_1a => 2700,
+            Self::_1b => 2000,
+            Self::_2a => 2400,
+            Self::_2b => 1900,
+            Self::_3a => 3200,
+            Self::_3b => 3000,
+            Self::_4a => 2200,
+            Self::_4b => 2100,
+            Self::_5a => 2600,
+            Self::_5b => 1900,
+        })
+    }
+}
+
+impl FromStr for MensSoloTRE {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "TRE1a" => Ok(Self::_1a),
+            "TRE1b" => Ok(Self::_1b),
+            "TRE2a" => Ok(Self::_2a),
+            "TRE2b" => Ok(Self::_2b),
             "TRE3a" => Ok(Self::_3a),
             "TRE3b" => Ok(Self::_3b),
             "TRE4a" => Ok(Self::_4a),
@@ -195,6 +247,7 @@ impl FromStr for TeamTRE {
 #[derive(Debug, Eq, PartialEq)]
 pub enum TREKind {
     Solo(SoloTRE),
+    MensSolo(MensSoloTRE),
     Duet(DuetTRE),
     MixedDuet(MixedDuetTRE),
     Team(TeamTRE),
@@ -204,6 +257,7 @@ impl DD for TREKind {
     fn dd(&self) -> MilliDD {
         match self {
             Self::Solo(t) => t.dd(),
+            Self::MensSolo(t) => t.dd(),
             Self::Duet(t) => t.dd(),
             Self::MixedDuet(t) => t.dd(),
             Self::Team(t) => t.dd(),
@@ -213,7 +267,8 @@ impl DD for TREKind {
 
 pub fn parse_tre(evt: Events, s: &str) -> Result<TREKind, anyhow::Error> {
     match evt {
-        Events::Solo => Ok(TREKind::Solo(s.parse()?)),
+        Events::Solo(Gender::Man) => Ok(TREKind::MensSolo(s.parse()?)),
+        Events::Solo(Gender::Woman) => Ok(TREKind::Solo(s.parse()?)),
         Events::Duet => Ok(TREKind::Duet(s.parse()?)),
         Events::MixedDuet => Ok(TREKind::MixedDuet(s.parse()?)),
         Events::Team => Ok(TREKind::Team(s.parse()?)),
@@ -223,15 +278,16 @@ pub fn parse_tre(evt: Events, s: &str) -> Result<TREKind, anyhow::Error> {
 
 #[cfg(test)]
 mod tests {
-    use crate::Events;
     use crate::Events::{Combo, MixedDuet, Solo, Team};
     use crate::tre::parse_tre;
+    use crate::{Events, Gender};
 
     #[test]
     fn test_parse_tre() {
         const GOOD_CASES: &[(&str, Events, &str)] = &[
             ("team_tre4b", Team, "TRE4b"),
-            ("solo_tre4a", Solo, "TRE4a"),
+            ("solo_tre2a", Solo(Gender::Man), "TRE2a"),
+            ("solo_tre4a", Solo(Gender::Woman), "TRE4a"),
             ("md_tre3a", MixedDuet, "TRE3a"),
         ];
         for (name, evt, s) in GOOD_CASES {
@@ -239,7 +295,8 @@ mod tests {
         }
 
         const BAD_CASES: &[(&str, Events, &str)] = &[
-            ("solo_invalid_tre", Solo, "TRE5m"),
+            ("solo_invalid_tre", Solo(Gender::Man), "TRE2"),
+            ("solo_invalid_tre", Solo(Gender::Woman), "TRE5m"),
             ("team_tre4", Team, "TRE4"),
             ("md_tre4a", MixedDuet, "TRE4a"),
             ("tre_in_combo", Combo, "TRE4a"),

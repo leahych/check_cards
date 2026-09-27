@@ -13,6 +13,7 @@ mod utils;
 use crate::AgeGroups::{AG12U, JRSR, Youth};
 use crate::ElementKind::{Hybrid, PairAcro, TeamAcro};
 use crate::Events::{Acrobatic, Combo, Duet, MixedDuet, Solo, Team, Trio};
+use crate::Gender::*;
 use crate::IssueLevel::{Error, Warning};
 pub use crate::element::ElementKind;
 pub use crate::hybrid::*;
@@ -136,9 +137,15 @@ impl From<&str> for AgeGroups {
     }
 }
 
+#[derive(Copy, Clone, Debug, Hash, PartialEq, Eq)]
+pub enum Gender {
+    Man,
+    Woman,
+}
+
 #[derive(Copy, Clone, Debug, Display, Default, Hash, PartialEq, Eq)]
 pub enum Events {
-    Solo,
+    Solo(Gender),
     Duet,
     #[strum(to_string = "Mixed Duet")]
     MixedDuet,
@@ -160,7 +167,13 @@ impl From<&str> for Events {
             ("MIXED", MixedDuet),
             ("DUET", Duet),
             ("TRIO", Trio),
-            ("SOLO", Solo),
+            ("WOMAN", Solo(Woman)),
+            ("WOMEN", Solo(Woman)),
+            ("FEMALE", Solo(Woman)),
+            ("MAN", Solo(Man)),
+            ("MEN", Solo(Man)),
+            ("MALE", Solo(Man)),
+            ("SOLO", Solo(Woman)),
         ] {
             if input.contains(pattern) {
                 return kind;
@@ -299,20 +312,20 @@ pub const fn get_expected_routine_time(category: &Category) -> Option<NaiveTime>
     #[allow(clippy::match_same_arms)]
     match category {
         // 12-U
-        Category { ag: AG12U, event: Solo,      free: true } => Some(routine_time(2,  0)),
+        Category { ag: AG12U, event: Solo(_),   free: true } => Some(routine_time(2,  0)),
         Category { ag: AG12U, event: Duet,      free: true } => Some(routine_time(2, 10)),
         Category { ag: AG12U, event: MixedDuet, free: true } => Some(routine_time(2, 30)),
         Category { ag: AG12U, event: Team,      free: true } => Some(routine_time(2, 50)),
         Category { ag: AG12U, event: Combo,     free: true } => Some(routine_time(2, 45)),
         // Youth
-        Category { ag: Youth, event: Solo,      free: true } => Some(routine_time(2,  0)),
+        Category { ag: Youth, event: Solo(_),   free: true } => Some(routine_time(2,  0)),
         Category { ag: Youth, event: Duet,      free: true } => Some(routine_time(2, 10)),
         Category { ag: Youth, event: MixedDuet, free: true } => Some(routine_time(2, 30)),
         Category { ag: Youth, event: Team,      free: true } => Some(routine_time(2, 50)),
         Category { ag: Youth, event: Combo,     free: true } => Some(routine_time(2, 45)),
         Category { ag: Youth, event: Acrobatic, free: true } => Some(routine_time(2, 30)),
         // JR/SR free
-        Category { ag: JRSR, event: Solo,       free: true } => Some(routine_time(2, 10)),
+        Category { ag: JRSR, event: Solo(_),    free: true } => Some(routine_time(2, 10)),
         Category { ag: JRSR, event: Duet,       free: true } => Some(routine_time(2, 25)),
         Category { ag: JRSR, event: MixedDuet,  free: true } => Some(routine_time(2, 45)),
         Category { ag: JRSR, event: Trio,       free: true } => Some(routine_time(2, 45)),
@@ -320,7 +333,7 @@ pub const fn get_expected_routine_time(category: &Category) -> Option<NaiveTime>
         Category { ag: JRSR, event: Acrobatic,  free: true } => Some(routine_time(3,  0)),
         Category { ag: JRSR, event: Combo,      free: true } => Some(routine_time(3, 30)),
         // JR/SR tech
-        Category { ag: JRSR, event: Solo,       free: false } => Some(routine_time(2,  0)),
+        Category { ag: JRSR, event: Solo(_),    free: false } => Some(routine_time(2,  0)),
         Category { ag: JRSR, event: Duet,       free: false } => Some(routine_time(2, 20)),
         Category { ag: JRSR, event: MixedDuet,  free: false } => Some(routine_time(2, 20)),
         Category { ag: JRSR, event: Team,       free: false } => Some(routine_time(2, 50)),
@@ -358,8 +371,16 @@ mod tests {
         assert_eq!(Into::<Events>::into("combination"), Combo);
         assert_eq!(Into::<Events>::into("combo"), Combo);
         assert_eq!(Into::<Events>::into("duet"), Duet);
+        assert_eq!(Into::<Events>::into("male duet"), Duet);
+        assert_eq!(Into::<Events>::into("men's duet"), Duet);
         assert_eq!(Into::<Events>::into("MixedDuet"), MixedDuet);
-        assert_eq!(Into::<Events>::into("solo"), Solo);
+        assert_eq!(Into::<Events>::into("solo"), Solo(Woman));
+        assert_eq!(Into::<Events>::into("woman solo"), Solo(Woman));
+        assert_eq!(Into::<Events>::into("women's solo"), Solo(Woman));
+        assert_eq!(Into::<Events>::into("femalesolo"), Solo(Woman));
+        assert_eq!(Into::<Events>::into("mansolo"), Solo(Man));
+        assert_eq!(Into::<Events>::into("men's solo"), Solo(Man));
+        assert_eq!(Into::<Events>::into("male solo"), Solo(Man));
         assert_eq!(Into::<Events>::into("trio"), Trio);
         assert_eq!(Into::<Events>::into(""), Events::Unknown);
     }
