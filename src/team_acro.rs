@@ -6,7 +6,7 @@ use std::str::FromStr;
 use strum::ParseError;
 use strum_macros::{Display, EnumString};
 
-trait DDPos2: DD {
+pub trait DDPos2: DD {
     fn dd_pos2(&self) -> MilliDD;
 }
 
@@ -1944,6 +1944,9 @@ impl PConst {
             ],
             Self::Flower => &[_2pASlash, _3pbA, HA, _3pA, F2A, SiA, _1FA, BA],
             Self::Hand => &[_2pASlash, _3pbA, HA, _1FA, _3pA, F2A, SiA, BA],
+            Self::Split => &[_3pA],     // TODO
+            Self::Weasel => &[_4p, BA], // TODO
+            Self::_4L => &[],           // TODO
         }
     }
 
@@ -1960,6 +1963,9 @@ impl PConst {
             Self::_2S => PRotationGroup::_2S,
             Self::Flower => PRotationGroup::_2S,
             Self::DB => PRotationGroup::DB,
+            Self::Split => PRotationGroup::r,
+            Self::Weasel => PRotationGroup::r, // TODO
+            Self::_4L => PRotationGroup::r,    // TODO
         }
     }
 }

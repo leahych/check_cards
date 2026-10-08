@@ -328,7 +328,7 @@ pub const fn get_expected_routine_time(category: &Category) -> Option<NaiveTime>
         Category { ag: JRSR, event: Solo(_),    free: true } => Some(routine_time(2, 10)),
         Category { ag: JRSR, event: Duet,       free: true } => Some(routine_time(2, 25)),
         Category { ag: JRSR, event: MixedDuet,  free: true } => Some(routine_time(2, 45)),
-        Category { ag: JRSR, event: Trio,       free: true } => Some(routine_time(2, 45)),
+        Category { ag: JRSR, event: Trio,       free: true } => Some(routine_time(2, 25)),
         Category { ag: JRSR, event: Team,       free: true } => Some(routine_time(3, 10)),
         Category { ag: JRSR, event: Acrobatic,  free: true } => Some(routine_time(3,  0)),
         Category { ag: JRSR, event: Combo,      free: true } => Some(routine_time(3, 30)),

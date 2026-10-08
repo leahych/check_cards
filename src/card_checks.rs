@@ -72,7 +72,7 @@ fn check_max_families(decls: &[Decl], matcher: fn(&Decl) -> bool) -> usize {
         .unwrap_or_default()
 }
 
-fn check_hybrid_maxes(category: Category, decls: &[Decl]) -> Box<[CardIssue]> {
+fn check_hybrid_maxes(_: Category, decls: &[Decl]) -> Box<[CardIssue]> {
     const MAX_FAMILIES: &[NamedFamilyMatcher] = &[
         ("Airborne Weight", airborne_matcher),
         ("Connection", connection_matcher),
@@ -105,16 +105,8 @@ fn check_hybrid_maxes(category: Category, decls: &[Decl]) -> Box<[CardIssue]> {
     }
 
     for (decl, points) in decl_points {
-        if points > 30 {
-            ci_err(&mut ci, format!("{decl} is used more than 3 times"));
-        } else if points > 20
-            && matches!(decl, Conn(_, _))
-            && matches!(category.event, Duet | MixedDuet)
-        {
-            ci_err(
-                &mut ci,
-                format!("Max of 2 connections with the same technique ({decl}) in Duets"),
-            );
+        if points > 20 {
+            ci_err(&mut ci, format!("{decl} is used more than 2 times"));
         }
     }
     ci.into()
@@ -146,7 +138,7 @@ const fn element_maxes(category: &Category) -> Option<EMax> {
         (JRSR, Solo(_), true) =>    Some(EMax { chohy: 1, suconn: 0, tre: 0, acro: 0, hybrid: 4 }),
         (JRSR, Duet, true) =>       Some(EMax { chohy: 0, suconn: 0, tre: 0, acro: 2, hybrid: 4 }),
         (JRSR, MixedDuet, true) =>  Some(EMax { chohy: 1, suconn: 4, tre: 0, acro: 3, hybrid: 3 }),
-        (JRSR, Trio, true) =>       Some(EMax { chohy: 0, suconn: 0, tre: 0, acro: 3, hybrid: 5 }),
+        (JRSR, Trio, true) =>       Some(EMax { chohy: 1, suconn: 0, tre: 0, acro: 3, hybrid: 3 }),
         (JRSR, Team, true) =>       Some(EMax { chohy: 0, suconn: 0, tre: 0, acro: 3, hybrid: 5 }),
         (JRSR, Acrobatic, true) =>  Some(EMax { chohy: 0, suconn: 0, tre: 0, acro: 7, hybrid: 0 }),
         (JRSR, Combo, true) =>      Some(EMax { chohy: 1, suconn: 0, tre: 0, acro: 4, hybrid: 5 }),
@@ -291,6 +283,12 @@ fn check_factoring(category: Category, decls: &[Decl]) -> Box<[CardIssue]> {
 
         if prev_decl.f != No && decl.f != No && prev_decl.lc == decl.lc {
             ci_warn(&mut ci, "if performing same choreography in two groups, do not factor");
+        }
+
+        if (prev_decl.lc == Aw(A3a) && decl.lc == Flex(F7))
+            || (prev_decl.lc == Flex(F7) && decl.lc == Aw(A3a))
+        {
+            ci_warn(&mut ci, "F7 requires 'clearly stopping in VP'");
         }
     }
 
@@ -667,10 +665,10 @@ mod tests {
             ("five_rb_var_ok", check_hybrid_maxes, def, "RB 1RB 2RB ROB RCB", 0),
             ("five_r1_var_ok", check_hybrid_maxes, def, "R1 1R1 2R1 RO1 RC1", 0),
             ("four_a1s_ok", check_hybrid_maxes, def, "A1a A1b A1c A1d", 0),
-            ("four_c4s_err", check_hybrid_maxes, def, "C4 C4 C4 C4+", 1),
-            ("too_many_Cs", check_hybrid_maxes, def, "C4 C4*0.3 C4*0.3 C4*0.3 C4*0.3 C4*0.3", 1),
-            ("three_c4s_duet_err", check_hybrid_maxes, TMIXED, "C4 C4 C4", 1),
-            ("three_c4s_team_ok", check_hybrid_maxes, FTEAM, "C4 C4 C4", 0),
+            ("three_c4s_err", check_hybrid_maxes, def, "C4 C4 C4+", 1),
+            ("too_many_Cs", check_hybrid_maxes, def, "C4 C4*0.3 C4*0.3 C4*0.3", 1),
+            ("three_c4s_err", check_hybrid_maxes, def, "C4 C4 C4", 1),
+            ("two_c4s_ok", check_hybrid_maxes, def, "C4 C4", 0),
             ("solo_factored_err", check_factoring, FSOLO, "R1*0.5", 1),
             ("duet_factored_too_small_err", check_factoring, FDUET, "R1*0.3", 1),
             ("duet_factored_ok", check_factoring, FDUET, "R1*0.5", 0),
@@ -697,6 +695,10 @@ mod tests {
             ("x5_0.3_err", check_factoring, FTEAM, "R1*0.3 R2*0.3 R1*0.3 R2*0.3 R1*0.3 R2*0.3", 1),
             ("x5_0.3_ok", check_factoring, FTEAM, "R1*0.5 R2*0.5 R1*0.5 R2*0.5 R1*0.5", 0),
             ("x5_0.3_err", check_factoring, FTEAM, "R1*0.5 R2*0.5 R1*0.5 R2*0.5 R1*0.5 R2*0.5", 1),
+            ("a3a_f7_warn", check_factoring, FTEAM, "A3a F7", 1),
+            ("a3a_f9_ok", check_factoring, FTEAM, "A3a F9", 0),
+            ("f7_a3a_warn", check_factoring, FTEAM, "F7 A3a", 1),
+            ("f7_a5_warn", check_factoring, FTEAM, "F7 A5", 0),
             ("walkout_in_middle_err", check_hybrid_start_end, def, "F1a F2a R1", 1),
             ("walkout_at_end_ok", check_hybrid_start_end, def, "R1 F1a F2a", 0),
             ("walkout_at_end_pc", check_hybrid_start_end, def, "R1 F1a F2a 2PC", 0),
