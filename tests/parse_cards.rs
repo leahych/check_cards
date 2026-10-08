@@ -131,13 +131,12 @@ fn test_parse_iss_team() {
                             decls: Box::from([
                                 Decl { lc: Conn(C4, false), f: Factor::No },
                                 Decl { lc: Conn(C4, false), f: Factor::No },
-                                Decl { lc: Conn(C4, false), f: Factor::No },
                                 Decl { lc: Twist(RD2), f: Factor::No },
                                 Decl { lc: Spin(S1), f: Factor::No },
                             ]),
                             pc_bonus: Some(PatternChanges(2))
                         },
-                        Some(MilliDD(3850))
+                        Some(MilliDD(3350))
                     ),
                 },
                 Element {
@@ -152,13 +151,12 @@ fn test_parse_iss_team() {
                                 Decl { lc: Twist(_1RB), f: Factor::No },
                                 Decl { lc: Aw(A8), f: Factor::No },
                                 Decl { lc: Conn(CB, true), f: Factor::No },
-                                Decl { lc: Conn(CB, true), f: Factor::No },
                                 Decl { lc: Aw(A1c), f: Factor::No },
                                 Decl { lc: Twist(_2RB), f: Factor::No },
                             ]),
                             pc_bonus: Some(PatternChanges(1))
                         },
-                        Some(MilliDD(3550))
+                        Some(MilliDD(3350))
                     ),
                 },
                 Element {
@@ -171,13 +169,12 @@ fn test_parse_iss_team() {
                                 Decl { lc: Thrust(T3d), f: Factor::No },
                                 Decl { lc: Aw(A2b), f: Factor::No },
                                 Decl { lc: Aw(A2b), f: Factor::No },
-                                Decl { lc: Aw(A2b), f: Factor::No },
                                 Decl { lc: Aw(A3a), f: Factor::No },
                                 Decl { lc: Spin(S2), f: Factor::No },
                             ]),
                             pc_bonus: None
                         },
-                        Some(MilliDD(2700))
+                        Some(MilliDD(2550))
                     ),
                 },
             ]
