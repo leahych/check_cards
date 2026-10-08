@@ -147,7 +147,7 @@ fn check_num_athletes(acro: &TeamAcroKind) -> Box<[CardIssue]> {
     const B_REQ5: &[BConst] =
         &[BConst::_2SupU, BConst::_2SupD, BConst::_2SupM, BConst::StTransitional];
     const C_REQ5: &[CConst] = &[CConst::ThrOntoPair, CConst::ThrOntoFF, CConst::ThrAboveLh];
-    const P_REQ5: &[PConst] = &[PConst::_2S, PConst::Flower];
+    const P_REQ5: &[PConst] = &[PConst::_2S, PConst::Flower, PConst::_4L];
 
     // Lh2F might not really require 6+, but realistically it isn't happening with 4-5.
     const B_REQ6: &[BConst] = &[BConst::_2SupD2F, BConst::Lh2F];
@@ -233,10 +233,22 @@ fn check_exclusive_bonuses(acro: &TeamAcroKind) -> Box<[CardIssue]> {
     use CBonus::*;
     use PBonus::*;
 
-    const A_EXCL: &[&[ABonus]] = &[&[Grip, Conn, Catch], &[Hula, RetSq, RetPa]];
-    const B_EXCL: &[&[BBonus]] = &[&[BBonus::Twirl, RotF], &[Moon, BBonus::Mov, Hold]];
-    const C_EXCL: &[&[CBonus]] =
-        &[&[Ju, _1POntoH, HOnto1P, Jump, JumpPass, On1Foot, _1FOnto1F, _1FOnto1FPlus, _2FOnto2F]];
+    const A_EXCL: &[&[ABonus]] = &[&[Grip, Conn, Catch], &[Hula, RetSq, RetPa, Ret1Pa, RetF]];
+    const B_EXCL: &[&[BBonus]] =
+        &[&[BBonus::Twirl, RotF, Spiral, MovHeadDown], &[Moon, BBonus::Mov, Hold, ChangeL]];
+    const C_EXCL: &[&[CBonus]] = &[&[
+        Ju,
+        _1POntoH,
+        HOnto1P,
+        Jump,
+        JumpPass,
+        On1Foot,
+        _1FOnto1F,
+        _1FOnto1FPlus,
+        _2FOnto2F,
+        _1FOnto1P,
+        _1POnto1P,
+    ]];
     const P_EXCL: &[&[PBonus]] = &[
         &[Porp, Spich],
         &[Stand, Diva],
@@ -256,6 +268,11 @@ fn check_exclusive_bonuses(acro: &TeamAcroKind) -> Box<[CardIssue]> {
             Mov1PlusT,
             Fall,
             FTurn,
+            Ps1HeadDown,
+            Ps1t1o,
+            Mov1PlusT1,
+            Ps1HeadDowno,
+            Ps1_5HeadDown,
         ],
     ];
 
@@ -272,11 +289,11 @@ fn check_age_restrictions(ag: AgeGroups, acro: &TeamAcroKind) -> Box<[CardIssue]
     use CBonus::*;
 
     fn a_bonuses(b: &ABonus) -> Option<String> {
-        if let RetSq | RetPa = b { Some(b.to_string()) } else { None }
+        if let RetSq | RetPa | Ret1Pa | RetF = b { Some(b.to_string()) } else { None }
     }
 
     fn c_bonuses(b: &CBonus) -> Option<String> {
-        if let _1FOnto1F | _1FOnto1FPlus | _1POntoH | HOnto1P = b {
+        if let _1FOnto1F | _1FOnto1FPlus | _1POntoH | HOnto1P | _1FOnto1P = b {
             Some(b.to_string())
         } else {
             None
@@ -288,12 +305,19 @@ fn check_age_restrictions(ag: AgeGroups, acro: &TeamAcroKind) -> Box<[CardIssue]
     }
 
     let mut ci = Vec::new();
-    for bonus in match acro {
+    for decl in match acro {
         Airborne(a) => a.bonuses.iter().filter_map(a_bonuses).collect(),
+        Balance(a) => {
+            if a.conn == BConn::_1FHSlash {
+                Vec::from([a.conn.to_string()])
+            } else {
+                Vec::new()
+            }
+        }
         Combined(a) => a.bonuses.iter().filter_map(c_bonuses).collect(),
-        _ => Vec::new(), // B and P don't have any limited bonuses
+        Platform(_) => Vec::new(), // P doesn't have any age limited parts
     } {
-        ci_err(&mut ci, format!("{bonus} is only allowed in JR/SR routines"));
+        ci_err(&mut ci, format!("{decl} is only allowed in JR/SR routines"));
     }
     ci.into()
 }
@@ -521,9 +545,12 @@ fn check_reqs_a(acro: &AcroA) -> Box<[CardIssue]> {
         // That leaves twists as the only option, and since it's group A
         //  there is only one rotation to check
         if group != ARotationGroup::Twist
-            && (acro.bonuses.contains(&ABonus::RetPa) || acro.bonuses.contains(&ABonus::RetSq))
+            && (acro.bonuses.contains(&ABonus::RetPa)
+                || acro.bonuses.contains(&ABonus::Ret1Pa)
+                || acro.bonuses.contains(&ABonus::RetF)
+                || acro.bonuses.contains(&ABonus::RetSq))
         {
-            ci_err(&mut ci, "Somersaults cannot be used with RetPa or RetSq");
+            ci_err(&mut ci, "Somersaults cannot be used with Return bonuses");
         }
 
         if group == ARotationGroup::Twist
@@ -553,6 +580,50 @@ fn check_reqs_a(acro: &AcroA) -> Box<[CardIssue]> {
     // "Catch" but misunderstood the requirements.
     if acro.bonuses.contains(&ABonus::Catch) && !acro.bonuses.contains(&ABonus::Dbl) {
         ci_warn(&mut ci, "Catch requires two simultaneous acrobatics, so Dbl should be claimed");
+    }
+
+    ci.into()
+}
+
+fn check_reqs_b_bonus(acro: &AcroB, bonus: &BBonus) -> Box<[CardIssue]> {
+    let mut ci = Vec::new();
+
+    let last_pos = acro.positions.second.as_ref().unwrap_or(&acro.positions.first);
+    let has_pos3 = acro.bonuses.contains(&BBonus::Pos3);
+
+    acro_reqs!(ci, bonus.required_consts(), bonus, acro.construction);
+    acro_req!(ci, &bonus.required_conns(), bonus, acro.conn);
+    let first_postions = bonus.required_first_pos();
+    if !first_postions.is_empty() && !first_postions.contains(&acro.positions.first) {
+        let s = oxford_join(first_postions);
+        ci_err(&mut ci, format!("First position should be {s} if using {bonus}"));
+    }
+
+    if bonus == &BBonus::Hold && acro.rotation.is_some() {
+        ci_warn(&mut ci, "Hold and Rotation must not be simultaneous");
+    }
+
+    if bonus == &BBonus::RotF {
+        // this is based on "rotates on feet of support"
+        const ROTF_REQ_CONNS: &[BConn] = &[BConn::Li, BConn::Ch, BConn::LayF, BConn::SPlus];
+        acro_reqs!(ci, ROTF_REQ_CONNS, &BBonus::RotF, acro.conn);
+
+        if !acro.positions.first.is_horizontal()
+            && !matches!(&acro.positions.second, Some(pos2) if pos2.is_horizontal())
+        {
+            ci_err(&mut ci, "RotF claimed, but no horizontal position claimed");
+        }
+    }
+
+    if bonus.requires_handstand() && !last_pos.could_be_handstand() && !has_pos3 {
+        ci_warn(
+            &mut ci,
+            format!("{bonus} requires a handstand position, but {last_pos} is not a handstand"),
+        );
+    }
+
+    if bonus == &BBonus::SdUp && acro.positions.first.is_head_up() {
+        ci_warn(&mut ci, format!("SdUp claimed, but {} is head up", acro.positions.first));
     }
 
     ci.into()
@@ -647,24 +718,8 @@ fn check_reqs_b(acro: &AcroB) -> Box<[CardIssue]> {
         );
     }
 
-    if acro.bonuses.contains(&BBonus::Hold) && acro.rotation.is_some() {
-        ci_warn(&mut ci, "Hold and Rotation must not be simultaneous");
-    }
-
-    if acro.bonuses.contains(&BBonus::RotF) {
-        // this is based on "rotates on feet of support"
-        const ROTF_REQ_CONNS: &[BConn] = &[BConn::Li, BConn::Ch, BConn::LayF, BConn::SPlus];
-        acro_reqs!(ci, ROTF_REQ_CONNS, &BBonus::RotF, acro.conn);
-
-        if !pos1.is_horizontal()
-            && !matches!(&acro.positions.second, Some(pos2) if pos2.is_horizontal())
-        {
-            ci_err(&mut ci, "RotF claimed, but no horizontal position claimed");
-        }
-    }
-
-    if acro.bonuses.contains(&BBonus::SdUp) && pos1.is_head_up() {
-        ci_warn(&mut ci, "SdUp claimed, but {pos} is head up");
+    for bonus in &acro.bonuses {
+        ci.extend(check_reqs_b_bonus(acro, bonus));
     }
 
     ci.into()
@@ -861,6 +916,12 @@ fn check_reqs_p(acro: &AcroP) -> Box<[CardIssue]> {
         // warn because technically you could do something before Spich,
         // and then you'd start with that position, but that's unlikely
         ci_err(&mut ci, "Spich requires going from bamboo to shrimp or shrimp to bamboo");
+    }
+
+    let last_position = acro.positions.second.as_ref().unwrap_or(&acro.positions.first);
+    let head_down_bonus = acro.bonuses.iter().any(PBonus::is_head_down);
+    if head_down_bonus && last_position.is_head_up() && !acro.bonuses.contains(&PBonus::Pos3) {
+        ci_warn(&mut ci, format!("{head_down_bonus} declared but {last_position} is head up"));
     }
 
     ci.into()
@@ -1205,6 +1266,18 @@ mod tests {
             ("head_up_to_free_ok", check_reqs, "P-DB-L/SiF+P-pi/2hp", 0),
             ("free_to_head_down_ok", check_reqs, "P-DB-L/SiF+P-hp/2pi", 0),
             ("queen_ok", check_reqs, "P-B-2pBb-qu", 0),
+            ("bloom_with_owl_err", check_reqs, "B-St-F1S-ow-Bloom", 1),
+            ("bloom_with_queen_ok", check_reqs, "B-St-F1S-qu-Bloom", 0),
+            ("spiral_wo_handstand_err", check_reqs, "B-LH-LiH-ct-Spiral", 1),
+            ("spiral_w_handstand_ok", check_reqs, "B-LH-LiH-ct/2bb-Spiral", 0),
+            ("spiral_wo_pos3_err", check_reqs, "B-LH-LiH-ct/2ne-Spiral", 1),
+            ("spiral_w_pos3_ok", check_reqs, "B-LH-LiH-ct/2ne-Pos3/Spiral", 0),
+            ("retf_wo_feet_err", check_reqs, "A-Sq-Up-tk-RetF", 1),
+            ("retf_with_feet_ok", check_reqs, "A-Feet-Up-tk-RetF", 0),
+            ("head_up_with_upside_down_err", check_reqs, "P-P-F2A-sd-Ps1!", 1),
+            ("head_down_with_upside_down_ok", check_reqs, "P-Knees-SP+K-bb-Ps1!", 0),
+            ("head_up_with_upside_down_pos2_ok", check_reqs, "P-P-F2A-sd/2bb-Ps1!", 0),
+            ("head_up_with_pos3_ok", check_reqs, "P-P-F2A-sd/2ba-Pos3/Ps1!", 0),
             ("airborne_ln_as_takeoff", check_positions, "A-Sq-Back-ln/2tk-s1", 1),
         ];
         for (name, check, acro, expected) in tests {
@@ -1229,6 +1302,10 @@ mod tests {
         assert_eq!(check_age_restrictions(Youth, &acro).len(), 0);
         assert_eq!(check_age_restrictions(JRSR, &acro).len(), 0);
         let acro = "A-Sq-Up-ln-RetSq".parse().unwrap();
+        assert_eq!(check_age_restrictions(AG12U, &acro).len(), 1);
+        assert_eq!(check_age_restrictions(Youth, &acro).len(), 1);
+        assert_eq!(check_age_restrictions(JRSR, &acro).len(), 0);
+        let acro = "B-St-1FH/-ba".parse().unwrap();
         assert_eq!(check_age_restrictions(AG12U, &acro).len(), 1);
         assert_eq!(check_age_restrictions(Youth, &acro).len(), 1);
         assert_eq!(check_age_restrictions(JRSR, &acro).len(), 0);

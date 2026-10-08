@@ -427,6 +427,8 @@ pub enum ABonus {
     RetSq,
     RetPa,
     Feet,
+    Ret1Pa,
+    RetF,
 }
 
 impl DD for ABonus {
@@ -443,6 +445,8 @@ impl DD for ABonus {
             Self::RetSq => 800,
             Self::RetPa => 600,
             Self::Feet => 75,
+            Self::Ret1Pa => 1100,
+            Self::RetF => 1000,
         })
     }
 }
@@ -454,8 +458,9 @@ impl ABonus {
         // reading of the acro catalog.
         match self {
             Self::Feet => &[AConst::Feet, AConst::_2Sup, AConst::_2SupH],
-            Self::RetPa => &[AConst::Shou],
+            Self::RetPa | Self::Ret1Pa => &[AConst::Shou],
             Self::RetSq => &[AConst::Sq],
+            Self::RetF => &[AConst::Feet],
             Self::Split => &[AConst::Thr, AConst::_2Sup, AConst::_2SupH],
             _ => &[],
         }
@@ -464,7 +469,7 @@ impl ABonus {
     #[must_use]
     pub const fn required_dir(&self) -> Option<ADir> {
         match self {
-            Self::Hula | Self::RetSq | Self::RetPa => Some(ADir::Up),
+            Self::Hula | Self::RetSq | Self::RetPa | Self::Ret1Pa | Self::RetF => Some(ADir::Up),
             _ => None,
         }
     }
@@ -551,8 +556,26 @@ impl BConst {
         #[allow(clippy::match_same_arms)]
         match self {
             Self::St => &[
-                _1P1P, _1PPx, PP, FP, SiSb, Bp, E, PHSlash, AP, SiS, FS, F1S, Tw, SPlus, _1PH,
-                _1F1P, _1F1F,
+                _1P1P,
+                _1PPx,
+                PP,
+                FP,
+                SiSb,
+                Bp,
+                E,
+                PHSlash,
+                AP,
+                SiS,
+                FS,
+                F1S,
+                Tw,
+                SPlus,
+                _1PH,
+                _1F1P,
+                _1F1F,
+                _1FHSlash,
+                _1PHSlashPlusH1PSlash,
+                _1FHSlashPlusS1PSlash,
             ],
             Self::StH => &[_1P1F, FF, FFSlash, PF, ShF, LayF, SiF, SPlus, _1F1F, H1FSlash, HTPlus],
             Self::_2SupU => &[Le, _1FHPlus1FP, PP2],
@@ -560,7 +583,20 @@ impl BConst {
             Self::_2SupM => &[Le, Ch],
             Self::_2SupD2F => &[Tow],
             Self::L | Self::L2FPlus => &[Li],
-            Self::StTransitional => &[PP, PF, Bp, ShF, E, F1S, LayF, _1P1F, _2pH, PHSlash],
+            Self::StTransitional => &[
+                PP,
+                PF,
+                Bp,
+                ShF,
+                E,
+                F1S,
+                LayF,
+                _1P1F,
+                _2pH,
+                PHSlash,
+                _1PHSlashPlusH1PSlash,
+                _1FHSlashPlusS1PSlash,
+            ],
             Self::LH | Self::Lh2F => &[LiH],
         }
     }
@@ -615,6 +651,12 @@ pub enum BConn {
     H1FSlash,
     #[strum(to_string = "HT+")]
     HTPlus,
+    #[strum(to_string = "1FH/")]
+    _1FHSlash,
+    #[strum(to_string = "1PH/+H1P/")]
+    _1PHSlashPlusH1PSlash,
+    #[strum(to_string = "1FH/+S1P/")]
+    _1FHSlashPlusS1PSlash,
 }
 
 impl DD for BConn {
@@ -655,6 +697,9 @@ impl DD for BConn {
             Self::_2pH => 775,
             Self::H1FSlash => 950,
             Self::HTPlus => 750,
+            Self::_1FHSlash => 750,
+            Self::_1PHSlashPlusH1PSlash => 725,
+            Self::_1FHSlashPlusS1PSlash => 600,
         })
     }
 }
@@ -696,12 +741,13 @@ impl BConn {
                 | Self::HTPlus
                 | Self::ShF
                 | Self::E
+                | Self::_1PHSlashPlusH1PSlash
         )
     }
 
     #[must_use]
     pub const fn is_only_one_leg(&self) -> bool {
-        matches!(self, Self::F1S | Self::_1F1P | Self::_1F1F)
+        matches!(self, Self::F1S | Self::_1F1P | Self::_1F1F | Self::_1FHSlashPlusS1PSlash)
     }
 
     #[must_use]
@@ -727,6 +773,8 @@ impl BConn {
                 | Self::_2pH
                 | Self::H1FSlash
                 | Self::HTPlus
+                | Self::_1PHSlashPlusH1PSlash
+                | Self::_1FHSlashPlusS1PSlash
         )
     }
 
@@ -745,6 +793,7 @@ impl BConn {
                 | Self::_1FHPlus1FP
                 | Self::_1F1P
                 | Self::_1F1F
+                | Self::_1FHSlash
         )
     }
 
@@ -787,6 +836,9 @@ impl BConn {
             Self::_2pH => &[StTransitional],
             Self::H1FSlash => &[StH],
             Self::HTPlus => &[StH],
+            Self::_1FHSlash => &[St],
+            Self::_1PHSlashPlusH1PSlash => &[St, StTransitional],
+            Self::_1FHSlashPlusS1PSlash => &[St, StTransitional],
         }
     }
 
@@ -838,6 +890,9 @@ impl BConn {
             Self::_2pH => &[Bang],
             Self::H1FSlash => &[Bang],
             Self::HTPlus => &[Bang],
+            Self::_1FHSlash => &[Plain, Plus],
+            Self::_1PHSlashPlusH1PSlash => &[Bang],
+            Self::_1FHSlashPlusS1PSlash => &[Plain, Plus],
         }
     }
 }
@@ -964,25 +1019,23 @@ impl BPos {
     }
 
     #[must_use]
+    pub const fn could_be_handstand(&self) -> bool {
+        self.is_head_down() || matches!(self, Self::mo | Self::pp | Self::sh)
+    }
+
+    #[must_use]
+    pub const fn is_head_down(&self) -> bool {
+        matches!(self, Self::bb | Self::bo | Self::ff | Self::wi | Self::br | Self::ow | Self::ma)
+    }
+
+    #[must_use]
     pub const fn could_be_head_down(&self) -> bool {
         self.is_free() || self.definitely_head_down()
     }
 
     #[must_use]
     pub const fn definitely_head_down(&self) -> bool {
-        matches!(
-            self,
-            Self::bb
-                | Self::bo
-                | Self::ff
-                | Self::wi
-                | Self::br
-                | Self::ow
-                | Self::ma
-                | Self::dr
-                | Self::qu
-                | Self::sn
-        )
+        self.is_head_down() || matches!(self, |Self::dr| Self::qu | Self::sn)
     }
 
     // The extreme flex positions can be done in a ballet leg platform
@@ -1056,6 +1109,8 @@ pub enum BRotation {
     #[strum(to_string = "r0.5L")]
     r0_5L,
     r1L,
+    #[strum(to_string = "r1.5L+")]
+    r1_5LPlus, // I have no idea why going to 1.5 means it needs to include plus "+"
 }
 
 impl DD for BRotation {
@@ -1079,6 +1134,7 @@ impl DD for BRotation {
             Self::rSlashL => 400,
             Self::r0_5L => 500,
             Self::r1L => 800,
+            Self::r1_5LPlus => 1000,
         })
     }
 }
@@ -1130,7 +1186,7 @@ impl BRotation {
             Self::r0_5 | Self::r1 | Self::r1_5 => Plain,
             Self::r0_5Plus | Self::r1Plus | Self::r1_5Plus | Self::r2Plus => Plus,
             Self::r0_5Bang | Self::r1Bang | Self::r1_5Bang | Self::r2Bang => Bang,
-            Self::rSlashL | Self::r0_5L | Self::r1L => L,
+            Self::rSlashL | Self::r0_5L | Self::r1L | Self::r1_5LPlus => L,
         }
     }
 }
@@ -1146,6 +1202,12 @@ pub enum BBonus {
     Moon,
     Mov,
     Hold,
+    ChangeL,
+    Spiral,
+    Switch,
+    Bloom,
+    #[strum(to_string = "Mov!")]
+    MovHeadDown,
 }
 
 impl DD for BBonus {
@@ -1161,7 +1223,45 @@ impl DD for BBonus {
             Self::Moon => 275,
             Self::Mov => 700,
             Self::Hold => 500,
+            Self::ChangeL => 350,
+            Self::Spiral => 300,
+            Self::Switch => 300,
+            Self::Bloom => 900,
+            Self::MovHeadDown => 200,
         })
+    }
+}
+
+impl BBonus {
+    #[must_use]
+    pub const fn required_consts(&self) -> &'static [BConst] {
+        match self {
+            Self::ChangeL => &[BConst::L, BConst::LH, BConst::Lh2F, BConst::L2FPlus],
+            Self::MovHeadDown => &[BConst::L, BConst::LH],
+            Self::Spiral => &[BConst::LH],
+            _ => &[],
+        }
+    }
+
+    #[must_use]
+    pub const fn required_conns(&self) -> Option<BConn> {
+        match self {
+            Self::Switch => Some(BConn::_1PH),
+            _ => None,
+        }
+    }
+
+    #[must_use]
+    pub const fn required_first_pos(&self) -> &'static [BPos] {
+        match self {
+            Self::Bloom => &[BPos::qu, BPos::dr],
+            _ => &[],
+        }
+    }
+
+    #[must_use]
+    pub const fn requires_handstand(&self) -> bool {
+        matches!(self, Self::Spiral | Self::MovHeadDown)
     }
 }
 
@@ -1399,6 +1499,8 @@ pub enum CBRotation {
     _2F0_5,
     #[strum(to_string = "2F1")]
     _2F1,
+    #[strum(to_string = "2F1.5")]
+    _2F1_5,
 }
 
 impl DD for CBRotation {
@@ -1415,6 +1517,7 @@ impl DD for CBRotation {
             Self::CP0_5 => 400,
             Self::_2F0_5 => 250,
             Self::_2F1 => 350,
+            Self::_2F1_5 => 450,
         })
     }
 }
@@ -1427,7 +1530,7 @@ impl CBRotation {
             Self::Cr0_5Bang | Self::Cr1Bang | Self::Cr1_5Bang => CBRotationGroup::Bang,
             Self::Cr0_5L => CBRotationGroup::L,
             Self::CP0_5 => CBRotationGroup::P,
-            Self::_2F0_5 | Self::_2F1 => CBRotationGroup::_2F,
+            Self::_2F0_5 | Self::_2F1 | Self::_2F1_5 => CBRotationGroup::_2F,
         }
     }
 
@@ -1441,7 +1544,7 @@ impl CBRotation {
             }
             Self::Cr0_5L => &[ThrAboveLh],
             Self::CP0_5 => &[ThrOntoF, ThrOntoFF, ThrOntohand],
-            Self::_2F0_5 | Self::_2F1 => &[ThrAbove2F],
+            Self::_2F0_5 | Self::_2F1 | Self::_2F1_5 => &[ThrAbove2F],
         }
     }
 }
@@ -1482,6 +1585,9 @@ pub enum CFRotation {
     Cs1t1_5o,
     Cs1t2o,
     Chs0_5,
+    Cs2,
+    Cs1_5t0_5o,
+    Cs2t0_5,
 }
 
 impl FromStr for CFRotation {
@@ -1523,6 +1629,9 @@ impl FromStr for CFRotation {
             "Cs1t1.5o" => Ok(Self::Cs1t1_5o),
             "Cs1t2o" => Ok(Self::Cs1t2o),
             "Chs0.5" => Ok(Self::Chs0_5),
+            "Cs2" => Ok(Self::Cs2),
+            "Cs1.5t0.5o" => Ok(Self::Cs1_5t0_5o),
+            "Cs2t0.5" => Ok(Self::Cs2t0_5),
             _ => Err(anyhow!("unknown rotation: '{s}'")),
         }
     }
@@ -1566,6 +1675,9 @@ impl DD for CFRotation {
             Self::Cs1t1_5o => 900,
             Self::Cs1t2o => 1050,
             Self::Chs0_5 => 200,
+            Self::Cs2 => 550,
+            Self::Cs1_5t0_5o => 950,
+            Self::Cs2t0_5 => 800,
         })
     }
 }
@@ -1585,11 +1697,15 @@ impl FeaturedRotation for CFRotation {
             Self::Css1t0_5 | Self::Css1t1 | Self::Css1t1_5 | Self::Css1t2 => StraightSomersault,
             Self::Cs1t1o | Self::Cs1t1_5o | Self::Cs1t2o => Somersault,
             Self::Chs0_5 => Handspring,
+            Self::Cs2 | Self::Cs1_5t0_5o | Self::Cs2t0_5 => Somersault,
         }
     }
 
     fn is_open(&self) -> bool {
-        matches!(self, Self::Cs1_5o | Self::Cs1t1o | Self::Cs1t1_5o | Self::Cs1t2o)
+        matches!(
+            self,
+            Self::Cs1_5o | Self::Cs1t1o | Self::Cs1t1_5o | Self::Cs1t2o | Self::Cs1_5t0_5o
+        )
     }
 }
 
@@ -1619,6 +1735,10 @@ pub enum CBonus {
     _1FOnto1FPlus,
     #[strum(to_string = "2F>2F")]
     _2FOnto2F,
+    #[strum(to_string = "1F>1P")]
+    _1FOnto1P,
+    #[strum(to_string = "1P>1P")]
+    _1POnto1P,
 }
 
 impl DD for CBonus {
@@ -1643,6 +1763,8 @@ impl DD for CBonus {
             Self::_1FOnto1F => 700,
             Self::_1FOnto1FPlus => 1000,
             Self::_2FOnto2F => 500,
+            Self::_1FOnto1P => 600,
+            Self::_1POnto1P => 375,
         })
     }
 }
@@ -1659,6 +1781,7 @@ impl CBonus {
             Self::JumpPass => {
                 &[ThrOntoSt, ThrOntoStH, ThrOntoFF, ThrOntoF, ThrOntohand, ThrOntoSq, ThrOntoSt2]
             }
+            Self::_1FOnto1P | Self::_1POnto1P => &[ThrOntoSt],
             // AQUA doesn't have 1F>1F in writing, but nothing else is
             // possible, and it matches the restriction on 2F>2F
             Self::_1FOnto1F | Self::_2FOnto2F => &[ThrOntoStH],
@@ -1728,6 +1851,9 @@ pub enum PConst {
     _2S,
     Flower,
     Hand,
+    Split,
+    Weasel,
+    _4L,
 }
 
 impl DD for PConst {
@@ -1743,6 +1869,9 @@ impl DD for PConst {
             Self::_2S => 1250,
             Self::Flower => 1000,
             Self::Hand => 800,
+            Self::Split => 1250,
+            Self::Weasel => 1500,
+            Self::_4L => 1450,
         })
     }
 }
@@ -1811,6 +1940,7 @@ impl PConst {
                 LSlashSiFPlusP,
                 _2pASlash,
                 BA,
+                _3pSPlus,
             ],
             Self::Flower => &[_2pASlash, _3pbA, HA, _3pA, F2A, SiA, _1FA, BA],
             Self::Hand => &[_2pASlash, _3pbA, HA, _1FA, _3pA, F2A, SiA, BA],
@@ -1885,6 +2015,8 @@ pub enum PConn {
     ShiShiPlus,
     #[strum(to_string = "HP+L")]
     HPPlusL,
+    #[strum(to_string = "3pS+")]
+    _3pSPlus,
 }
 
 impl DD for PConn {
@@ -1918,6 +2050,7 @@ impl DD for PConn {
             Self::SFPlusTP => 250,
             Self::ShiShiPlus => 700,
             Self::HPPlusL => 425,
+            Self::_3pSPlus => 400,
         })
     }
 }
@@ -1935,7 +2068,10 @@ impl PConn {
     #[must_use]
     pub const fn could_be_one_leg(&self) -> bool {
         self.definitely_one_leg()
-            || matches!(self, Self::FAb | Self::_2pK | Self::_3pK | Self::_3pS | Self::_3pbA)
+            || matches!(
+                self,
+                Self::FAb | Self::_2pK | Self::_3pK | Self::_3pS | Self::_3pbA | Self::_3pSPlus
+            )
     }
 
     #[must_use]
@@ -1970,6 +2106,7 @@ impl PConn {
             Self::SFPlusTP => &[DB],
             Self::ShiShiPlus => &[DB],
             Self::HPPlusL => &[B, DB],
+            Self::_3pSPlus => &[_2S],
         }
     }
 
@@ -2110,6 +2247,16 @@ pub enum PBonus {
     Mov1PlusT,
     Fall,
     FTurn,
+    #[strum(to_string = "Ps1!")]
+    Ps1HeadDown,
+    Ps1t1o,
+    Lotus,
+    #[strum(to_string = "Mov1+t1")]
+    Mov1PlusT1,
+    #[strum(to_string = "Ps1!o")]
+    Ps1HeadDowno,
+    #[strum(to_string = "Ps1.5!")]
+    Ps1_5HeadDown,
 }
 
 impl DD for PBonus {
@@ -2144,6 +2291,12 @@ impl DD for PBonus {
             Self::Mov1PlusT => 275,
             Self::Fall => 50,
             Self::FTurn => 150,
+            Self::Ps1HeadDown => 150,
+            Self::Ps1t1o => 450,
+            Self::Lotus => 300,
+            Self::Mov1PlusT1 => 325,
+            Self::Ps1HeadDowno => 350,
+            Self::Ps1_5HeadDown => 300,
         })
     }
 }
@@ -2165,6 +2318,7 @@ impl PBonus {
     pub const fn required_conns(&self) -> Option<PConn> {
         match self {
             Self::Diva => Some(PConn::_3pS),
+            Self::Lotus => Some(PConn::_3pbA),
             _ => None,
         }
     }
@@ -2174,8 +2328,14 @@ impl PBonus {
         match self {
             Self::Porp => Some(BPos::bb),
             Self::Spider => Some(BPos::br),
+            // TODO Self::Lotus requires turtle at some point (or Pos3)
             _ => None,
         }
+    }
+
+    #[must_use]
+    pub const fn is_head_down(&self) -> bool {
+        matches!(self, Self::Ps1HeadDown | Self::Ps1HeadDowno | Self::Ps1_5HeadDown)
     }
 }
 

@@ -87,7 +87,7 @@ fn test_parse_iss_team() {
                                 Decl { lc: Flex(FB), f: Factor::No },
                                 Decl { lc: Flex(F6a), f: Factor::No },
                                 Decl { lc: Aw(AB), f: Factor::No },
-                                Decl { lc: Aw(A6), f: Factor::No },
+                                Decl { lc: Aw(A8), f: Factor::No },
                                 Decl { lc: Spin(S1), f: Factor::No },
                                 Decl { lc: Aw(AB), f: Factor::No },
                                 Decl { lc: Twist(_2R1), f: Factor::No },
@@ -97,7 +97,7 @@ fn test_parse_iss_team() {
                             ]),
                             pc_bonus: Some(PatternChanges(1))
                         },
-                        Some(MilliDD(4050))
+                        Some(MilliDD(3900))
                     ),
                 },
                 Element {
@@ -108,9 +108,9 @@ fn test_parse_iss_team() {
                         HybridDecl {
                             decls: Box::from([
                                 Decl { lc: Aw(A3a), f: Factor::No },
-                                Decl { lc: Aw(A6), f: Factor::No },
+                                Decl { lc: Aw(A8), f: Factor::No },
                                 Decl { lc: Aw(A1c), f: Factor::No },
-                                Decl { lc: Aw(A6), f: Factor::No },
+                                Decl { lc: Aw(A8), f: Factor::No },
                                 Decl { lc: Flex(F4f), f: Factor::_0_3 },
                                 Decl { lc: Flex(F4e), f: Factor::_0_5 },
                                 Decl { lc: Flex(F4f), f: Factor::_0_5 },
@@ -119,7 +119,7 @@ fn test_parse_iss_team() {
                             ]),
                             pc_bonus: Some(PatternChanges(4))
                         },
-                        Some(MilliDD(4920))
+                        Some(MilliDD(4805))
                     ),
                 },
                 Element {
@@ -137,7 +137,7 @@ fn test_parse_iss_team() {
                             ]),
                             pc_bonus: Some(PatternChanges(2))
                         },
-                        Some(MilliDD(3800))
+                        Some(MilliDD(3850))
                     ),
                 },
                 Element {
@@ -150,7 +150,7 @@ fn test_parse_iss_team() {
                                 Decl { lc: Conn(CB, true), f: Factor::No },
                                 Decl { lc: Aw(A5), f: Factor::No },
                                 Decl { lc: Twist(_1RB), f: Factor::No },
-                                Decl { lc: Aw(A6), f: Factor::No },
+                                Decl { lc: Aw(A8), f: Factor::No },
                                 Decl { lc: Conn(CB, true), f: Factor::No },
                                 Decl { lc: Conn(CB, true), f: Factor::No },
                                 Decl { lc: Aw(A1c), f: Factor::No },
@@ -177,7 +177,7 @@ fn test_parse_iss_team() {
                             ]),
                             pc_bonus: None
                         },
-                        Some(MilliDD(2550))
+                        Some(MilliDD(2700))
                     ),
                 },
             ]
@@ -323,7 +323,7 @@ fn test_parse_iss_report() {
                                     Decl { lc: Flex(F6c), f: Factor::No },
                                     Decl { lc: Twist(_2RB), f: Factor::No },
                                     Decl { lc: Twist(RU1), f: Factor::No },
-                                    Decl { lc: Aw(A6), f: Factor::No },
+                                    Decl { lc: Aw(A8), f: Factor::No },
                                     Decl { lc: Flex(F3a), f: Factor::No },
                                     Decl { lc: Flex(F3b), f: Factor::No },
                                     Decl { lc: Flex(F2a), f: Factor::No },
@@ -350,7 +350,7 @@ fn test_parse_iss_report() {
                                     Decl { lc: Flex(F1a), f: Factor::No },
                                     Decl { lc: Flex(F3b), f: Factor::No },
                                     Decl { lc: Aw(A1d), f: Factor::No },
-                                    Decl { lc: Aw(A6), f: Factor::No },
+                                    Decl { lc: Aw(A8), f: Factor::No },
                                     Decl { lc: Spin(SC1), f: Factor::No },
                                 ]),
                                 pc_bonus: Some(PatternChanges(2)),
@@ -388,7 +388,7 @@ fn test_parse_iss_report() {
                                     Decl { lc: Flex(F5a), f: Factor::No },
                                     Decl { lc: Flex(F5a), f: Factor::No },
                                     Decl { lc: Twist(RU1), f: Factor::No },
-                                    Decl { lc: Aw(A8), f: Factor::No },
+                                    Decl { lc: Aw(A10), f: Factor::No },
                                     Decl { lc: Flex(F1a), f: Factor::No },
                                     Decl { lc: Twist(RC1), f: Factor::No },
                                     Decl { lc: Flex(F8a), f: Factor::No },
@@ -406,7 +406,7 @@ fn test_parse_iss_report() {
                             HybridDecl {
                                 decls: Box::from([
                                     Decl { lc: Flex(F9), f: Factor::No },
-                                    Decl { lc: Aw(A7), f: Factor::No },
+                                    Decl { lc: Aw(A9), f: Factor::No },
                                     Decl { lc: Aw(A4b), f: Factor::No },
                                     Decl { lc: Flex(F5a), f: Factor::No },
                                     Decl { lc: Aw(A4b), f: Factor::No },
@@ -500,7 +500,7 @@ fn test_parse_iss_report() {
                             HybridDecl {
                                 decls: Box::from([
                                     Decl { lc: Aw(A1c), f: Factor::No },
-                                    Decl { lc: Aw(A6), f: Factor::No },
+                                    Decl { lc: Aw(A8), f: Factor::No },
                                     Decl { lc: Aw(A1c), f: Factor::No },
                                     Decl { lc: Twist(_2RB), f: Factor::No },
                                     Decl { lc: Aw(A1c), f: Factor::No },
@@ -522,7 +522,7 @@ fn test_parse_iss_report() {
                             HybridDecl {
                                 decls: Box::from([
                                     Decl { lc: Aw(A3b), f: Factor::No },
-                                    Decl { lc: Aw(A6), f: Factor::No },
+                                    Decl { lc: Aw(A8), f: Factor::No },
                                     Decl { lc: Twist(_1R4), f: Factor::No },
                                     Decl { lc: Spin(S1), f: Factor::No },
                                     Decl { lc: Thrust(T7), f: Factor::No },
