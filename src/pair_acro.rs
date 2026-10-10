@@ -101,7 +101,7 @@ pub enum PairAcroKind {
     Js1_5B,
     Js1Ro,
     Js1R,
-    #[strum(to_string = "SL!2+2")]
+    #[strum(to_string = "SL!2+r2")]
     SLHeadDown2Plusr2,
     Js1Bo,
     #[strum(to_string = "W!+catchSL")]

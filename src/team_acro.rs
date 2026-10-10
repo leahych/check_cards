@@ -1853,6 +1853,7 @@ pub enum PConst {
     Hand,
     Split,
     Weasel,
+    #[strum(to_string = "4L")]
     _4L,
 }
 
