@@ -1,0 +1,1478 @@
+<?xml version="1.0" encoding="windows-1252" ?>
+<Artistic_Swimming>
+	<Date>2026-10-09</Date>
+	<Version>2026 Catalogue</Version>
+	<Description>Difficulty charts</Description>
+	<Creator>Integrated Sports Systems (ISS) Inc.</Creator>
+	<Reference>Appendix 2</Reference>
+	<Country>INTL</Country>
+	<Base_Marks>
+		<Base_Mark>
+			<Family>No. of Movements</Family>
+			<Code>NM</Code>
+			<Category>
+				<CategoryDesc>Level 1</CategoryDesc>
+				<CategoryCode>1</CategoryCode>
+				<Description>6 or less movements</Description>
+				<DD>0.05</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 2</CategoryDesc>
+				<CategoryCode>2</CategoryCode>
+				<Description>7-19 movements</Description>
+				<DD>0.10</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 3</CategoryDesc>
+				<CategoryCode>3</CategoryCode>
+				<Description>20-29 movements</Description>
+				<DD>0.20</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 4</CategoryDesc>
+				<CategoryCode>4</CategoryCode>
+				<Description>30+ movements</Description>
+				<DD>0.30</DD>
+			</Category>
+		</Base_Mark>
+		<Base_Mark>
+			<Family>Time Underwater</Family>
+			<Code>TU</Code>
+			<Category>
+				<CategoryDesc>Level 1</CategoryDesc>
+				<CategoryCode>1</CategoryCode>
+				<Description>Short (6 sec. or less)</Description>
+				<DD>0.05</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 2</CategoryDesc>
+				<CategoryCode>2</CategoryCode>
+				<Description>Medium (7-15 seconds)</Description>
+				<DD>0.10</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 3</CategoryDesc>
+				<CategoryCode>3</CategoryCode>
+				<Description>Long (16 sec. or more)</Description>
+				<DD>0.20</DD>
+			</Category>
+		</Base_Mark>
+	</Base_Marks>
+	<Hybrids>
+		<Hybrid>
+			<Family>Thrusts</Family>
+			<Code>T</Code>
+			<Category>
+				<CategoryDesc>Level B</CategoryDesc>
+				<CategoryCode>TB</CategoryCode>
+				<Description>Thrust with one or two legs followed by crashing on the surface</Description>
+				<DD>0.30</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 1</CategoryDesc>
+				<CategoryCode>T1</CategoryCode>
+				<Description>Thrust with one leg followed by vertical descent</Description>
+				<DD>0.45</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 2</CategoryDesc>
+				<CategoryCode>T2a</CategoryCode>
+				<Description>Thrust with one leg followed by Spin 180°</Description>
+				<DD>0.50</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 2</CategoryDesc>
+				<CategoryCode>T2b</CategoryCode>
+				<Description>Thrust with one leg followed by Twirl 180° and a crash</Description>
+				<DD>0.50</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 3</CategoryDesc>
+				<CategoryCode>T3a</CategoryCode>
+				<Description>Thrust and vertical descent</Description>
+				<DD>0.65</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 3</CategoryDesc>
+				<CategoryCode>T3b</CategoryCode>
+				<Description>Thrust with one leg followed by Spin 360°</Description>
+				<DD>0.65</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 3</CategoryDesc>
+				<CategoryCode>T3c</CategoryCode>
+				<Description>Thrust with one leg followed by Twirl 180° and descent</Description>
+				<DD>0.65</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 3</CategoryDesc>
+				<CategoryCode>T3d</CategoryCode>
+				<Description>Thrust with flexibility followed by crashing</Description>
+				<DD>0.65</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 4</CategoryDesc>
+				<CategoryCode>T4a</CategoryCode>
+				<Description>Thrust with one leg followed by Spin 720°</Description>
+				<DD>0.85</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 4</CategoryDesc>
+				<CategoryCode>T4b</CategoryCode>
+				<Description>Thrust with flexibility and descent</Description>
+				<DD>0.85</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 4</CategoryDesc>
+				<CategoryCode>T4c</CategoryCode>
+				<Description>Thrust followed bySpin 180°</Description>
+				<DD>0.85</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 4</CategoryDesc>
+				<CategoryCode>T4d</CategoryCode>
+				<Description>Flying Fish (with descent)</Description>
+				<DD>0.85</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 4</CategoryDesc>
+				<CategoryCode>T4e</CategoryCode>
+				<Description>Thrust followed by Twirl 180° and a crash</Description>
+				<DD>0.85</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 5</CategoryDesc>
+				<CategoryCode>T5a</CategoryCode>
+				<Description>Thrust followed by Spin 360°</Description>
+				<DD>0.90</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 5</CategoryDesc>
+				<CategoryCode>T5b</CategoryCode>
+				<Description>Thrust followed by Twirl 180° and descent</Description>
+				<DD>0.90</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 5</CategoryDesc>
+				<CategoryCode>T5c</CategoryCode>
+				<Description>Thrust with flexibility followed by Spin 180°</Description>
+				<DD>0.90</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 5</CategoryDesc>
+				<CategoryCode>T5d</CategoryCode>
+				<Description>Flying Fish Spin 180° or Thrust Fishtail Helicopter Spinning 180°</Description>
+				<DD>0.90</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 5</CategoryDesc>
+				<CategoryCode>T5e</CategoryCode>
+				<Description>One leg Thrust with Twirl 180° followed by Spin 360°</Description>
+				<DD>0.90</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 6</CategoryDesc>
+				<CategoryCode>T6a</CategoryCode>
+				<Description>Thrust with flexibility followed by Spin 360°</Description>
+				<DD>1.20</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 6</CategoryDesc>
+				<CategoryCode>T6b</CategoryCode>
+				<Description>Thrust with Twirl 180° followed by Spin 360°</Description>
+				<DD>1.20</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 6</CategoryDesc>
+				<CategoryCode>T6c</CategoryCode>
+				<Description>Flying Fish 360° or Thrust Fishtail Helicopter Spinning 360°</Description>
+				<DD>1.20</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 7</CategoryDesc>
+				<CategoryCode>T7</CategoryCode>
+				<Description>Thrust followed by Spin 720°</Description>
+				<DD>1.60</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 8</CategoryDesc>
+				<CategoryCode>T8</CategoryCode>
+				<Description>Thrust with flexibility followed by Spin 720°</Description>
+				<DD>1.90</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 9</CategoryDesc>
+				<CategoryCode>T9</CategoryCode>
+				<Description>Thrust to height of 8.5 (waist) or higher continued by catching (clearly stopping - stable height demonstrated for 1s or more) in a Vertical Position above the knees or higher</Description>
+				<DD>2.00</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 10</CategoryDesc>
+				<CategoryCode>T10</CategoryCode>
+				<Description>Thrust to height of 8.5 (waist) or higher followed by Spin 1080° or more</Description>
+				<DD>2.30</DD>
+			</Category>
+		</Hybrid>
+		<Hybrid>
+			<Family>Spins</Family>
+			<Code>S</Code>
+			<Category>
+				<CategoryDesc>Level B</CategoryDesc>
+				<CategoryCode>SB</CategoryCode>
+				<Description>Spin 180°</Description>
+				<DD>0.15</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level B</CategoryDesc>
+				<CategoryCode>SCB</CategoryCode>
+				<Description>Combined 180°</Description>
+				<DD>0.40</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level B</CategoryDesc>
+				<CategoryCode>SCDB</CategoryCode>
+				<Description>Two-direction Combined 180°</Description>
+				<DD>0.45</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 1</CategoryDesc>
+				<CategoryCode>S1</CategoryCode>
+				<Description>Spin 360°</Description>
+				<DD>0.40</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 1</CategoryDesc>
+				<CategoryCode>SC1</CategoryCode>
+				<Description>Combined 360°</Description>
+				<DD>0.95</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 1</CategoryDesc>
+				<CategoryCode>SCD1</CategoryCode>
+				<Description>Two-direction Combined 360°</Description>
+				<DD>1.00</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 2</CategoryDesc>
+				<CategoryCode>S2</CategoryCode>
+				<Description>Spin 720°</Description>
+				<DD>0.90</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 2</CategoryDesc>
+				<CategoryCode>SC2</CategoryCode>
+				<Description>Combined 720°</Description>
+				<DD>1.95</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 2</CategoryDesc>
+				<CategoryCode>SCD2</CategoryCode>
+				<Description>Two-direction Combined 720°</Description>
+				<DD>2.00</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 3</CategoryDesc>
+				<CategoryCode>S3</CategoryCode>
+				<Description>Spin 1080°</Description>
+				<DD>1.40</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 3</CategoryDesc>
+				<CategoryCode>SC3</CategoryCode>
+				<Description>Combined 1080°</Description>
+				<DD>2.95</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 3</CategoryDesc>
+				<CategoryCode>SCD3</CategoryCode>
+				<Description>Two-direction Combined 1080°</Description>
+				<DD>3.00</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 4</CategoryDesc>
+				<CategoryCode>S4</CategoryCode>
+				<Description>Spin 1440°</Description>
+				<DD>1.90</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 4</CategoryDesc>
+				<CategoryCode>SC4</CategoryCode>
+				<Description>Combined 1440°</Description>
+				<DD>3.95</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 4</CategoryDesc>
+				<CategoryCode>SCD4</CategoryCode>
+				<Description>Two-direction Combined 1440°</Description>
+				<DD>4.00</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 5</CategoryDesc>
+				<CategoryCode>S5</CategoryCode>
+				<Description>Spin 1800°</Description>
+				<DD>2.40</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 5</CategoryDesc>
+				<CategoryCode>SC5</CategoryCode>
+				<Description>Combined 1800°</Description>
+				<DD>4.95</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 5</CategoryDesc>
+				<CategoryCode>SCD5</CategoryCode>
+				<Description>Two-direction Combined 1800°</Description>
+				<DD>5.00</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 6</CategoryDesc>
+				<CategoryCode>S6</CategoryCode>
+				<Description>Spin 2160°</Description>
+				<DD>2.90</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 6</CategoryDesc>
+				<CategoryCode>SC6</CategoryCode>
+				<Description>Combined 2160°</Description>
+				<DD>5.75</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 6</CategoryDesc>
+				<CategoryCode>SCD6</CategoryCode>
+				<Description>Two-direction Combined 2160°</Description>
+				<DD>5.80</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 7</CategoryDesc>
+				<CategoryCode>S7</CategoryCode>
+				<Description>Spin 2520°</Description>
+				<DD>3.40</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 8</CategoryDesc>
+				<CategoryCode>S8</CategoryCode>
+				<Description>Spin 2880°</Description>
+				<DD>3.90</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 9</CategoryDesc>
+				<CategoryCode>S9</CategoryCode>
+				<Description>Spin 3240°</Description>
+				<DD>4.40</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 10</CategoryDesc>
+				<CategoryCode>S10</CategoryCode>
+				<Description>Spin 3600°</Description>
+				<DD>4.90</DD>
+			</Category>
+		</Hybrid>
+		<Hybrid>
+			<Family>Twists</Family>
+			<Code>R</Code>
+			<Category>
+				<CategoryDesc>Level B</CategoryDesc>
+				<CategoryCode>RB</CategoryCode>
+				<Description>Swirl 180°/Turn 180° non-sustained or up-down</Description>
+				<DD>0.10</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level B</CategoryDesc>
+				<CategoryCode>1RB</CategoryCode>
+				<Description>1 leg Twist/Twirl 180°</Description>
+				<DD>0.15</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level B</CategoryDesc>
+				<CategoryCode>2RB</CategoryCode>
+				<Description>Twist/Twirl 180° (VP)</Description>
+				<DD>0.20</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level B</CategoryDesc>
+				<CategoryCode>ROB</CategoryCode>
+				<Description>VP open 180°to Split</Description>
+				<DD>0.25</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level B</CategoryDesc>
+				<CategoryCode>RCB</CategoryCode>
+				<Description>Split close 180°to VP</Description>
+				<DD>0.25</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 1</CategoryDesc>
+				<CategoryCode>R1</CategoryCode>
+				<Description>Swirl 360°/Turn 360° non-sustained or up-down</Description>
+				<DD>0.20</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 1</CategoryDesc>
+				<CategoryCode>1R1</CategoryCode>
+				<Description>1 leg Twist/Twirl 360°</Description>
+				<DD>0.35</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 1</CategoryDesc>
+				<CategoryCode>2R1</CategoryCode>
+				<Description>Twist/Twirl 360° (VP)</Description>
+				<DD>0.45</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 1</CategoryDesc>
+				<CategoryCode>RD1</CategoryCode>
+				<Description>Two-direction 360° (VP)</Description>
+				<DD>0.50</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 1</CategoryDesc>
+				<CategoryCode>RU1</CategoryCode>
+				<Description>Unbalanced Twist/Twirl 360° (VP)</Description>
+				<DD>0.55</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 1</CategoryDesc>
+				<CategoryCode>RO1</CategoryCode>
+				<Description>VP open 360°to Split</Description>
+				<DD>0.55</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 1</CategoryDesc>
+				<CategoryCode>RC1</CategoryCode>
+				<Description>Split close 360°to VP</Description>
+				<DD>0.55</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 2</CategoryDesc>
+				<CategoryCode>R2</CategoryCode>
+				<Description>Swirl 720°</Description>
+				<DD>0.40</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 2</CategoryDesc>
+				<CategoryCode>1R2</CategoryCode>
+				<Description>1 leg Twist 720°</Description>
+				<DD>0.75</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 2</CategoryDesc>
+				<CategoryCode>2R2</CategoryCode>
+				<Description>Twist 720° (VP)</Description>
+				<DD>0.95</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 2</CategoryDesc>
+				<CategoryCode>RD2</CategoryCode>
+				<Description>Two-direction 720° (VP)</Description>
+				<DD>1.05</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 2</CategoryDesc>
+				<CategoryCode>RU2</CategoryCode>
+				<Description>Unbalanced Twist 720° (VP)</Description>
+				<DD>1.15</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 3</CategoryDesc>
+				<CategoryCode>R3</CategoryCode>
+				<Description>Swirl 1080°</Description>
+				<DD>0.60</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 3</CategoryDesc>
+				<CategoryCode>1R3</CategoryCode>
+				<Description>1 leg Twist 1080°</Description>
+				<DD>1.15</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 3</CategoryDesc>
+				<CategoryCode>2R3</CategoryCode>
+				<Description>Twist 1080° (VP)</Description>
+				<DD>1.45</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 3</CategoryDesc>
+				<CategoryCode>RU3</CategoryCode>
+				<Description>Unbalanced Twist 1080° (VP)</Description>
+				<DD>1.75</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 4</CategoryDesc>
+				<CategoryCode>R4</CategoryCode>
+				<Description>Swirl 1440°</Description>
+				<DD>0.80</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 4</CategoryDesc>
+				<CategoryCode>1R4</CategoryCode>
+				<Description>1 leg Twist 1440°</Description>
+				<DD>1.55</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 4</CategoryDesc>
+				<CategoryCode>2R4</CategoryCode>
+				<Description>Twist 1440° (VP)</Description>
+				<DD>1.95</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 4</CategoryDesc>
+				<CategoryCode>RD4</CategoryCode>
+				<Description>Two-direction 1440° (VP)</Description>
+				<DD>2.15</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 4</CategoryDesc>
+				<CategoryCode>RU4</CategoryCode>
+				<Description>Unbalanced Twist 1440° (VP)</Description>
+				<DD>2.35</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 5</CategoryDesc>
+				<CategoryCode>1R5</CategoryCode>
+				<Description>1 leg Twist 1800°</Description>
+				<DD>1.95</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 5</CategoryDesc>
+				<CategoryCode>2R5</CategoryCode>
+				<Description>Twist 1800° (VP)</Description>
+				<DD>2.45</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 5</CategoryDesc>
+				<CategoryCode>RU5</CategoryCode>
+				<Description>Unbalanced Twist 1800° (VP)</Description>
+				<DD>2.95</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 6</CategoryDesc>
+				<CategoryCode>1R6</CategoryCode>
+				<Description>1 leg Twist 2160°</Description>
+				<DD>2.35</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 6</CategoryDesc>
+				<CategoryCode>2R6</CategoryCode>
+				<Description>Twist 2160° (VP)</Description>
+				<DD>2.95</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 6</CategoryDesc>
+				<CategoryCode>RD6</CategoryCode>
+				<Description>Two-direction 2160° (VP)</Description>
+				<DD>3.35</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 6</CategoryDesc>
+				<CategoryCode>RU6</CategoryCode>
+				<Description>Unbalanced Twist 2160° (VP)</Description>
+				<DD>3.55</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 7</CategoryDesc>
+				<CategoryCode>2R7</CategoryCode>
+				<Description>Twist 2520° (VP)</Description>
+				<DD>3.45</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 7</CategoryDesc>
+				<CategoryCode>RU7</CategoryCode>
+				<Description>Unbalanced Twist 2520° (VP)</Description>
+				<DD>4.15</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 8</CategoryDesc>
+				<CategoryCode>2R8</CategoryCode>
+				<Description>Twist 2880° (VP)</Description>
+				<DD>3.95</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 8</CategoryDesc>
+				<CategoryCode>RU8</CategoryCode>
+				<Description>Unbalanced Twist 2880° (VP)</Description>
+				<DD>4.75</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 9</CategoryDesc>
+				<CategoryCode>2R9</CategoryCode>
+				<Description>Twist 3240° (VP)</Description>
+				<DD>4.45</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 9</CategoryDesc>
+				<CategoryCode>RU9</CategoryCode>
+				<Description>Unbalanced Twist 3240° (VP)</Description>
+				<DD>5.35</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 10</CategoryDesc>
+				<CategoryCode>2R10</CategoryCode>
+				<Description>Twist 3600° (VP)</Description>
+				<DD>4.95</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 10</CategoryDesc>
+				<CategoryCode>RU10</CategoryCode>
+				<Description>Unbalanced Twist 3600° (VP)</Description>
+				<DD>5.95</DD>
+			</Category>
+		</Hybrid>
+		<Hybrid>
+			<Family>Airborne Weight</Family>
+			<Code>A</Code>
+			<Category>
+				<CategoryDesc>Level B</CategoryDesc>
+				<CategoryCode>AB</CategoryCode>
+				<Description>Lift to any single leg position from inverted Tuck, Table Top or a variant</Description>
+				<DD>0.05</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 1</CategoryDesc>
+				<CategoryCode>A1a</CategoryCode>
+				<Description>Lift to any single leg position from Front Pike</Description>
+				<DD>0.10</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 1</CategoryDesc>
+				<CategoryCode>A1b</CategoryCode>
+				<Description>Single leg descent</Description>
+				<DD>0.10</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 1</CategoryDesc>
+				<CategoryCode>A1c</CategoryCode>
+				<Description>Lift to VP from inverted Tuck, Table Top or a variant</Description>
+				<DD>0.10</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 1</CategoryDesc>
+				<CategoryCode>A1d</CategoryCode>
+				<Description>Join to VP from Fishtail,  Ben knee VP or Split</Description>
+				<DD>0.10</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 2</CategoryDesc>
+				<CategoryCode>A2a</CategoryCode>
+				<Description>Vertical descent in VP</Description>
+				<DD>0.15</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 2</CategoryDesc>
+				<CategoryCode>A2b</CategoryCode>
+				<Description>From Front Pike to a single leg position while rotating 180°</Description>
+				<DD>0.15</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 3</CategoryDesc>
+				<CategoryCode>A3a</CategoryCode>
+				<Description>Front Pike to VP</Description>
+				<DD>0.20</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 3</CategoryDesc>
+				<CategoryCode>A3b</CategoryCode>
+				<Description>Vertical ascent with 1 or 2 legs</Description>
+				<DD>0.20</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 4</CategoryDesc>
+				<CategoryCode>A4a</CategoryCode>
+				<Description>From Front Pike to a single leg position while rotating 360°</Description>
+				<DD>0.45</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 4</CategoryDesc>
+				<CategoryCode>A4b</CategoryCode>
+				<Description>Front Pike to a VP while rotating 180°</Description>
+				<DD>0.45</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 5</CategoryDesc>
+				<CategoryCode>A5</CategoryCode>
+				<Description>Front Pike to a VP while rotating 360°</Description>
+				<DD>0.65</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 6</CategoryDesc>
+				<CategoryCode>A6</CategoryCode>
+				<Description>3 seconds of up and down movements with one leg or a combination of one or two legs</Description>
+				<DD>0.80</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 7</CategoryDesc>
+				<CategoryCode>A7</CategoryCode>
+				<Description>3 seconds of up and down movements with two legs</Description>
+				<DD>0.90</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 8</CategoryDesc>
+				<CategoryCode>A8</CategoryCode>
+				<Description>Sustained height with one leg or a combination of one or two legs lasting equal or more than 3 seconds Or Isolated movements performed in a stable and fixed single leg position isolated movements performed with other (non-fixed) leg lasting 3 seconds or more Or A combination of the two techniques</Description>
+				<DD>1.15</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 9</CategoryDesc>
+				<CategoryCode>A9</CategoryCode>
+				<Description>Sustained height in Vertical Position lasting equal or more than 3 seconds</Description>
+				<DD>1.45</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 10</CategoryDesc>
+				<CategoryCode>A10</CategoryCode>
+				<Description>Sustained height shown at least 3 seconds or more in Vertical Position performed in an unbalanced position</Description>
+				<DD>1.65</DD>
+			</Category>
+		</Hybrid>
+		<Hybrid>
+			<Family>Flexibility</Family>
+			<Code>F</Code>
+			<Category>
+				<CategoryDesc>Level B</CategoryDesc>
+				<CategoryCode>FB</CategoryCode>
+				<Description>Back Layout to Surface Arch or Bent Knee Surface Arch</Description>
+				<DD>0.05</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 1</CategoryDesc>
+				<CategoryCode>F1a</CategoryCode>
+				<Description>Rapid Split from any position</Description>
+				<DD>0.10</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 1</CategoryDesc>
+				<CategoryCode>F1b</CategoryCode>
+				<Description>Rapid Knight position</Description>
+				<DD>0.10</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 1</CategoryDesc>
+				<CategoryCode>F1c</CategoryCode>
+				<Description>BK Surface Arch to Knight</Description>
+				<DD>0.10</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 2</CategoryDesc>
+				<CategoryCode>F2a</CategoryCode>
+				<Description>Walkout Front</Description>
+				<DD>0.20</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 2</CategoryDesc>
+				<CategoryCode>F2b</CategoryCode>
+				<Description>Split to Front Pike</Description>
+				<DD>0.20</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 2</CategoryDesc>
+				<CategoryCode>F2c</CategoryCode>
+				<Description>Split variants at the surface</Description>
+				<DD>0.20</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 3</CategoryDesc>
+				<CategoryCode>F3a</CategoryCode>
+				<Description>Split to Split through VP</Description>
+				<DD>0.30</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 3</CategoryDesc>
+				<CategoryCode>F3b</CategoryCode>
+				<Description>Ariana Rotation</Description>
+				<DD>0.30</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 3</CategoryDesc>
+				<CategoryCode>F3c</CategoryCode>
+				<Description>Combination of a Right and Left Leg Knight Position</Description>
+				<DD>0.30</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 3</CategoryDesc>
+				<CategoryCode>F3d</CategoryCode>
+				<Description>Fishtail to Knight or Knight to Fishtail (bending the moving leg through the vertical line ie through Bent Knee VP).</Description>
+				<DD>0.30</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 4</CategoryDesc>
+				<CategoryCode>F4a</CategoryCode>
+				<Description>Bent Knee Front Layout to Bent Knee Arch Position or Front Layout to Split with a straight leg</Description>
+				<DD>0.35</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 4</CategoryDesc>
+				<CategoryCode>F4b</CategoryCode>
+				<Description>From Surface Arch Position to Knight or Split with a straight leg</Description>
+				<DD>0.35</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 4</CategoryDesc>
+				<CategoryCode>F4c</CategoryCode>
+				<Description>Bent Knee Surface to Bent Knee VP</Description>
+				<DD>0.35</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 4</CategoryDesc>
+				<CategoryCode>F4d</CategoryCode>
+				<Description>Bent Knee Surface Arch to Knight</Description>
+				<DD>0.35</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 4</CategoryDesc>
+				<CategoryCode>F4e</CategoryCode>
+				<Description>Fishtail to Knight or Knight to Fishtail (horizontal plane, along the surface)</Description>
+				<DD>0.35</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 4</CategoryDesc>
+				<CategoryCode>F4f</CategoryCode>
+				<Description>Fishtail to Knight through VP</Description>
+				<DD>0.35</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 5</CategoryDesc>
+				<CategoryCode>F5a</CategoryCode>
+				<Description>Knight to VP orKnight to Fishtail through VP</Description>
+				<DD>0.40</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 5</CategoryDesc>
+				<CategoryCode>F5b</CategoryCode>
+				<Description>Bent Knee Surface Arch to VP</Description>
+				<DD>0.40</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 5</CategoryDesc>
+				<CategoryCode>F5c</CategoryCode>
+				<Description>Knight rotating 180°</Description>
+				<DD>0.40</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 6</CategoryDesc>
+				<CategoryCode>F6a</CategoryCode>
+				<Description>Cyclone 180°</Description>
+				<DD>0.45</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 6</CategoryDesc>
+				<CategoryCode>F6b</CategoryCode>
+				<Description>Knight rotating 360°</Description>
+				<DD>0.45</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 6</CategoryDesc>
+				<CategoryCode>F6c</CategoryCode>
+				<Description>Knight Join to VP while rotating 180°</Description>
+				<DD>0.45</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 6</CategoryDesc>
+				<CategoryCode>F6d</CategoryCode>
+				<Description>Flat Split or Split variants sustained at the surface 3 seconds or more</Description>
+				<DD>0.45</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 7</CategoryDesc>
+				<CategoryCode>F7</CategoryCode>
+				<Description>Surface Arch to VP (clearly stopping in VP)</Description>
+				<DD>0.50</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 8</CategoryDesc>
+				<CategoryCode>F8a</CategoryCode>
+				<Description>Knight Join to VP while rotating 360°</Description>
+				<DD>0.65</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 8</CategoryDesc>
+				<CategoryCode>F8b</CategoryCode>
+				<Description>Bent Knee Surface Arch Position to VP rotating 360°</Description>
+				<DD>0.65</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 9</CategoryDesc>
+				<CategoryCode>F9</CategoryCode>
+				<Description>Surface Arch Position to VP rotating 180°</Description>
+				<DD>0.75</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 10</CategoryDesc>
+				<CategoryCode>F10</CategoryCode>
+				<Description>Surface Arch Position to VP rotating 360°</Description>
+				<DD>1.00</DD>
+			</Category>
+		</Hybrid>
+		<Hybrid>
+			<Family>Connections</Family>
+			<Code>C</Code>
+			<Category>
+				<CategoryDesc>Level B</CategoryDesc>
+				<CategoryCode>CB</CategoryCode>
+				<Description>Piked body position at the surface of the water or any position out of VP "cone" area 2-3 connected</Description>
+				<DD>0.10</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level B</CategoryDesc>
+				<CategoryCode>CB+</CategoryCode>
+				<Description>Piked body position at the surface of the water or any position out of VP "cone" area 4-8 connected</Description>
+				<DD>0.20</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 1</CategoryDesc>
+				<CategoryCode>C1a</CategoryCode>
+				<Description>Connection in any one leg VP with the "bottom" leg connected. Can be facing any direction 2-3 connected</Description>
+				<DD>0.20</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 1</CategoryDesc>
+				<CategoryCode>C1a+</CategoryCode>
+				<Description>Connection in any one leg VP with the "bottom" leg connected. Can be facing any direction 4-8 connected</Description>
+				<DD>0.30</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 1</CategoryDesc>
+				<CategoryCode>C1b</CategoryCode>
+				<Description>Connecting a bottom leg with a thigh or VP leg 2-3 connected</Description>
+				<DD>0.20</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 1</CategoryDesc>
+				<CategoryCode>C1b+</CategoryCode>
+				<Description>Connecting a bottom leg with a thigh or VP leg 4-8 connected</Description>
+				<DD>0.30</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 2</CategoryDesc>
+				<CategoryCode>C2a</CategoryCode>
+				<Description>One leg face-to-face connection 2-3 connected</Description>
+				<DD>0.30</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 2</CategoryDesc>
+				<CategoryCode>C2a+</CategoryCode>
+				<Description>One leg face-to-face connection 4-8 connected</Description>
+				<DD>0.40</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 2</CategoryDesc>
+				<CategoryCode>C2b</CategoryCode>
+				<Description>One leg back one leg forward connection 2-3 connected</Description>
+				<DD>0.30</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 2</CategoryDesc>
+				<CategoryCode>C2b+</CategoryCode>
+				<Description>One leg back one leg forward connection 4-8 connected</Description>
+				<DD>0.40</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 2</CategoryDesc>
+				<CategoryCode>C2c</CategoryCode>
+				<Description>C1 connections with a rotation of at least 180° at sustained height 2-3 connected</Description>
+				<DD>0.30</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 2</CategoryDesc>
+				<CategoryCode>C2c+</CategoryCode>
+				<Description>C1 connections with a rotation of at least 180° at sustained height 4-8 connected</Description>
+				<DD>0.40</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 3</CategoryDesc>
+				<CategoryCode>C3</CategoryCode>
+				<Description>One leg back or side connection 2-3 connected</Description>
+				<DD>0.40</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 3</CategoryDesc>
+				<CategoryCode>C3+</CategoryCode>
+				<Description>One leg back or side connection 4-8 connected</Description>
+				<DD>0.50</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 4</CategoryDesc>
+				<CategoryCode>C4</CategoryCode>
+				<Description>Two-leg connection. May be facing any direction. 2-3 connected</Description>
+				<DD>0.50</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 4</CategoryDesc>
+				<CategoryCode>C4+</CategoryCode>
+				<Description>Two-leg connection. May be facing any direction. 4-8 connected</Description>
+				<DD>0.60</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 5</CategoryDesc>
+				<CategoryCode>C5</CategoryCode>
+				<Description>Rotation vertical connection with one leg in VP "cone" area. May be facing any direction. 2-3 connected </Description>
+				<DD>1.00</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 5</CategoryDesc>
+				<CategoryCode>C5+</CategoryCode>
+				<Description>Rotation vertical connection with one leg in VP "cone" area. May be facing any direction. 4-8 connected </Description>
+				<DD>1.10</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 6</CategoryDesc>
+				<CategoryCode>C6a</CategoryCode>
+				<Description>Rotation vertical connection with two legs in VP "cone" area. May be facing any direction. 2-3 connected</Description>
+				<DD>1.25</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 6</CategoryDesc>
+				<CategoryCode>C6a+</CategoryCode>
+				<Description>Rotation vertical connection with two legs in VP "cone" area. May be facing any direction. 4-8 connected</Description>
+				<DD>1.35</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 6</CategoryDesc>
+				<CategoryCode>C6b</CategoryCode>
+				<Description>Rotation vertical connection with one leg. May be facing any direction. C5 definition with rotation of 360° or more at sustained height. 2-3 connected</Description>
+				<DD>1.25</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 6</CategoryDesc>
+				<CategoryCode>C6b+</CategoryCode>
+				<Description>Rotation vertical connection with one leg. May be facing any direction. C5 definition with rotation of 360° or more at sustained height. 4-8 connected</Description>
+				<DD>1.35</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 7</CategoryDesc>
+				<CategoryCode>C7</CategoryCode>
+				<Description>360° Rotation vertical connection with two legs in VP "cone" area. May be facing any direction. C6 definition with rotation of 360° or more at sustained height.  : 2-3 connected</Description>
+				<DD>1.50</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Level 7</CategoryDesc>
+				<CategoryCode>C7+</CategoryCode>
+				<Description>360° Rotation vertical connection with two legs in VP "cone" area. May be facing any direction. C6 definition with rotation of 360° or more at sustained height.  : 4-8 connected</Description>
+				<DD>1.60</DD>
+			</Category>
+		</Hybrid>
+	</Hybrids>
+	<Acrobatics>
+		<Acrobatic>
+			<Family>Airborne</Family>
+			<Code>A</Code>
+		</Acrobatic>
+		<Acrobatic>
+			<Family>Balance</Family>
+			<Code>B</Code>
+			<Category>
+				<CategoryDesc>Stack</CategoryDesc>
+				<CategoryCode>S</CategoryCode>
+				<Description></Description>
+				<DD>0.00</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Lift</CategoryDesc>
+				<CategoryCode>L</CategoryCode>
+				<Description></Description>
+				<DD>0.00</DD>
+			</Category>
+		</Acrobatic>
+		<Acrobatic>
+			<Family>Combined</Family>
+			<Code>C</Code>
+			<Category>
+				<CategoryDesc>On to Support</CategoryDesc>
+				<CategoryCode>C</CategoryCode>
+				<Description></Description>
+				<DD>0.00</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Through Support</CategoryDesc>
+				<CategoryCode>T</CategoryCode>
+				<Description></Description>
+				<DD>0.00</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Other</CategoryDesc>
+				<CategoryCode>O</CategoryCode>
+				<Description></Description>
+				<DD>0.00</DD>
+			</Category>
+		</Acrobatic>
+		<Acrobatic>
+			<Family>Platform</Family>
+			<Code>P</Code>
+			<Category>
+				<CategoryDesc>Standard</CategoryDesc>
+				<CategoryCode>P</CategoryCode>
+				<Description></Description>
+				<DD>0.00</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Float</CategoryDesc>
+				<CategoryCode>F</CategoryCode>
+				<Description></Description>
+				<DD>0.00</DD>
+			</Category>
+		</Acrobatic>
+	</Acrobatics>	
+	<Bonuses>
+		<Bonus>
+			<Family>Traveling</Family>
+			<Code>TR</Code>
+		</Bonus>	
+		<Bonus>
+			<Family>Angles</Family>
+			<Code>A</Code>
+		</Bonus>	
+		<Bonus>
+			<Family>Placement</Family>
+			<Code>PL</Code>
+		</Bonus>	
+		<Bonus>
+			<Family>Synchronisation</Family>
+			<Code></Code>
+		</Bonus>	
+		<Bonus>
+			<Family>Pattern Change</Family>
+			<Code></Code>
+			<Category>
+				<CategoryDesc></CategoryDesc>
+				<CategoryCode>1PC</CategoryCode>
+				<Description>Every PC counted</Description>
+				<DD>0.20</DD>
+			</Category>
+			<Category>
+				<CategoryDesc></CategoryDesc>
+				<CategoryCode>2PC</CategoryCode>
+				<Description>2 x Every PC counted</Description>
+				<DD>0.40</DD>
+			</Category>
+			<Category>
+				<CategoryDesc></CategoryDesc>
+				<CategoryCode>3PC</CategoryCode>
+				<Description>3 x Every PC counted</Description>
+				<DD>0.60</DD>
+			</Category>
+			<Category>
+				<CategoryDesc></CategoryDesc>
+				<CategoryCode>4PC</CategoryCode>
+				<Description>4 x Every PC counted</Description>
+				<DD>0.80</DD>
+			</Category>
+			<Category>
+				<CategoryDesc></CategoryDesc>
+				<CategoryCode>5PC</CategoryCode>
+				<Description>5 x Every PC counted</Description>
+				<DD>1.00</DD>
+			</Category>
+			<Category>
+				<CategoryDesc></CategoryDesc>
+				<CategoryCode>6PC</CategoryCode>
+				<Description>6 x Every PC counted</Description>
+				<DD>1.20</DD>
+			</Category>
+			<Category>
+				<CategoryDesc></CategoryDesc>
+				<CategoryCode>7PC</CategoryCode>
+				<Description>7 x Every PC counted</Description>
+				<DD>1.40</DD>
+			</Category>
+			<Category>
+				<CategoryDesc></CategoryDesc>
+				<CategoryCode>8PC</CategoryCode>
+				<Description>8 x Every PC counted</Description>
+				<DD>1.60</DD>
+			</Category>
+			<Category>
+				<CategoryDesc></CategoryDesc>
+				<CategoryCode>9PC</CategoryCode>
+				<Description>9 x Every PC counted</Description>
+				<DD>1.80</DD>
+			</Category>
+			<Category>
+				<CategoryDesc></CategoryDesc>
+				<CategoryCode>10PC</CategoryCode>
+				<Description>10 x Every PC counted</Description>
+				<DD>2.00</DD>
+			</Category>
+		</Bonus>	
+	</Bonuses>
+	<Required_Elements_Solo>
+		<Element>
+			<Family>Element 1</Family>
+			<Code>TRE</Code>
+			<Category>
+				<CategoryDesc>Element 1</CategoryDesc>
+				<CategoryCode>1a</CategoryCode>
+				<Description>Thrust Continuous Spin 720°</Description>
+				<DD>2.70</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Element 1</CategoryDesc>
+				<CategoryCode>1b</CategoryCode>
+				<Description>Thrust Continuous Spin 360°</Description>
+				<DD>2.00</DD>
+			</Category>
+		</Element>
+		<Element>
+			<Family>Element 2</Family>
+			<Code>TRE</Code>
+			<Category>
+				<CategoryDesc>Element 2</CategoryDesc>
+				<CategoryCode>2</CategoryCode>
+				<Description>Clepsydra</Description>
+				<DD>3.50</DD>
+			</Category>
+		</Element>
+		<Element>
+			<Family>Element 3</Family>
+			<Code>TRE</Code>
+			<Category>
+				<CategoryDesc>Element 3</CategoryDesc>
+				<CategoryCode>3a</CategoryCode>
+				<Description>Porpoise Two Directions Spin Up 720°</Description>
+				<DD>3.10</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Element 3</CategoryDesc>
+				<CategoryCode>3b</CategoryCode>
+				<Description>Porpoise Two Directions Spin Up 360°</Description>
+				<DD>2.60</DD>
+			</Category>
+		</Element>
+		<Element>
+			<Family>Element 4</Family>
+			<Code>TRE</Code>
+			<Category>
+				<CategoryDesc>Element 4</CategoryDesc>
+				<CategoryCode>4a</CategoryCode>
+				<Description>Pacific Closing 360°</Description>
+				<DD>3.60</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Element 4</CategoryDesc>
+				<CategoryCode>4b</CategoryCode>
+				<Description>Pacific</Description>
+				<DD>3.50</DD>
+			</Category>
+		</Element>
+		<Element>
+			<Family>Element 5</Family>
+			<Code>TRE</Code>
+			<Category>
+				<CategoryDesc>Element 5</CategoryDesc>
+				<CategoryCode>5a</CategoryCode>
+				<Description>Rocket Split Spin 720° (360° Join + 360°)</Description>
+				<DD>2.50</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Element 5</CategoryDesc>
+				<CategoryCode>5b</CategoryCode>
+				<Description>Rocket Split Spin 360° (180° Join + 180°)</Description>
+				<DD>2.20</DD>
+			</Category>
+		</Element>
+	</Required_Elements_Solo>
+	<Required_Elements_Duet>
+		<Element>
+			<Family>Element 1</Family>
+			<Code>TRE</Code>
+			<Category>
+				<CategoryDesc>Element 1</CategoryDesc>
+				<CategoryCode>1a</CategoryCode>
+				<Description>Thrust Bent Knee Twirl Spin 360°</Description>
+				<DD>2.30</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Element 1</CategoryDesc>
+				<CategoryCode>1b</CategoryCode>
+				<Description>Thrust Bent Knee Twirl Spin 180°</Description>
+				<DD>2.10</DD>
+			</Category>
+		</Element>
+		<Element>
+			<Family>Element 2</Family>
+			<Code>TRE</Code>
+			<Category>
+				<CategoryDesc>Element 2</CategoryDesc>
+				<CategoryCode>2a</CategoryCode>
+				<Description>Rocket Split Catch Spin 360°</Description>
+				<DD>2.50</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Element 2</CategoryDesc>
+				<CategoryCode>2b</CategoryCode>
+				<Description>Rocket Split Catch Spin 180°</Description>
+				<DD>2.40</DD>
+			</Category>
+		</Element>
+		<Element>
+			<Family>Element 3</Family>
+			<Code>TRE</Code>
+			<Category>
+				<CategoryDesc>Element 3</CategoryDesc>
+				<CategoryCode>3</CategoryCode>
+				<Description>Sundial</Description>
+				<DD>3.60</DD>
+			</Category>
+		</Element>
+		<Element>
+			<Family>Element 4</Family>
+			<Code>TRE</Code>
+			<Category>
+				<CategoryDesc>Element 4</CategoryDesc>
+				<CategoryCode>4a</CategoryCode>
+				<Description>Swan Half Twist</Description>
+				<DD>3.40</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Element 4</CategoryDesc>
+				<CategoryCode>4b</CategoryCode>
+				<Description>Swan</Description>
+				<DD>2.90</DD>
+			</Category>
+		</Element>
+		<Element>
+			<Family>Element 5</Family>
+			<Code>TRE</Code>
+			<Category>
+				<CategoryDesc>Element 5</CategoryDesc>
+				<CategoryCode>5a</CategoryCode>
+				<Description>Mercury Continuous Spin 720°</Description>
+				<DD>2.70</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Element 5</CategoryDesc>
+				<CategoryCode>5b</CategoryCode>
+				<Description>Mercury Continuous Spin 360°</Description>
+				<DD>2.50</DD>
+			</Category>
+		</Element>
+	</Required_Elements_Duet>
+	<Required_Elements_Mixed_Duet>
+		<Element>
+			<Family>Element 1</Family>
+			<Code>TRE</Code>
+			<Category>
+				<CategoryDesc>Element 1</CategoryDesc>
+				<CategoryCode>1a</CategoryCode>
+				<Description>Albatross Helicopter Continuous Spin 720°</Description>
+				<DD>3.10</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Element 1</CategoryDesc>
+				<CategoryCode>1b</CategoryCode>
+				<Description>Albatross Helicopter Continuous Spin 360°</Description>
+				<DD>2.90</DD>
+			</Category>
+		</Element>
+		<Element>
+			<Family>Element 2</Family>
+			<Code>TRE</Code>
+			<Category>
+				<CategoryDesc>Element 2</CategoryDesc>
+				<CategoryCode>2a</CategoryCode>
+				<Description>Osprey Rotation 180°</Description>
+				<DD>2.30</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Element 2</CategoryDesc>
+				<CategoryCode>2b</CategoryCode>
+				<Description>Osprey</Description>
+				<DD>2.20</DD>
+			</Category>
+		</Element>
+		<Element>
+			<Family>Element 3</Family>
+			<Code>TRE</Code>
+			<Category>
+				<CategoryDesc>Element 3</CategoryDesc>
+				<CategoryCode>3a</CategoryCode>
+				<Description>Seraphin Twirl</Description>
+				<DD>3.20</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Element 3</CategoryDesc>
+				<CategoryCode>3b</CategoryCode>
+				<Description>Seraphin</Description>
+				<DD>2.90</DD>
+			</Category>
+		</Element>
+	</Required_Elements_Mixed_Duet>
+	<Required_Elements_Team>
+		<Element>
+			<Family>Element 1</Family>
+			<Code>TRE</Code>
+			<Category>
+				<CategoryDesc>Element 1</CategoryDesc>
+				<CategoryCode>1a</CategoryCode>
+				<Description>Fouetté 540° Helicopter</Description>
+				<DD>2.20</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Element 1</CategoryDesc>
+				<CategoryCode>1b</CategoryCode>
+				<Description>Fouetté 360° Helicopter</Description>
+				<DD>1.90</DD>
+			</Category>
+		</Element>
+		<Element>
+			<Family>Element 2</Family>
+			<Code>TRE</Code>
+			<Category>
+				<CategoryDesc>Element 2</CategoryDesc>
+				<CategoryCode>2a</CategoryCode>
+				<Description>Cyclone Full Twist</Description>
+				<DD>2.80</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Element 2</CategoryDesc>
+				<CategoryCode>2b</CategoryCode>
+				<Description>Cyclone Half Twist</Description>
+				<DD>2.60</DD>
+			</Category>
+		</Element>
+		<Element>
+			<Code>TRE</Code>
+			<Category>
+				<CategoryDesc>Element 3</CategoryDesc>
+				<CategoryCode>3a</CategoryCode>
+				<Description>Thrust Spin 360°</Description>
+				<DD>2.10</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Element 3</CategoryDesc>
+				<CategoryCode>3b</CategoryCode>
+				<Description>Thrust Spin 180°</Description>
+				<DD>1.90</DD>
+			</Category>
+		</Element>
+		<Element>
+			<Family>Element 4</Family>
+			<Code>TRE</Code>
+			<Category>
+				<CategoryDesc>Element 4</CategoryDesc>
+				<CategoryCode>4a</CategoryCode>
+				<Description>Rocket Split Spin 360°</Description>
+				<DD>2.40</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Element 4</CategoryDesc>
+				<CategoryCode>4b</CategoryCode>
+				<Description>Rocket Split Spin 180°</Description>
+				<DD>2.30</DD>
+			</Category>
+		</Element>
+		<Element>
+			<Family>Element 5</Family>
+			<Code>TRE</Code>
+			<Category>
+				<CategoryDesc>Element 5</CategoryDesc>
+				<CategoryCode>5a</CategoryCode>
+				<Description>Elaris Pattern Change Combined Spin 720°</Description>
+				<DD>3.40</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Element 5</CategoryDesc>
+				<CategoryCode>5b</CategoryCode>
+				<Description>Elaris Pattern Change Combined Spin 360°</Description>
+				<DD>3.20</DD>
+			</Category>
+		</Element>
+	</Required_Elements_Team>
+</Artistic_Swimming>

@@ -95,3 +95,5 @@ features = ["Document", "HtmlInputElement", "HtmlTableElement", "HtmlTableSectio
 
 [dev-dependencies]
 pretty_assertions = "1.4.1"
+quick-xml = { version = "0.42.0", features = ["encoding", "serialize"] }
+serde = { version = "1.0.229", features = ["derive"] }

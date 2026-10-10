@@ -1,0 +1,3321 @@
+<?xml version="1.0" encoding="windows-1252" ?>
+<Artistic_Swimming>
+	<Date>2026-10-09</Date>
+	<Version>2026 Catalogue</Version>
+	<Description>2026 Appendix 7</Description>
+	<Creator>Integrated Sports Systems (ISS) Inc.</Creator>
+	<Reference>None</Reference>
+	<ACRO-A>
+		<Group_SubGroup>
+			<Family>Group / Sub Group</Family>
+			<Code>G</Code>
+		</Group_SubGroup>
+		<Construction>
+			<Family>Construction</Family>
+			<Code>C</Code>
+			<Movement>
+				<MovementCode>Thr</MovementCode>
+				<Description>Simple jump/throw</Description>
+				<DD>0.60</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Shou</MovementCode>
+				<Description>Jump or throw (stack head-up) from shoulders, arms or different combinations</Description>
+				<DD>0.90</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Feet</MovementCode>
+				<Description>Jump/ throw from feet</Description>
+				<DD>1.00</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Sq</MovementCode>
+				<Description>Jump from square ("basket")</Description>
+				<DD>1.20</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2Sup</MovementCode>
+				<Description>Jump/throw from two supports head-up, disconnection and enter the water</Description>
+				<DD>1.00</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2SupH</MovementCode>
+				<Description>Jump/throw from two supports, from which at least one of them is head down</Description>
+				<DD>1.10</DD>
+			</Movement>
+		</Construction>
+		<Direction>
+			<Family>Direction</Family>
+			<Code>D</Code>
+			<Movement>
+				<MovementCode>Up</MovementCode>
+				<Description>Upwards</Description>
+				<DD>0.05</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Forw</MovementCode>
+				<Description>Forwards</Description>
+				<DD>0.05</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Back</MovementCode>
+				<Description>Backwards</Description>
+				<DD>0.10</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Side</MovementCode>
+				<Description>Sideways</Description>
+				<DD>0.20</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Rev</MovementCode>
+				<Description>Reverse</Description>
+				<DD>0.40</DD>
+			</Movement>
+		</Direction>
+		<Positions>
+			<Family>Positions</Family>
+			<Code>P</Code>
+			<Movement>
+				<MovementCode>tk</MovementCode>
+				<Description>Tuck pos 1</Description>
+				<DD>0.125</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2tk</MovementCode>
+				<Description>Tuck pos 2</Description>
+				<DD>0.062</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>pk</MovementCode>
+				<Description>Pike pos 1</Description>
+				<DD>0.20</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2pk</MovementCode>
+				<Description>Pike pos 2</Description>
+				<DD>0.10</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>kt</MovementCode>
+				<Description>Kite pos 1</Description>
+				<DD>0.05</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2kt</MovementCode>
+				<Description>Kite pos 2</Description>
+				<DD>0.025</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>ln</MovementCode>
+				<Description>Line pos 1</Description>
+				<DD>0.10</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2ln</MovementCode>
+				<Description>Line pos 2</Description>
+				<DD>0.05</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>sp</MovementCode>
+				<Description>Split pos 1</Description>
+				<DD>0.25</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2sp</MovementCode>
+				<Description>Split pos 2</Description>
+				<DD>0.125</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>ja</MovementCode>
+				<Description>Jay pos 1</Description>
+				<DD>0.175</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2ja</MovementCode>
+				<Description>Jay pos 2</Description>
+				<DD>0.087</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>rg</MovementCode>
+				<Description>Ring pos 1</Description>
+				<DD>0.30</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2rg</MovementCode>
+				<Description>Ring pos 2</Description>
+				<DD>0.15</DD>
+			</Movement>
+		</Positions>
+		<Support>
+			<Family>Area of support and type of connection</Family>
+			<Code>S</Code>
+		</Support>
+		<Rotation_Base>
+			<Family>Rotation of construction</Family>
+			<Code>R</Code>
+		</Rotation_Base>
+		<Rotation>
+			<Family>Plane and degree of rotations</Family>
+			<Code>T</Code>
+			<Movement>
+				<MovementCode>t0.5</MovementCode>
+				<Description>180°</Description>
+				<DD>0.025</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>t1</MovementCode>
+				<Description>360°</Description>
+				<DD>0.05</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>t1.5</MovementCode>
+				<Description>540°</Description>
+				<DD>0.10</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>t2</MovementCode>
+				<Description>720°</Description>
+				<DD>0.20</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>t2.5</MovementCode>
+				<Description>900°</Description>
+				<DD>0.25</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>t3</MovementCode>
+				<Description>1080°</Description>
+				<DD>0.35</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>f1</MovementCode>
+				<Description>360° side somersault</Description>
+				<DD>0.40</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>f1.5</MovementCode>
+				<Description>540° side somersault</Description>
+				<DD>0.70</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>f2</MovementCode>
+				<Description>720° side somersault</Description>
+				<DD>1.10</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>D</MovementCode>
+				<Description>180° somersault / dive (any direction)</Description>
+				<DD>0.075</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>dt0.5</MovementCode>
+				<Description>180° somersault /dive + 180° twist (any direction)</Description>
+				<DD>0.10</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>dt1</MovementCode>
+				<Description>180° somersault /dive + 360° twist (any direction)</Description>
+				<DD>0.15</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>dt1.5</MovementCode>
+				<Description>180° somersault /dive + 540° twist (any direction)</Description>
+				<DD>0.25</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>dt2</MovementCode>
+				<Description>180° somersault /dive + 720° twist (any direction)</Description>
+				<DD>0.30</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>s1</MovementCode>
+				<Description>360° somersault</Description>
+				<DD>0.30</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>s1f</MovementCode>
+				<Description>360° somersault forwards</Description>
+				<DD>0.40</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>ss1</MovementCode>
+				<Description>360° straight body somersault</Description>
+				<DD>0.50</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>ss1f</MovementCode>
+				<Description>360° straight body somersault forwards</Description>
+				<DD>0.60</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>s1t0.5</MovementCode>
+				<Description>1 somersault + 0.5 twist</Description>
+				<DD>0.45</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>s1t0.5f</MovementCode>
+				<Description>1 somersault + 0.5 twist forwards</Description>
+				<DD>0.55</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>s1t1</MovementCode>
+				<Description>1 somersault + 1 twist</Description>
+				<DD>0.50</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>s1t1f</MovementCode>
+				<Description>1 somersault + 1 twist forwards</Description>
+				<DD>0.60</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>s1t1.5</MovementCode>
+				<Description>1 somersault + 1.5 twist</Description>
+				<DD>0.55</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>s1t2</MovementCode>
+				<Description>1 somersault + 2 twist</Description>
+				<DD>0.70</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>ss1t0.5</MovementCode>
+				<Description>Straight body somersault 1 + 0.5 twist</Description>
+				<DD>0.60</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>ss1t0.5f</MovementCode>
+				<Description>Straight body somersault 1 + 0.5 twist forwards</Description>
+				<DD>0.70</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>ss1t1</MovementCode>
+				<Description>Straight body somersault 1 + 1 twist</Description>
+				<DD>0.625</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>ss1t1f</MovementCode>
+				<Description>Straight body somersault 1 + 1 twist forwards</Description>
+				<DD>0.75</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>ss1t1.5</MovementCode>
+				<Description>Straight body somersault 1 + 1.5 twist</Description>
+				<DD>0.90</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>ss1t2</MovementCode>
+				<Description>Straight body somersault 1 + 2 twists</Description>
+				<DD>1.10</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>ss1t2.5</MovementCode>
+				<Description>Straight body somersault 1 + 2.5 twists</Description>
+				<DD>1.25</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>ss1t3</MovementCode>
+				<Description>Straight body somersault 1 + 3 twists</Description>
+				<DD>1.50</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>s1.5</MovementCode>
+				<Description>540° somersault</Description>
+				<DD>0.65</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>s1.5f</MovementCode>
+				<Description>540° somersault forwards</Description>
+				<DD>0.75</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>s1.5o</MovementCode>
+				<Description>540° somersault + open</Description>
+				<DD>1.00</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>s1.5fo</MovementCode>
+				<Description>540° somersault forwards + open</Description>
+				<DD>1.10</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>s1.5t0.5</MovementCode>
+				<Description>1.5 somersault + 0.5 twist</Description>
+				<DD>0.675</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>s1.5t0.5f</MovementCode>
+				<Description>1.5 somersault + 0.5 twist forwards</Description>
+				<DD>0.775</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>s1.5t0.5o</MovementCode>
+				<Description>1.5 somersault + 0.5 twist + open</Description>
+				<DD>1.20</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>s1.5t0.5fo</MovementCode>
+				<Description>1.5 somersault + 0.5 twist + open forwards</Description>
+				<DD>1.30</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>s1.5t1fo</MovementCode>
+				<Description>1.5 somersault + 1 twist + open forwards</Description>
+				<DD>1.40</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>s1.5t1</MovementCode>
+				<Description>1.5 somersault + 1 twist</Description>
+				<DD>0.80</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>s1.5t1.5</MovementCode>
+				<Description>1.5 somersault and 1.5 twist</Description>
+				<DD>0.975</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>s2</MovementCode>
+				<Description>720° somersault</Description>
+				<DD>0.90</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>s2o</MovementCode>
+				<Description>720° somersault + open</Description>
+				<DD>1.70</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>s2f</MovementCode>
+				<Description>720° somersault forwards</Description>
+				<DD>1.10</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>s2fo</MovementCode>
+				<Description>720° somersault forwards + open</Description>
+				<DD>1.80</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>s2t0.5</MovementCode>
+				<Description>2 somersaults + 0.5 twist</Description>
+				<DD>1.20</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>s2t0.5f</MovementCode>
+				<Description>2 somersaults + 0.5 twist forwards</Description>
+				<DD>1.30</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>s2t0.5o</MovementCode>
+				<Description>2 somersaults + 0.5 twist + open</Description>
+				<DD>1.75</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>s2t0.5fo</MovementCode>
+				<Description>2 somersaults + 0.5 twist + open forwards</Description>
+				<DD>1.85</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>s2t1</MovementCode>
+				<Description>2 somersaults + 1 twist</Description>
+				<DD>1.60</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>s2t1o</MovementCode>
+				<Description>2 somersaults + 1 twist +open</Description>
+				<DD>2.10</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>s2t1fo</MovementCode>
+				<Description>2 somersaults + 1 twist forwards + open</Description>
+				<DD>2.20</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>s2.5</MovementCode>
+				<Description>900° somersault</Description>
+				<DD>1.20</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>s2.5f</MovementCode>
+				<Description>900° somersault forwards</Description>
+				<DD>1.30</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>s3</MovementCode>
+				<Description>1080° somersault</Description>
+				<DD>2.00</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>ss1.5</MovementCode>
+				<Description>1.5 straight body somersaults</Description>
+				<DD>1.20</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>C</MovementCode>
+				<Description>Cartwheel</Description>
+				<DD>0.10</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>ct0.5</MovementCode>
+				<Description>Cartwheel + half twist</Description>
+				<DD>0.15</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>ct1</MovementCode>
+				<Description>Cartwheel + 1 twist</Description>
+				<DD>0.175</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>H</MovementCode>
+				<Description>Handspring</Description>
+				<DD>0.10</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>ht0.5</MovementCode>
+				<Description>Handspring + 180° twist</Description>
+				<DD>0.15</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>ht1</MovementCode>
+				<Description>Handspring + 360° twist</Description>
+				<DD>0.175</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>hd</MovementCode>
+				<Description>Handspring + half somersault (dive)</Description>
+				<DD>0.125</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>hs1</MovementCode>
+				<Description>Handspring + 1 somersault</Description>
+				<DD>0.40</DD>
+			</Movement>
+		</Rotation>
+		<Bonus>
+			<Family>Bonus</Family>
+			<Code>B</Code>
+			<Movement>
+				<MovementCode>Dbl</MovementCode>
+				<Description>Synchronized actions for double acrobatic movements</Description>
+				<DD>0.20</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Pos3</MovementCode>
+				<Description>Third position</Description>
+				<DD>0.05</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Grip</MovementCode>
+				<Description>Arm connection between 2 featured swimmers from the beginning of the acrobatic movement and remain connected until submergence of both featured swimmers.</Description>
+				<DD>0.10</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Conn</MovementCode>
+				<Description>Connection between support and featured swimmer</Description>
+				<DD>0.10</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Catch</MovementCode>
+				<Description>Connection between 2 featured swimmers during airborne phase and remain connected until submergence of both featured swimmers</Description>
+				<DD>0.15</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Split</MovementCode>
+				<Description>Jump/Throw from split (head-up) position</Description>
+				<DD>0.20</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Hula</MovementCode>
+				<Description>"Hulahoop" action</Description>
+				<DD>0.35</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>RetSq</MovementCode>
+				<Description>"Return" on the "Square" construction above water after the airborne phase and remain on construction until submergence of the construction</Description>
+				<DD>0.80</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>RetPa</MovementCode>
+				<Description>"Return" on support’s palms above water after the airborne phase and remain on construction until submergence of support swimmer</Description>
+				<DD>0.60</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Feet</MovementCode>
+				<Description>Jump from feet feet/feet connect between support and featured swimmer during "pushing phase" until disconnect</Description>
+				<DD>0.075</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Ret1Pa</MovementCode>
+				<Description>Return on a Stack construction, onto 1 support’s palm (headstand)</Description>
+				<DD>1.10</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>RetF</MovementCode>
+				<Description>Return on Feet Construction with Featured Swimmer in handstand</Description>
+				<DD>1.00</DD>
+			</Movement>
+		</Bonus>
+	</ACRO-A>
+	<ACRO-B>
+		<Group_SubGroup>
+			<Family>Group / Sub Group</Family>
+			<Code>G</Code>
+		</Group_SubGroup>
+		<Construction>
+			<Family>Construction</Family>
+			<Code>C</Code>
+			<Movement>
+				<MovementCode>St</MovementCode>
+				<Description>Stack Head-Up</Description>
+				<DD>1.00</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>StH</MovementCode>
+				<Description>Stack Head-down</Description>
+				<DD>1.10</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2SupU</MovementCode>
+				<Description>Stack 2 head-up supports</Description>
+				<DD>1.15</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2SupD</MovementCode>
+				<Description>Stack 2 head-down supports</Description>
+				<DD>1.40</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2SupM</MovementCode>
+				<Description>Stack 2 supports (one of them head-down)</Description>
+				<DD>1.25</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2SupD2F</MovementCode>
+				<Description>Stack two head-down (S) + two (F)</Description>
+				<DD>1.55</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>L</MovementCode>
+				<Description>Simple Lift</Description>
+				<DD>0.70</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>L2F+</MovementCode>
+				<Description>Lift of two (F) or more who must form one construction and must be connected</Description>
+				<DD>0.80</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>St></MovementCode>
+				<Description>Transitional Stack</Description>
+				<DD>1.025</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>LH</MovementCode>
+				<Description>Lift ONLY on Heads above water</Description>
+				<DD>1.10</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Lh2F</MovementCode>
+				<Description>Lift with two (F) ONLY on Heads above water</Description>
+				<DD>1.20</DD>
+			</Movement>
+		</Construction>
+		<Direction>
+			<Family>Direction</Family>
+			<Code>D</Code>
+		</Direction>
+		<Support>
+			<Family>Area of Support / Type of Connection</Family>
+			<Code>S</Code>
+			<Movement>
+				<MovementCode>1P1P</MovementCode>
+				<Description>1 palm (F) on 1 palm (S)</Description>
+				<DD>1.30</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>1P1F</MovementCode>
+				<Description>1 palm (F) on 1 foot (S)</Description>
+				<DD>1.05</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>1PPx</MovementCode>
+				<Description>(F) balances on 1 palm on the "XS" type of grip of the (S)</Description>
+				<DD>1.00</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>PP</MovementCode>
+				<Description>Palms (F) to Palms (S)</Description>
+				<DD>0.80</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>FP</MovementCode>
+				<Description>1 foot/2 Feet (F) on palms (S)</Description>
+				<DD>0.70</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>FF</MovementCode>
+				<Description>Feet (F) on feet (S)</Description>
+				<DD>0.60</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>FF/</MovementCode>
+				<Description>Feet (F) on feet (S) with help from base swimmers or spotters</Description>
+				<DD>0.275</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>PF</MovementCode>
+				<Description>Palms (F) on feet (S)</Description>
+				<DD>0.45</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>SiSb</MovementCode>
+				<Description>Lower back (F) sits on shoulder blades (S)</Description>
+				<DD>0.50</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Bp</MovementCode>
+				<Description>"Backpack" grip: Back-to-back blind connection</Description>
+				<DD>0.15</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>ShF</MovementCode>
+				<Description>Shoulders (F) on feet (S)</Description>
+				<DD>0.40</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>E</MovementCode>
+				<Description>"Eiffel" grip: Palms (F) on shoulders (S)/ Palms (S) on shoulders (F)</Description>
+				<DD>0.375</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>PH/</MovementCode>
+				<Description>Palm (F) on head (S)</Description>
+				<DD>0.85</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>LiH</MovementCode>
+				<Description>Lift ONLY on heads above water: (F) stand/lay/sit on 2-4 heads of base swimmers (S)</Description>
+				<DD>0.45</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>AP</MovementCode>
+				<Description>All (F) body on palms of (S) (lay or sit)</Description>
+				<DD>0.35</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>SiS</MovementCode>
+				<Description>(F) Sit/hang or lay on shoulders (S)</Description>
+				<DD>0.10</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>FS</MovementCode>
+				<Description>Feet (F) on Shoulders (S)</Description>
+				<DD>0.025</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>F1S</MovementCode>
+				<Description>Foot (F) on a shoulder (S)</Description>
+				<DD>0.125</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Le</MovementCode>
+				<Description>"Lemur" grip</Description>
+				<DD>0.15</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Tow</MovementCode>
+				<Description>"Tower" grip</Description>
+				<DD>0.25</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Li</MovementCode>
+				<Description>Simple lift: Base swimmers hold (F)</Description>
+				<DD>0.075</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Ch</MovementCode>
+				<Description>"Chameleon" grip</Description>
+				<DD>0.30</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Tw</MovementCode>
+				<Description>Twins</Description>
+				<DD>0.10</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>LayF</MovementCode>
+				<Description>(F) Lay/Hang on Feet (S)</Description>
+				<DD>0.175</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>SiF</MovementCode>
+				<Description>(F) Sit on feet or 1 foot of (S)</Description>
+				<DD>0.20</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>1FH+1FP</MovementCode>
+				<Description>Construction: Two (S) head-up, (F) 1 leg stays on a head of first (S) and 2nd leg on palms (near head) of second (S)</Description>
+				<DD>0.55</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>S+</MovementCode>
+				<Description>(F) Sit, stand or lay on Stack or Stack head-down with spotter/s</Description>
+				<DD>0.05</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>1F1P</MovementCode>
+				<Description>(F) 1 foot on 1 palm (S)</Description>
+				<DD>1.25</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>1F1F</MovementCode>
+				<Description>1 foot (F) on 1 foot (S)</Description>
+				<DD>1.10</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>1PH</MovementCode>
+				<Description>1 palm (F) on 1 head (S) grip.</Description>
+				<DD>1.40</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>PP2</MovementCode>
+				<Description>Palms/Palms connection on 2SupU Stack.</Description>
+				<DD>0.65</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2pH</MovementCode>
+				<Description>Transitional stack only: Palm(s) on the head of (S).</Description>
+				<DD>0.775</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>H1F/</MovementCode>
+				<Description>Head of (F) on 1 foot of (S). (F) hand(s) connected to leg of (S)</Description>
+				<DD>0.95</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>HT+</MovementCode>
+				<Description>Head of (F) on 2 feet of (S), with hand(s) of (F) holding leg(s) of (S).</Description>
+				<DD>0.75</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>1FH/</MovementCode>
+				<Description>1 foot (F) on head of (S). Hand(s) of (S) can be connected to leg of (F)</Description>
+				<DD>0.75</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>1PH/+H1P/</MovementCode>
+				<Description>1 palm (F) on Head of (S) and Head of (F) on 1 palm of (S) + extra connection with their other hands</Description>
+				<DD>0.725</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>1FH/+S1P/</MovementCode>
+				<Description>1 foot (F) on head of (S). Shoulder of (F) on 1 palm of (S) + extra connection with their other hands. May have spotter(s)</Description>
+				<DD>0.60</DD>
+			</Movement>
+		</Support>
+		<Positions>
+			<Family>Positions</Family>
+			<Code>P</Code>
+			<Movement>
+				<MovementCode>he</MovementCode>
+				<Description>Heron Pos 1</Description>
+				<DD>0.125</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2he</MovementCode>
+				<Description>Heron Pos 2</Description>
+				<DD>0.062</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>vs</MovementCode>
+				<Description>Vertical Split Pos 1</Description>
+				<DD>0.30</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2vs</MovementCode>
+				<Description>Vertical Split Pos 2</Description>
+				<DD>0.10</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>gl</MovementCode>
+				<Description>Glass Pos 1</Description>
+				<DD>0.40</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2gl</MovementCode>
+				<Description>Glass Pos 2</Description>
+				<DD>0.20</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>ba</MovementCode>
+				<Description>Ballerina Pos 1</Description>
+				<DD>0.15</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2ba</MovementCode>
+				<Description>Ballerina Pos 2</Description>
+				<DD>0.075</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>sa</MovementCode>
+				<Description>Sail Pos 1</Description>
+				<DD>0.325</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2sa</MovementCode>
+				<Description>Sail Pos 2</Description>
+				<DD>0.162</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>ne</MovementCode>
+				<Description>Needle Pos 1</Description>
+				<DD>0.425</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2ne</MovementCode>
+				<Description>Needle Pos 2</Description>
+				<DD>0.212</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>ey</MovementCode>
+				<Description>Eye Pos 1</Description>
+				<DD>0.50</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2ey</MovementCode>
+				<Description>Eye Pos 2</Description>
+				<DD>0.25</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>sd</MovementCode>
+				<Description>Stand Pos 1</Description>
+				<DD>0.05</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2sd</MovementCode>
+				<Description>Stand Pos 2</Description>
+				<DD>0.025</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>mo</MovementCode>
+				<Description>Monkey Pos 1</Description>
+				<DD>0.075</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2mo</MovementCode>
+				<Description>Monkey Pos 2</Description>
+				<DD>0.037</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>pp</MovementCode>
+				<Description>Porcupine Pos 1</Description>
+				<DD>0.10</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2pp</MovementCode>
+				<Description>Porcupine Pos 2</Description>
+				<DD>0.05</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>ct</MovementCode>
+				<Description>Cat Pos 1</Description>
+				<DD>0.025</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2ct</MovementCode>
+				<Description>Cat Pos 2</Description>
+				<DD>0.012</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>sh</MovementCode>
+				<Description>Shrimp Pos 1</Description>
+				<DD>0.175</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2sh</MovementCode>
+				<Description>Shrimp Pos 2</Description>
+				<DD>0.087</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>hp</MovementCode>
+				<Description>Harp Pos 1</Description>
+				<DD>0.45</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2hp</MovementCode>
+				<Description>Harp Pos 2</Description>
+				<DD>0.225</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>fl</MovementCode>
+				<Description>Flamingo Pos 1</Description>
+				<DD>0.225</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2fl</MovementCode>
+				<Description>Flamingo Pos 2</Description>
+				<DD>0.112</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>tu</MovementCode>
+				<Description>Turtle Pos 1</Description>
+				<DD>0.375</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2tu</MovementCode>
+				<Description>Turtle Pos 2</Description>
+				<DD>0.187</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>co</MovementCode>
+				<Description>Cobra Pos 1</Description>
+				<DD>0.15</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2co</MovementCode>
+				<Description>Cobra Pos 2</Description>
+				<DD>0.075</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>spl</MovementCode>
+				<Description>Split Pos 1</Description>
+				<DD>0.28</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2spl</MovementCode>
+				<Description>Split Pos 2</Description>
+				<DD>0.14</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>so</MovementCode>
+				<Description>Scorpio Pos 1</Description>
+				<DD>0.275</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2so</MovementCode>
+				<Description>Scorpio Pos 2</Description>
+				<DD>0.137</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>pi</MovementCode>
+				<Description>Pin Pos 1</Description>
+				<DD>0.60</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2pi</MovementCode>
+				<Description>Pin Pos 2</Description>
+				<DD>0.30</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>bb</MovementCode>
+				<Description>Bamboo Pos 1</Description>
+				<DD>0.15</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2bb</MovementCode>
+				<Description>Bamboo Pos 2</Description>
+				<DD>0.075</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>bo</MovementCode>
+				<Description>Box Pos 1</Description>
+				<DD>0.20</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2bo</MovementCode>
+				<Description>Box Pos 2</Description>
+				<DD>0.10</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>ff</MovementCode>
+				<Description>Firefly Pos 1</Description>
+				<DD>0.275</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2ff</MovementCode>
+				<Description>Firefly Pos 2</Description>
+				<DD>0.137</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>wi</MovementCode>
+				<Description>Willow Pos 1</Description>
+				<DD>0.25</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2wi</MovementCode>
+				<Description>Willow Pos 2</Description>
+				<DD>0.125</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>br</MovementCode>
+				<Description>Bridge Pos 1</Description>
+				<DD>0.325</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2br</MovementCode>
+				<Description>Bridge Pos 2</Description>
+				<DD>0.162</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>ow</MovementCode>
+				<Description>Owl Pos 1</Description>
+				<DD>0.30</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2ow</MovementCode>
+				<Description>Owl Pos 2</Description>
+				<DD>0.175</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>ma</MovementCode>
+				<Description>Marlin Pos 1</Description>
+				<DD>0.35</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2ma</MovementCode>
+				<Description>Marlin Pos 2</Description>
+				<DD>0.175</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>dr</MovementCode>
+				<Description>Drop Pos 1</Description>
+				<DD>0.80</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2dr</MovementCode>
+				<Description>Drop Pos 2</Description>
+				<DD>0.40</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>qu</MovementCode>
+				<Description>Queen Pos 1</Description>
+				<DD>0.70</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2qu</MovementCode>
+				<Description>Queen Pos 2</Description>
+				<DD>0.35</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>sn</MovementCode>
+				<Description>Snail Pos 1</Description>
+				<DD>0.475</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2sn</MovementCode>
+				<Description>Snail Pos 2</Description>
+				<DD>0.237</DD>
+			</Movement>
+ 		</Positions>
+		<Rotation_Base>
+			<Family>Rotation of the construction base</Family>
+			<Code>R</Code>
+ 			<Movement>
+				<MovementCode>r0.5/</MovementCode>
+				<Description>180° The featured swimmer stands on 2 feet on the shoulders of the support swimmer</Description>
+				<DD>0.05</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>r1/</MovementCode>
+				<Description>360° The featured swimmer stands on 2 feet on the shoulders of the support swimmer</Description>
+				<DD>0.10</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>r1.5/</MovementCode>
+				<Description>540° The featured swimmer stands on 2 feet on the shoulders of the support swimmer</Description>
+				<DD>0.15</DD>
+			</Movement>
+ 			<Movement>
+				<MovementCode>r0.5</MovementCode>
+				<Description>180° The support swimmer must be head up. The featured swimmer can be head up or head down</Description>
+				<DD>0.10</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>r1</MovementCode>
+				<Description>360° The support swimmer must be head up. The featured swimmer can be head up or head down</Description>
+				<DD>0.20</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>r1.5</MovementCode>
+				<Description>540° The support swimmer must be head up. The featured swimmer can be head up or head down</Description>
+				<DD>0.30</DD>
+			</Movement>
+ 			<Movement>
+				<MovementCode>r0.5+</MovementCode>
+				<Description>180° The featured swimmer stands on 1 leg with other leg at 135 to 180 degrees</Description>
+				<DD>0.125</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>r1+</MovementCode>
+				<Description>360° The featured swimmer stands on 1 leg with other leg at 135 to 180 degrees</Description>
+				<DD>0.225</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>r1.5+</MovementCode>
+				<Description>540° The featured swimmer stands on 1 leg with other leg at 135 to 180 degrees</Description>
+				<DD>0.325</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>r2+</MovementCode>
+				<Description>720° The featured swimmer stands on 1 leg with other leg at 135 to 180 degrees</Description>
+				<DD>0.425</DD>
+			</Movement>
+ 			<Movement>
+				<MovementCode>r0.5!</MovementCode>
+				<Description>180° The featured swimmer is in a "Handstand" connection OR The support swimmer is in a head-down construction</Description>
+				<DD>0.15</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>r1!</MovementCode>
+				<Description>360° The featured swimmer is in a "Handstand" connection OR The support swimmer is in a head-down construction</Description>
+				<DD>0.25</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>r1.5!</MovementCode>
+				<Description>540° The featured swimmer is in a "Handstand" connection OR The support swimmer is in a head-down construction</Description>
+				<DD>0.35</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>r2!</MovementCode>
+				<Description>720° The featured swimmer is in a "Handstand" connection OR The support swimmer is in a head-down construction</Description>
+				<DD>0.45</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>r/L</MovementCode>
+				<Description>90° Value for Lift - big water resistance for base athletes while the entire construction rotates including the base swimmers</Description>
+				<DD>0.40</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>r0.5L</MovementCode>
+				<Description>180° Value for Lift - big water resistance for base athletes while the entire construction rotates including the base swimmers</Description>
+				<DD>0.50</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>r1L</MovementCode>
+				<Description>360° Value for Lift - big water resistance for base athletes while the entire construction rotates including the base swimmers</Description>
+				<DD>0.80</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>r1.5L+</MovementCode>
+				<Description>Rotation of 540 degrees or more for Lift</Description>
+				<DD>1.00</DD>
+			</Movement>
+		</Rotation_Base>
+		<Rotation>
+			<Family>Plane and degree of the rotation</Family>
+			<Code>T</Code>
+		</Rotation>
+		<Bonus>
+			<Family>Bonus</Family>
+			<Code>B</Code>
+			<Movement>
+				<MovementCode>Dbl</MovementCode>
+				<Description>Synchronized actions for double acrobatic movements</Description>
+				<DD>0.20</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Pos3</MovementCode>
+				<Description>Third position</Description>
+				<DD>0.05</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Twirl</MovementCode>
+				<Description>"Twirl" of featured-swimmer in group B 180-360 (head-up or head-down).</Description>
+				<DD>0.10</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>RotF</MovementCode>
+				<Description>Featured-swimmer rotates on feet of support 180-360°</Description>
+				<DD>0.20</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>SdUp</MovementCode>
+				<Description>Stand-up (lifting torso) from head-down position</Description>
+				<DD>0.10</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Wave</MovementCode>
+				<Description>"Wave" movements</Description>
+				<DD>0.10</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Moon</MovementCode>
+				<Description>"Moonwalk": Lift-up from split, legs sliding and changing place and opening back to the split on surface</Description>
+				<DD>0.275</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Mov</MovementCode>
+				<Description>Moving base lift (base-swimmers move backward and then return)</Description>
+				<DD>0.70</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Hold</MovementCode>
+				<Description>Long holding lift (3 seconds and more)</Description>
+				<DD>0.50</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>ChangeL</MovementCode>
+				<Description>Change the type of Lift construction during one acrobatic</Description>
+				<DD>0.35</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Spiral</MovementCode>
+				<Description>Spiral</Description>
+				<DD>0.30</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Switch</MovementCode>
+				<Description>"Switch" (Switch Grip)</Description>
+				<DD>0.30</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Bloom</MovementCode>
+				<Description>Bloom</Description>
+				<DD>0.90</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Mov!</MovementCode>
+				<Description>Move from lift/lift on head(s) to a handstand position</Description>
+				<DD>0.20</DD>
+			</Movement>
+		</Bonus>
+	</ACRO-B>
+	<ACRO-C>
+		<Group_SubGroup>
+			<Family>Group / Sub Group</Family>
+			<Code>G</Code>
+			<Movement>
+				<MovementCode>CO</MovementCode>
+				<Description>Subgroup Other</Description>
+				<DD>0.00</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>CT</MovementCode>
+				<Description>Subgroup Through Support</Description>
+				<DD>0.00</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>CC</MovementCode>
+				<Description>Subgroup Onto Support</Description>
+				<DD>0.00</DD>
+			</Movement>
+		</Group_SubGroup>
+		<Construction>
+			<Family>Construction</Family>
+			<Code>C</Code>
+			<Movement>
+				<MovementCode>Thr>St</MovementCode>
+				<Description>Transit or Jump on Stack from any kind of throw</Description>
+				<DD>1.125</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Thr>StH</MovementCode>
+				<Description>Transit or jump onto Stack head-down from any kind of throw</Description>
+				<DD>1.20</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Thr>Pair></MovementCode>
+				<Description>Through:2 pair One of them can be head-down) + (F)</Description>
+				<DD>0.675</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Thr>FF</MovementCode>
+				<Description>Transit or Jump from any kind of throw to 2 or more floats</Description>
+				<DD>1.00</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Thr>F</MovementCode>
+				<Description>Transit or Jump on a float</Description>
+				<DD>0.875</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Thr^Lh</MovementCode>
+				<Description>Fly above Lift on heads from any kind of throw.</Description>
+				<DD>1.575</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Thr^2F</MovementCode>
+				<Description>Fly above Second (main) formation from any kind of throw</Description>
+				<DD>1.225</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>L+spot</MovementCode>
+				<Description>Simple lift + spotter/s 2 formations of base swimmers under one (F)</Description>
+				<DD>0.775</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Thr>hand</MovementCode>
+				<Description>Transit or Jump on formation made from arms/hands</Description>
+				<DD>0.80</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Thr+Thr</MovementCode>
+				<Description>2 Jumps from throws (2 (F)s in connection with each-other)</Description>
+				<DD>1.25</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Sn</MovementCode>
+				<Description>Snake-type</Description>
+				<DD>1.175</DD>
+			</Movement>
+
+			<Movement>
+				<MovementCode>Thr>head></MovementCode>
+				<Description>Transit through 1, 2 or 3 heads from any kind of throw.</Description>
+				<DD>1.075</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2Sup+</MovementCode>
+				<Description>2 mini-Stack (head-up) +spotter (head-up or head-down).</Description>
+				<DD>1.050</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Thr>Sq</MovementCode>
+				<Description>Throw onto Small-Square formation</Description>
+				<DD>1.15</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Thr>St2</MovementCode>
+				<Description>Transit or jump on 2-Stacks from any kind of throw</Description>
+				<DD>1.20</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Thr>StH>1F</MovementCode>
+				<Description>From any kind of throw, jump/ step onto a Stack head-down. Followed by a step 1 onto a Stack</Description>
+				<DD>1.30</DD>
+			</Movement>
+		</Construction>
+		<Direction>
+			<Family>Direction</Family>
+			<Code>D</Code>
+			<Movement>
+				<MovementCode>Up</MovementCode>
+				<Description>Upwards</Description>
+				<DD>0.05</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Forw</MovementCode>
+				<Description>Forwards</Description>
+				<DD>0.05</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Back</MovementCode>
+				<Description>Backwards</Description>
+				<DD>0.10</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Side</MovementCode>
+				<Description>Sideways</Description>
+				<DD>0.20</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Rev</MovementCode>
+				<Description>Reverse</Description>
+				<DD>0.40</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Bln</MovementCode>
+				<Description>Blind back jump</Description>
+				<DD>0.20</DD>
+			</Movement>
+		</Direction>
+		<Support>
+			<Family>Area of Support / Type of Connection</Family>
+			<Code>S</Code>
+		</Support>
+		<Positions>
+			<Family>Positions</Family>
+			<Code>P</Code>
+			<Movement>
+				<MovementCode>tk</MovementCode>
+				<Description>Tuck pos 1</Description>
+				<DD>0.125</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2tk</MovementCode>
+				<Description>Tuck pos 2</Description>
+				<DD>0.062</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>pk</MovementCode>
+				<Description>Pike pos 1</Description>
+				<DD>0.20</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2pk</MovementCode>
+				<Description>Pike pos 2</Description>
+				<DD>0.10</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>kt</MovementCode>
+				<Description>Kite pos 1</Description>
+				<DD>0.05</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2kt</MovementCode>
+				<Description>Kite pos 2</Description>
+				<DD>0.025</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>ln</MovementCode>
+				<Description>Line pos 1</Description>
+				<DD>0.10</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2ln</MovementCode>
+				<Description>Line pos 2</Description>
+				<DD>0.05</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>sp</MovementCode>
+				<Description>Split pos 1</Description>
+				<DD>0.25</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2sp</MovementCode>
+				<Description>Split pos 2</Description>
+				<DD>0.125</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>ja</MovementCode>
+				<Description>Jay pos 1</Description>
+				<DD>0.175</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2ja</MovementCode>
+				<Description>Jay pos 2</Description>
+				<DD>0.087</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>rg</MovementCode>
+				<Description>Ring pos 1</Description>
+				<DD>0.30</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2rg</MovementCode>
+				<Description>Ring pos 2</Description>
+				<DD>0.15</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>he</MovementCode>
+				<Description>Heron Pos 1</Description>
+				<DD>0.125</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2he</MovementCode>
+				<Description>Heron Pos 2</Description>
+				<DD>0.062</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>vs</MovementCode>
+				<Description>Vertical Split Pos 1</Description>
+				<DD>0.30</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2vs</MovementCode>
+				<Description>Vertical Split Pos 2</Description>
+				<DD>0.10</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>gl</MovementCode>
+				<Description>Glass Pos 1</Description>
+				<DD>0.40</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2gl</MovementCode>
+				<Description>Glass Pos 2</Description>
+				<DD>0.20</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>ba</MovementCode>
+				<Description>Ballerina Pos 1</Description>
+				<DD>0.15</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2ba</MovementCode>
+				<Description>Ballerina Pos 2</Description>
+				<DD>0.075</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>sa</MovementCode>
+				<Description>Sail Pos 1</Description>
+				<DD>0.325</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2sa</MovementCode>
+				<Description>Sail Pos 2</Description>
+				<DD>0.162</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>ne</MovementCode>
+				<Description>Needle Pos 1</Description>
+				<DD>0.425</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2ne</MovementCode>
+				<Description>Needle Pos 2</Description>
+				<DD>0.212</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>ey</MovementCode>
+				<Description>Eye Pos 1</Description>
+				<DD>0.50</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2ey</MovementCode>
+				<Description>Eye Pos 2</Description>
+				<DD>0.25</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>sd</MovementCode>
+				<Description>Stand Pos 1</Description>
+				<DD>0.05</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2sd</MovementCode>
+				<Description>Stand Pos 2</Description>
+				<DD>0.025</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>mo</MovementCode>
+				<Description>Monkey Pos 1</Description>
+				<DD>0.075</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2mo</MovementCode>
+				<Description>Monkey Pos 2</Description>
+				<DD>0.037</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>pp</MovementCode>
+				<Description>Porcupine Pos 1</Description>
+				<DD>0.10</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2pp</MovementCode>
+				<Description>Porcupine Pos 2</Description>
+				<DD>0.05</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>ct</MovementCode>
+				<Description>Cat Pos 1</Description>
+				<DD>0.025</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2ct</MovementCode>
+				<Description>Cat Pos 2</Description>
+				<DD>0.012</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>sh</MovementCode>
+				<Description>Shrimp Pos 1</Description>
+				<DD>0.175</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2sh</MovementCode>
+				<Description>Shrimp Pos 2</Description>
+				<DD>0.087</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>hp</MovementCode>
+				<Description>Harp Pos 1</Description>
+				<DD>0.45</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2hp</MovementCode>
+				<Description>Harp Pos 2</Description>
+				<DD>0.225</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>fl</MovementCode>
+				<Description>Flamingo Pos 1</Description>
+				<DD>0.225</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2fl</MovementCode>
+				<Description>Flamingo Pos 2</Description>
+				<DD>0.112</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>tu</MovementCode>
+				<Description>Turtle Pos 1</Description>
+				<DD>0.375</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2tu</MovementCode>
+				<Description>Turtle Pos 2</Description>
+				<DD>0.187</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>co</MovementCode>
+				<Description>Cobra Pos 1</Description>
+				<DD>0.15</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2co</MovementCode>
+				<Description>Cobra Pos 2</Description>
+				<DD>0.075</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>spl</MovementCode>
+				<Description>Split Pos 1</Description>
+				<DD>0.28</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2spl</MovementCode>
+				<Description>Split Pos 2</Description>
+				<DD>0.14</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>so</MovementCode>
+				<Description>Scorpio Pos 1</Description>
+				<DD>0.275</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2so</MovementCode>
+				<Description>Scorpio Pos 2</Description>
+				<DD>0.137</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>pi</MovementCode>
+				<Description>Pin Pos 1</Description>
+				<DD>0.60</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2pi</MovementCode>
+				<Description>Pin Pos 2</Description>
+				<DD>0.30</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>bb</MovementCode>
+				<Description>Bamboo Pos 1</Description>
+				<DD>0.15</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2bb</MovementCode>
+				<Description>Bamboo Pos 2</Description>
+				<DD>0.075</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>bo</MovementCode>
+				<Description>Box Pos 1</Description>
+				<DD>0.20</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2bo</MovementCode>
+				<Description>Box Pos 2</Description>
+				<DD>0.10</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>ff</MovementCode>
+				<Description>Firefly Pos 1</Description>
+				<DD>0.275</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2ff</MovementCode>
+				<Description>Firefly Pos 2</Description>
+				<DD>0.137</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>wi</MovementCode>
+				<Description>Willow Pos 1</Description>
+				<DD>0.25</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2wi</MovementCode>
+				<Description>Willow Pos 2</Description>
+				<DD>0.125</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>br</MovementCode>
+				<Description>Bridge Pos 1</Description>
+				<DD>0.325</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2br</MovementCode>
+				<Description>Bridge Pos 2</Description>
+				<DD>0.162</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>ow</MovementCode>
+				<Description>Owl Pos 1</Description>
+				<DD>0.30</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2ow</MovementCode>
+				<Description>Owl Pos 2</Description>
+				<DD>0.175</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>ma</MovementCode>
+				<Description>Marlin Pos 1</Description>
+				<DD>0.35</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2ma</MovementCode>
+				<Description>Marlin Pos 2</Description>
+				<DD>0.175</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>dr</MovementCode>
+				<Description>Drop Pos 1</Description>
+				<DD>0.80</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2dr</MovementCode>
+				<Description>Drop Pos 2</Description>
+				<DD>0.40</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>qu</MovementCode>
+				<Description>Queen Pos 1</Description>
+				<DD>0.70</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2qu</MovementCode>
+				<Description>Queen Pos 2</Description>
+				<DD>0.35</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>sn</MovementCode>
+				<Description>Snail Pos 1</Description>
+				<DD>0.475</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2sn</MovementCode>
+				<Description>Snail Pos 2</Description>
+				<DD>0.237</DD>
+			</Movement>
+ 		</Positions>
+		<Rotation_Base>
+			<Family>Rotation of the construction base</Family>
+			<Code>R</Code>
+			<Movement>
+				<MovementCode>Cr0.5</MovementCode>
+				<Description>180° Value* for Stack If the featured-swimmer AND the Support-Swimmer are NOT in head-down position</Description>
+				<DD>0.20</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Cr1</MovementCode>
+				<Description>360° Value* for Stack If the featured-swimmer AND the Support-Swimmer are NOT in head-down position</Description>
+				<DD>0.30</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Cr1.5</MovementCode>
+				<Description>540° Value* for Stack If the featured-swimmer AND the Support-Swimmer are NOT in head-down position</Description>
+				<DD>0.40</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Cr0.5!</MovementCode>
+				<Description>180° Value* for Stack If the featured-swimmer AND/OR the Support-Swimmer is in head-down position</Description>
+				<DD>0.30</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Cr1!</MovementCode>
+				<Description>360° Value* for Stack If the featured-swimmer AND/OR the Support-Swimmer is in head-down position</Description>
+				<DD>0.40</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Cr1.5!</MovementCode>
+				<Description>540° Value* for Stack If the featured-swimmer AND/OR the Support-Swimmer is in head-down position</Description>
+				<DD>0.50</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Cr0.5L</MovementCode>
+				<Description>180° Value for Lift on heads while featured-swimmer flies above it</Description>
+				<DD>0.40</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>CP0.5</MovementCode>
+				<Description>180° Value for the platform (formation) after featured-swimmer lands on it</Description>
+				<DD>0.40</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2F0.5</MovementCode>
+				<Description>180° Special rotation for the second formation in Thr^2F construction</Description>
+				<DD>0.25</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2F1</MovementCode>
+				<Description>360° Special rotation for the second formation in Thr^2F construction</Description>
+				<DD>0.35</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2F1.5</MovementCode>
+				<Description>Special rotation of 540° for the formation being flown over in Thr^2F construction</Description>
+				<DD>0.45</DD>
+			</Movement>
+		</Rotation_Base>
+		<Rotation>
+			<Family>Rotation</Family>
+			<Code>T</Code>
+			<Movement>
+				<MovementCode>Ct0.5</MovementCode>
+				<Description>1/2 twist (group C)</Description>
+				<DD>0.05</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Ct1</MovementCode>
+				<Description>1 twist (group C)</Description>
+				<DD>0.10</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Ct1.5</MovementCode>
+				<Description>1.5 twist (group C)</Description>
+				<DD>0.20</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Ct2</MovementCode>
+				<Description>2 twists (group C)</Description>
+				<DD>0.30</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Ct2.5</MovementCode>
+				<Description>2.5 twist (group C)</Description>
+				<DD>0.40</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Ct3</MovementCode>
+				<Description>3 twists (group C)</Description>
+				<DD>0.50</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Cd</MovementCode>
+				<Description>Dive (group C)</Description>
+				<DD>0.10</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Cdt0.5</MovementCode>
+				<Description>1/2 twist + dive (group C)</Description>
+				<DD>0.15</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Cdt1</MovementCode>
+				<Description>1 twist + dive (group C)</Description>
+				<DD>0.20</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Cdt1.5</MovementCode>
+				<Description>1.5 twist + dive (group C)</Description>
+				<DD>0.30</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Cs1</MovementCode>
+				<Description>1 somersault (group C)</Description>
+				<DD>0.25</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Css1</MovementCode>
+				<Description>1 straight somersault (group C)</Description>
+				<DD>0.35</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Cs1.5</MovementCode>
+				<Description>1.5 somersault (group C)</Description>
+				<DD>0.45</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Cs1.5o</MovementCode>
+				<Description>1.5 somersault + open (group C)</Description>
+				<DD>0.55</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Cf1</MovementCode>
+				<Description>1 frontal somersault (group C)</Description>
+				<DD>0.35</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Cf1.5</MovementCode>
+				<Description>1.5 frontal somersault (group C)</Description>
+				<DD>0.55</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Cc</MovementCode>
+				<Description>Cartwheel (group C)</Description>
+				<DD>0.10</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Cct0.5</MovementCode>
+				<Description>Cartwheel + 1/2 twist (group C)</Description>
+				<DD>0.15</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Cct1</MovementCode>
+				<Description>Cartwheel + 1 twist (group C)</Description>
+				<DD>0.20</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Ch</MovementCode>
+				<Description>Handspring (group C)</Description>
+				<DD>0.10</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Cht0.5</MovementCode>
+				<Description>Handspring + 1/2 twist (group C)</Description>
+				<DD>0.15</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Cht1</MovementCode>
+				<Description>Handspring + 1 twist (group C)</Description>
+				<DD>0.20</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Cs1t0.5</MovementCode>
+				<Description>1 somersault + 1/2 twist (group C)</Description>
+				<DD>0.30</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Cs1t1</MovementCode>
+				<Description>1 somersault + 1 twist (group C)</Description>
+				<DD>0.40</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Cs1t1.5</MovementCode>
+				<Description>1 somersault + 1.5 twist (group C)</Description>
+				<DD>0.50</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Cs1t2</MovementCode>
+				<Description>1 somersault + 2 twists (group C)</Description>
+				<DD>0.60</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Css1t0.5</MovementCode>
+				<Description>1 straight somersault + 1/2 twist (group C)</Description>
+				<DD>0.40</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Css1t1</MovementCode>
+				<Description>1 straight somersault + 1 twist (group C)</Description>
+				<DD>0.50</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Css1t1.5</MovementCode>
+				<Description>1 straight somersault + 1.5 twist (group C)</Description>
+				<DD>0.60</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Css1t2</MovementCode>
+				<Description>1 straight somersault + 2 twists (group C)</Description>
+				<DD>0.70</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Cs1t1o</MovementCode>
+				<Description>1 somersault + 1 twist + open (group C)</Description>
+				<DD>0.75</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Cs1t1.5o</MovementCode>
+				<Description>1 somersault + 1.5 twist + open (group C)</Description>
+				<DD>0.90</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Cs1t2o</MovementCode>
+				<Description>1 somersault + 2 twists + open (group C)</Description>
+				<DD>1.05</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Chs0.5</MovementCode>
+				<Description>Handspring + 1/2 somersault (group C)</Description>
+				<DD>0.20</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Cs2</MovementCode>
+				<Description>2 somersaults (group C)</Description>
+				<DD>0.55</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Cs1.5t0.5o</MovementCode>
+				<Description>Plane and degree of the rotation 1.5 somersault + half twist + open to a line position</Description>
+				<DD>0.95</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Cs2t0.5</MovementCode>
+				<Description>Plane and degree of rotation 2 somersaults + 1/2 twist group(C)</Description>
+				<DD>0.80</DD>
+			</Movement>
+		</Rotation>
+		<Bonus>
+			<Family>Bonus</Family>
+			<Code>B</Code>
+			<Movement>
+				<MovementCode>Pos3</MovementCode>
+				<Description>Third position</Description>
+				<DD>0.05</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Dbl</MovementCode>
+				<Description>Synchronized actions for double acrobatic movements</Description>
+				<DD>0.30</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Slip</MovementCode>
+				<Description>Featured swimmer transits from first formation to the 2nd support. They then slip through between the support’s legs or between the arms, disconnects, and then continues movement until entering the water.</Description>
+				<DD>0.175</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Star</MovementCode>
+				<Description>"Superstar" from a lift formation - blind fall backwards onto a 2nd formation made from hands</Description>
+				<DD>0.10</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Cx</MovementCode>
+				<Description>Connection between 2 featured-swimmers</Description>
+				<DD>0.125</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Twirl</MovementCode>
+				<Description>Twirl of a featured-swimmer</Description>
+				<DD>0.075</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>C-Roll</MovementCode>
+				<Description>"Rolling" on top of the construction</Description>
+				<DD>0.15</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Turn</MovementCode>
+				<Description>Push up from split + featured swimmer disconnects with one of the supports, performs a 180o rotation in sagittal plane</Description>
+				<DD>0.25</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Run</MovementCode>
+				<Description>Running on the back(s)</Description>
+				<DD>0.20</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Ju</MovementCode>
+				<Description>JUMP onto a non-Stack formation</Description>
+				<DD>0.15</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>1P>H</MovementCode>
+				<Description>JUMP with 1 hand onto head</Description>
+				<DD>1.10</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>H>1P</MovementCode>
+				<Description>JUMP onto a Stack landing with the head onto 1 palm of the support swimmer</Description>
+				<DD>0.90</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Jump</MovementCode>
+				<Description>JUMP onto Stack and remain on it until submergence of the support swimmer</Description>
+				<DD>0.275</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Jump></MovementCode>
+				<Description>JUMP and pass through a second formation with an intentional connection occurring after JUMP/flying phase</Description>
+				<DD>0.225</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>On1Foot</MovementCode>
+				<Description>JUMP from any kind of Throw landing with 1 palm onto 1 foot of the support swimmer (in stack head-down) and balancing on 1 palm while performing actions until submergence of the support swimmer</Description>
+				<DD>0.40</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>1F>1F</MovementCode>
+				<Description>JUMP of the featured swimmer landing with 1 foot onto 1 foot of the support swimmer (in stack head-down) and balancing on 1 foot while performing actions until submergence of the support swimmer.</Description>
+				<DD>0.70</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>1F>1F+</MovementCode>
+				<Description>JUMP of the featured swimmer landing with 1 foot onto 1 foot onto a stack head-down followed by a step onto another stack head-down and remain on support until submergence of the support swimmer of the 3rd formation.</Description>
+				<DD>1.00</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2F>2F</MovementCode>
+				<Description>JUMP of the featured swimmer landing on 2 feet onto 2 feet of a stack head-down and remain on support until submergence of the support swimmer</Description>
+				<DD>0.50</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>1F>1P</MovementCode>
+				<Description>JUMP of (F) landing with 1 foot onto 1 palm of (S) in stack head-up</Description>
+				<DD>0.60</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>1P>1P</MovementCode>
+				<Description>JUMP from any kind of Throw landing with 1 palm onto 1 palm of the support swimmer (in stack head-up) and balancing on 1 palm while performing actions until submergence of the support swimmer</Description>
+				<DD>0.375</DD>
+			</Movement>
+		</Bonus>
+	</ACRO-C>
+	<ACRO-P>
+		<Group_SubGroup>
+			<Family>Group / Sub Group</Family>
+			<Code>G</Code>
+			<Movement>
+				<MovementCode>PP</MovementCode>
+				<Description>Subgroup Standard</Description>
+				<DD>0.00</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>PF</MovementCode>
+				<Description>Subgroup Float</Description>
+				<DD>0.00</DD>
+			</Movement>
+		</Group_SubGroup>
+		<Construction>
+			<Family>Construction</Family>
+			<Code>C</Code>
+			<Movement>
+				<MovementCode>P</MovementCode>
+				<Description>Platform where (S) is horizontal with straight body</Description>
+				<DD>1.00</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Box</MovementCode>
+				<Description>Platform where (S) is head-up with the torso bent at 90°, legs straight at the surface.</Description>
+				<DD>1.10</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Knees</MovementCode>
+				<Description>Platform where (S) is horizontal with straight body and bent knees</Description>
+				<DD>1.05</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>B</MovementCode>
+				<Description>Platform where (S) is in a Ballet Leg position</Description>
+				<DD>1.20</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>DB</MovementCode>
+				<Description>Platform where (S) is in a Double Ballet Leg position</Description>
+				<DD>1.30</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Chariot</MovementCode>
+				<Description>Platform where (S) is horizontal on stomach with bent knees or in an arch "Chariot"</Description>
+				<DD>1.15</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2S</MovementCode>
+				<Description>Platform from 2 support swimmers</Description>
+				<DD>1.25</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Flower</MovementCode>
+				<Description>Platform "Flower"</Description>
+				<DD>1.00</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Hand</MovementCode>
+				<Description>Platform made from hands/arms</Description>
+				<DD>0.80</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Split</MovementCode>
+				<Description>A platform in which the support swimmer(S) is in a Front Split position</Description>
+				<DD>1.25</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Weasel</MovementCode>
+				<Description>Platform where (S) is horizontal alignment on stomachin a Turtle position</Description>
+				<DD>1.50</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>4L</MovementCode>
+				<Description>4 level platform construction</Description>
+				<DD>1.45</DD>
+			</Movement>
+		</Construction>
+		<Direction>
+			<Family>Direction</Family>
+			<Code>D</Code>
+		</Direction>
+		<Support>
+			<Family>Area of Support / Type of Connection</Family>
+			<Code>S</Code>
+			<Movement>
+				<MovementCode>SiA</MovementCode>
+				<Description>(F) sits or lays on big area of support</Description>
+				<DD>0.10</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>F2A</MovementCode>
+				<Description>(F) stands (two legs, two feet) on a big area of support such as: straight or arched body or hands/arms or ballet leg/s constructions.</Description>
+				<DD>0.20</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>FAb</MovementCode>
+				<Description>(F) stands (two legs, or 1 leg) on a big area of support such as: straight or arched body or ballet leg/s constructions + blind connect to (S)</Description>
+				<DD>0.20</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>3pA</MovementCode>
+				<Description>(F) connects at 3 points standing with at least one leg on a big area of support such as: straight or arched body or hands/arms constructions.</Description>
+				<DD>0.15</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>1FA</MovementCode>
+				<Description>(F) stands on 1 leg on a big area of support</Description>
+				<DD>0.40</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>HA</MovementCode>
+				<Description>Headstand (F) on a big area of support</Description>
+				<DD>0.10</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>SP+K</MovementCode>
+				<Description>(F) holds knees (S), (S) holds shoulders (F).</Description>
+				<DD>0.25</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>3pK</MovementCode>
+				<Description>(F) is connected to knee/s (S) and palms/shoulders by any 3 points</Description>
+				<DD>0.30</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>3pS</MovementCode>
+				<Description>3 points of connection with (S) on small area with (F): palms to palms and one foot to one foot (or palm to foot and foot to 2 palms)</Description>
+				<DD>0.40</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>3pbA</MovementCode>
+				<Description>(F) is connected to a big area of support by any 3 points</Description>
+				<DD>0.45</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>FA+PF</MovementCode>
+				<Description>One foot (F) stands on (S) who is in a ballet leg position + (F) holds/grabs the Ballet Leg (S)</Description>
+				<DD>0.25</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>SP+L</MovementCode>
+				<Description>Shoulders (F) on palms (S) + (F) is connected by hands with the leg or 2 legs (S).</Description>
+				<DD>0.375</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>SiF+Pb</MovementCode>
+				<Description>(F) sits on feet or 1 foot (S) + blind connection to (S) palms to palms</Description>
+				<DD>0.35</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>ShF+P</MovementCode>
+				<Description>Shoulders (F) on feet (S) + palms/palms connection between them</Description>
+				<DD>0.40</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>L/SiF+P</MovementCode>
+				<Description>(F) sits or lies on the foot or two feet (S). (S) connected to (F) with their palms.</Description>
+				<DD>0.30</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>4p</MovementCode>
+				<Description>4 points of connection</Description>
+				<DD>0.10</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2pA/</MovementCode>
+				<Description>Handstand (F) on a big area of support</Description>
+				<DD>0.275</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>BA</MovementCode>
+				<Description>Bridge position (F) with 4 points of connection on a big area of support.</Description>
+				<DD>0.30</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>DBB</MovementCode>
+				<Description>Bridge position (F) with 4 points of connection on a Double Ballet Leg construction.</Description>
+				<DD>0.50</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2pK</MovementCode>
+				<Description>2 points of connection (S) on platform construction Knees</Description>
+				<DD>0.20</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>>F1P</MovementCode>
+				<Description>(F) performs a transit to stand 1 leg on 1 or 2 palms (S).</Description>
+				<DD>0.40</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2pBb</MovementCode>
+				<Description>2 blind points of connection with (S) (blind points of support- is when (F) does not see the leg they are connected on).</Description>
+				<DD>0.55</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>>2P2P</MovementCode>
+				<Description>(F) performs a transit to 2 arm handstand on both palms (S).</Description>
+				<DD>0.60</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2b/</MovementCode>
+				<Description>(F) hanging on 1 or 2 ballet legs of one or two (S) + help from base swimmer(s)</Description>
+				<DD>0.45</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>SF+TP</MovementCode>
+				<Description>Chest on feet+ Hips on palms</Description>
+				<DD>0.25</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>ShiShi+</MovementCode>
+				<Description>Shin (F) connected to Shin (S) + (F) lays on the other foot of (S).</Description>
+				<DD>0.70</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>HP+L</MovementCode>
+				<Description>Head (F) on palms (S) + (F) connects with 1 or 2 legs(S)</Description>
+				<DD>0.425</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>3pS+</MovementCode>
+				<Description>For 2S construction only! 3 points of connection with (S) on small area with (F): palm(s) to foot and one foot to one foot</Description>
+				<DD>0.40</DD>
+			</Movement>
+		</Support>
+		<Positions>
+			<Family>Positions</Family>
+			<Code>P</Code>
+			<Movement>
+				<MovementCode>he</MovementCode>
+				<Description>Heron Pos 1</Description>
+				<DD>0.125</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2he</MovementCode>
+				<Description>Heron Pos 2</Description>
+				<DD>0.062</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>vs</MovementCode>
+				<Description>Vertical Split Pos 1</Description>
+				<DD>0.30</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2vs</MovementCode>
+				<Description>Vertical Split Pos 2</Description>
+				<DD>0.10</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>gl</MovementCode>
+				<Description>Glass Pos 1</Description>
+				<DD>0.40</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2gl</MovementCode>
+				<Description>Glass Pos 2</Description>
+				<DD>0.20</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>ba</MovementCode>
+				<Description>Ballerina Pos 1</Description>
+				<DD>0.15</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2ba</MovementCode>
+				<Description>Ballerina Pos 2</Description>
+				<DD>0.075</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>sa</MovementCode>
+				<Description>Sail Pos 1</Description>
+				<DD>0.325</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2sa</MovementCode>
+				<Description>Sail Pos 2</Description>
+				<DD>0.162</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>ne</MovementCode>
+				<Description>Needle Pos 1</Description>
+				<DD>0.425</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2ne</MovementCode>
+				<Description>Needle Pos 2</Description>
+				<DD>0.212</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>ey</MovementCode>
+				<Description>Eye Pos 1</Description>
+				<DD>0.50</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2ey</MovementCode>
+				<Description>Eye Pos 2</Description>
+				<DD>0.25</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>sd</MovementCode>
+				<Description>Stand Pos 1</Description>
+				<DD>0.05</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2sd</MovementCode>
+				<Description>Stand Pos 2</Description>
+				<DD>0.025</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>mo</MovementCode>
+				<Description>Monkey Pos 1</Description>
+				<DD>0.075</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2mo</MovementCode>
+				<Description>Monkey Pos 2</Description>
+				<DD>0.037</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>pp</MovementCode>
+				<Description>Porcupine Pos 1</Description>
+				<DD>0.10</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2pp</MovementCode>
+				<Description>Porcupine Pos 2</Description>
+				<DD>0.05</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>ct</MovementCode>
+				<Description>Cat Pos 1</Description>
+				<DD>0.025</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2ct</MovementCode>
+				<Description>Cat Pos 2</Description>
+				<DD>0.012</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>sh</MovementCode>
+				<Description>Shrimp Pos 1</Description>
+				<DD>0.175</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2sh</MovementCode>
+				<Description>Shrimp Pos 2</Description>
+				<DD>0.087</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>hp</MovementCode>
+				<Description>Harp Pos 1</Description>
+				<DD>0.45</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2hp</MovementCode>
+				<Description>Harp Pos 2</Description>
+				<DD>0.225</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>fl</MovementCode>
+				<Description>Flamingo Pos 1</Description>
+				<DD>0.225</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2fl</MovementCode>
+				<Description>Flamingo Pos 2</Description>
+				<DD>0.112</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>tu</MovementCode>
+				<Description>Turtle Pos 1</Description>
+				<DD>0.375</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2tu</MovementCode>
+				<Description>Turtle Pos 2</Description>
+				<DD>0.187</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>co</MovementCode>
+				<Description>Cobra Pos 1</Description>
+				<DD>0.15</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2co</MovementCode>
+				<Description>Cobra Pos 2</Description>
+				<DD>0.075</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>spl</MovementCode>
+				<Description>Split Pos 1</Description>
+				<DD>0.28</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2spl</MovementCode>
+				<Description>Split Pos 2</Description>
+				<DD>0.14</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>so</MovementCode>
+				<Description>Scorpio Pos 1</Description>
+				<DD>0.275</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2so</MovementCode>
+				<Description>Scorpio Pos 2</Description>
+				<DD>0.137</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>pi</MovementCode>
+				<Description>Pin Pos 1</Description>
+				<DD>0.60</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2pi</MovementCode>
+				<Description>Pin Pos 2</Description>
+				<DD>0.30</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>bb</MovementCode>
+				<Description>Bamboo Pos 1</Description>
+				<DD>0.15</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2bb</MovementCode>
+				<Description>Bamboo Pos 2</Description>
+				<DD>0.075</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>bo</MovementCode>
+				<Description>Box Pos 1</Description>
+				<DD>0.20</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2bo</MovementCode>
+				<Description>Box Pos 2</Description>
+				<DD>0.10</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>ff</MovementCode>
+				<Description>Firefly Pos 1</Description>
+				<DD>0.275</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2ff</MovementCode>
+				<Description>Firefly Pos 2</Description>
+				<DD>0.137</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>wi</MovementCode>
+				<Description>Willow Pos 1</Description>
+				<DD>0.25</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2wi</MovementCode>
+				<Description>Willow Pos 2</Description>
+				<DD>0.125</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>br</MovementCode>
+				<Description>Bridge Pos 1</Description>
+				<DD>0.325</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2br</MovementCode>
+				<Description>Bridge Pos 2</Description>
+				<DD>0.162</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>ow</MovementCode>
+				<Description>Owl Pos 1</Description>
+				<DD>0.30</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2ow</MovementCode>
+				<Description>Owl Pos 2</Description>
+				<DD>0.175</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>ma</MovementCode>
+				<Description>Marlin Pos 1</Description>
+				<DD>0.35</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2ma</MovementCode>
+				<Description>Marlin Pos 2</Description>
+				<DD>0.175</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>dr</MovementCode>
+				<Description>Drop Pos 1</Description>
+				<DD>0.80</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2dr</MovementCode>
+				<Description>Drop Pos 2</Description>
+				<DD>0.40</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>qu</MovementCode>
+				<Description>Queen Pos 1</Description>
+				<DD>0.70</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2qu</MovementCode>
+				<Description>Queen Pos 2</Description>
+				<DD>0.35</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>sn</MovementCode>
+				<Description>Snail Pos 1</Description>
+				<DD>0.475</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>2sn</MovementCode>
+				<Description>Snail Pos 2</Description>
+				<DD>0.237</DD>
+			</Movement>
+ 		</Positions>
+		<Rotation_Base>
+			<Family>Rotation of the construction base</Family>
+			<Code>R</Code>
+			<Movement>
+				<MovementCode>Pr</MovementCode>
+				<Description>90° Value for platform where the entire construction rotates, including base swimmers</Description>
+				<DD>0.20</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Pr0.5</MovementCode>
+				<Description>180° Value for platform where the entire construction rotates, including base swimmers</Description>
+				<DD>0.30</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Pr1</MovementCode>
+				<Description>360° Value for platform where the entire construction rotates, including base swimmers</Description>
+				<DD>0.50</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Pr1.5</MovementCode>
+				<Description>540° Value for platform where the entire construction rotates, including base swimmers</Description>
+				<DD>0.70</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Ph</MovementCode>
+				<Description>90° Value for construction made from hands</Description>
+				<DD>0.10</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>P0.5h</MovementCode>
+				<Description>180° Value for construction made from hands</Description>
+				<DD>0.20</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>P1h</MovementCode>
+				<Description>360° Value for construction made from hands</Description>
+				<DD>0.30</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>P1.5h</MovementCode>
+				<Description>540° Value for construction made from hands</Description>
+				<DD>0.50</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>P2h</MovementCode>
+				<Description>720°+ Value for construction made from hands</Description>
+				<DD>0.70</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>P2S</MovementCode>
+				<Description>90° Value for platform made from legs with 2 or more support swimmers</Description>
+				<DD>0.30</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>P2Sr0.5</MovementCode>
+				<Description>180° Value for platform made from legs with 2 or more support swimmers</Description>
+				<DD>0.40</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>P2Sr1</MovementCode>
+				<Description>360° Value for platform made from legs with 2 or more support swimmers</Description>
+				<DD>0.60</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>PDB</MovementCode>
+				<Description>90° Value for platform construction DB</Description>
+				<DD>0.35</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>PDB0.5</MovementCode>
+				<Description>180° Value for platform construction DB</Description>
+				<DD>0.45</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>PDB1</MovementCode>
+				<Description>360° Value for platform construction DB</Description>
+				<DD>0.70</DD>
+			</Movement>
+		</Rotation_Base>
+		<Rotation>
+			<Family>Rotation</Family>
+			<Code>T</Code>
+		</Rotation>
+		<Bonus>
+			<Family>Bonus</Family>
+			<Code>B</Code>
+			<Movement>
+				<MovementCode>Dbl</MovementCode>
+				<Description>Synchronized actions for double acrobatic movements</Description>
+				<DD>0.30</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Pos3</MovementCode>
+				<Description>Third position</Description>
+				<DD>0.05</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>UP</MovementCode>
+				<Description>Platform made from hands, which are "out of the water" (not on the surface).</Description>
+				<DD>1.00</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Porp</MovementCode>
+				<Description>"Porpoise" start-action for featured-swimmer at the beginning of the acrobatic movement to get to the main (first) position.</Description>
+				<DD>0.15</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Spich</MovementCode>
+				<Description>"Spichag" power press-up from Shrimp to Bamboo/or in opposite direction: power-lowering from Bamboo to Shrimp.</Description>
+				<DD>0.50</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Trav</MovementCode>
+				<Description>Travelling construction</Description>
+				<DD>0.20</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Stand</MovementCode>
+				<Description>After handstand/head-down position/s featured-swimmer lowers legs on a platform and stands-up.</Description>
+				<DD>0.10</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Diva</MovementCode>
+				<Description>For 2S construction: featured swimmer starts in 3pS connection, then stands on two feet foot to foot on two different support swimmers, and stands up,</Description>
+				<DD>0.30</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>PRoll</MovementCode>
+				<Description>"Roll" on the construction</Description>
+				<DD>0.125</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Box</MovementCode>
+				<Description>Lifting in a "Box" and lowering back</Description>
+				<DD>0.175</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Spider</MovementCode>
+				<Description>"Spider" action</Description>
+				<DD>0.225</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Climb</MovementCode>
+				<Description>Featured swimmer climbs onto the platform from under the water inside the construction to perform Position 1.</Description>
+				<DD>0.10</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Arch</MovementCode>
+				<Description>While platform is rising a non-stop transition to a Position 1 Queen or Drop that starts head-up.</Description>
+				<DD>0.40</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Kozak</MovementCode>
+				<Description>"Kozak" power press sequence</Description>
+				<DD>0.60</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Dive</MovementCode>
+				<Description>Dive or Half Somersault at the end of the platform performed headfirst or foot-first</Description>
+				<DD>0.05</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>CH</MovementCode>
+				<Description>Cartwheel or Handspring 360° ending action off a platform. Can be performed as Handspring with connection.</Description>
+				<DD>0.10</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Ps1</MovementCode>
+				<Description>At the end of the platform, the featured-swimmer performs 360° somersault to enter the water</Description>
+				<DD>0.10</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Ps1t0.5</MovementCode>
+				<Description>At the end of the platform, the featured-swimmer performs 360° somersault + half twist to enter the water</Description>
+				<DD>0.15</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Ps1o</MovementCode>
+				<Description>At the end of the platform, the featured swimmer performs 360o somersault and open to a straight body position to enter the water.</Description>
+				<DD>0.30</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Ps1t0.5o</MovementCode>
+				<Description>At the end of the platform, the featured swimmer performs 360o somersault + half twist and open to a straight body position to enter the water</Description>
+				<DD>0.40</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Ps1t1</MovementCode>
+				<Description>At the end of the platform, the featured-swimmer performs 360° somersault + 1 twist to enter the water</Description>
+				<DD>0.35</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Pf1</MovementCode>
+				<Description>At the end of the platform, the featured swimmer performs 360o Side Somersault to enter the water</Description>
+				<DD>0.15</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Pf1o</MovementCode>
+				<Description>At the end of the platform, the featured swimmer performs a 360o Side Somersault and open to a straight body position to enter the water</Description>
+				<DD>0.325</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Mov</MovementCode>
+				<Description>The featured swimmer Moves from platform onto 1 or 2 spotter’s heads for finishing acrobatic movement as a Lift.</Description>
+				<DD>0.25</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Mov1</MovementCode>
+				<Description>The featured swimmer Moves from platform to standing with one leg on the shoulder of 1 spotter/base swimmer and submerge</Description>
+				<DD>0.15</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Mov1+t</MovementCode>
+				<Description>The featured swimmer Moves from platform to standing with one leg on the shoulder of 1 spotter/base swimmer with a turn 180 degrees by the waist.</Description>
+				<DD>0.275</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Fall</MovementCode>
+				<Description>Fast fall down inside construction</Description>
+				<DD>0.05</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>FTurn</MovementCode>
+				<Description>Fast fall down inside platform construction with 360°+ turn</Description>
+				<DD>0.15</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Ps1!</MovementCode>
+				<Description>360° somersault starting from a head-down position</Description>
+				<DD>0.15</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Ps1t1o</MovementCode>
+				<Description>360° somersault + 1 twist and open to straight body position</Description>
+				<DD>0.45</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Lotus</MovementCode>
+				<Description>Featured swimmer rotates on static foot/feet of the support 180 or more in a Turtle position</Description>
+				<DD>0.30</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Mov1+t1</MovementCode>
+				<Description>Move on shoulder with one leg + 360° rotation (ending action)</Description>
+				<DD>0.325</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Ps1!o</MovementCode>
+				<Description>Head down 360° somersault + open</Description>
+				<DD>0.35</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Ps1.5!</MovementCode>
+				<Description>Head down 540° somersault</Description>
+				<DD>0.30</DD>
+			</Movement>
+		</Bonus>
+	</ACRO-P>
+	<ACRO-PAIRS>
+		<Elements>
+			<Family>Pair Acrobatics</Family>
+			<Movement>
+				<MovementCode>L»</MovementCode>
+				<Description>Lift head-up with crashing</Description>
+				<Image>D-1.jpg</Image>
+				<DD>0.10</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>L!»</MovementCode>
+				<Description>Lift legs-up with crashing</Description>
+				<Image>D-2.jpg</Image>
+				<DD>0.20</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>L</MovementCode>
+				<Description>Lift head-up</Description>
+				<Image>D-3.jpg</Image>
+				<DD>0.40</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Lf»</MovementCode>
+				<Description>Lift head-up with flexibility and crashing</Description>
+				<Image>D-4.jpg</Image>
+				<DD>0.40</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>L!f»</MovementCode>
+				<Description>Lift legs-up with flexibility and crashing</Description>
+				<Image>D-5.jpg</Image>
+				<DD>0.40</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>L!r0.5»</MovementCode>
+				<Description>Lift legs-up with crashing and rotation 180°</Description>
+				<Image>D-6.jpg</Image>
+				<DD>0.40</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>L!</MovementCode>
+				<Description>Lift legs-up</Description>
+				<Image>D-7.jpg</Image>
+				<DD>0.60</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Lf</MovementCode>
+				<Description>Lift head-up with flexibility</Description>
+				<Image>D-52.jpg</Image>
+				<DD>0.60</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>L!r1»</MovementCode>
+				<Description>Lift legs-up with crashing and rotation 360°</Description>
+				<Image>D-8.jpg</Image>
+				<DD>0.60</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>L!fr0.5»</MovementCode>
+				<Description>Lift legs-up with crashing, flexibility and rotation 180° (turn)</Description>
+				<Image>D-9.jpg</Image>
+				<DD>0.60</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Lr0.5</MovementCode>
+				<Description>Lift head-up with 180° rotation</Description>
+				<Image>D-10.jpg</Image>
+				<DD>0.60</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>SL></MovementCode>
+				<Description>Sustained lift head-up with traveling</Description>
+				<Image>D-11.jpg</Image>
+				<DD>0.80</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>L!r0.5</MovementCode>
+				<Description>Lift legs-up with 180° rotation</Description>
+				<Image>D-12.jpg</Image>
+				<DD>0.80</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Lfr0.5</MovementCode>
+				<Description>Lift head-up with flex. and 180° rotation</Description>
+				<Image>D-13.jpg</Image>
+				<DD>0.80</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>L!f</MovementCode>
+				<Description>Lift legs-up with flexibility</Description>
+				<Image>D-14.jpg</Image>
+				<DD>0.80</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>SL!></MovementCode>
+				<Description>Sustained lift legs-up with traveling</Description>
+				<Image>D-15.jpg</Image>
+				<DD>0.80</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Lr1</MovementCode>
+				<Description>Lift head-up with rotation 360°</Description>
+				<Image>D-16.jpg</Image>
+				<DD>0.80</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>J</MovementCode>
+				<Description>Jump head-up</Description>
+				<Image>D-17.jpg</Image>
+				<DD>0.80</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>W!»</MovementCode>
+				<Description>Throw legs-up with crashing</Description>
+				<Image>D-18.jpg</Image>
+				<DD>0.80</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>L!r1</MovementCode>
+				<Description>Lift legs-up with rotation 360°</Description>
+				<Image>D-19.jpg</Image>
+				<DD>1.00</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>L!fr0.5</MovementCode>
+				<Description>Lift legs-up with flexibility and rotation 180°</Description>
+				<Image>D-20.jpg</Image>
+				<DD>1.00</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>SL!f></MovementCode>
+				<Description>Sustained lift legs-up with flexibility and traveling</Description>
+				<Image>D-21.jpg</Image>
+				<DD>1.00</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>SL!r0.5></MovementCode>
+				<Description>Sustained lift legs-up with traveling and rotation 180°</Description>
+				<Image>D-22.jpg</Image>
+				<DD>1.00</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Jr0.5</MovementCode>
+				<Description>Jump head-up with 180° rotation</Description>
+				<Image>D-23.jpg</Image>
+				<DD>1.00</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Jf</MovementCode>
+				<Description>Jump head-up with flexibility</Description>
+				<Image>D-24.jpg</Image>
+				<DD>1.00</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>W!d</MovementCode>
+				<Description>Legs-Up Throw-Dive</Description>
+				<Image>D-25.jpg</Image>
+				<DD>1.00</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>L!fr1</MovementCode>
+				<Description>Lift legs-up with flexibility and rotation 360°</Description>
+				<Image>D-26.jpg</Image>
+				<DD>1.20</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>SL!fr0.5></MovementCode>
+				<Description>Sustained lift legs-up with flexibility, traveling and rotation 180°</Description>
+				<Image>D-27.jpg</Image>
+				<DD>1.20</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>W!r0.5</MovementCode>
+				<Description>Throw legs-up with 180° rotation</Description>
+				<Image>D-28.jpg</Image>
+				<DD>1.20</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>W!f</MovementCode>
+				<Description>Throw legs-up with flexibility</Description>
+				<Image>D-29.jpg</Image>
+				<DD>1.20</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Jd</MovementCode>
+				<Description>Jump-Dive</Description>
+				<Image>D-30.jpg</Image>
+				<DD>1.20</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>W!s0.5</MovementCode>
+				<Description>Throw legs-up with 180° somersault</Description>
+				<Image>D-31.jpg</Image>
+				<DD>1.40</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>W!fr0.5</MovementCode>
+				<Description>Throw legs-up with flexibility and rotation 180°</Description>
+				<Image>D-32.jpg</Image>
+				<DD>1.40</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Jpd</MovementCode>
+				<Description>Jump-Tuck/Change Position-Dive</Description>
+				<Image>D-38.jpg</Image>
+				<DD>1.40</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>W!r1</MovementCode>
+				<Description>Throw legs-up with rotation 360°</Description>
+				<Image>D-42.jpg</Image>
+				<DD>1.40</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>W!fr1</MovementCode>
+				<Description>Throw legs-up with flexibility and rotation 360° or more</Description>
+				<Image>D-33.jpg</Image>
+				<DD>1.60</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Js0.5t0.5</MovementCode>
+				<Description>Jump head-up with half twist and 180° somersault</Description>
+				<Image>D-45.jpg</Image>
+				<DD>1.60</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>W!s0.5t0.5</MovementCode>
+				<Description>Throw legs-up with 180° somersault and half twist</Description>
+				<Image>D-41.jpg</Image>
+				<DD>1.60</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Js1B</MovementCode>
+				<Description>Jump head-up with 1 somersault backwards</Description>
+				<Image>D-37.jpg</Image>
+				<DD>1.80</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>JBs1t0.5</MovementCode>
+				<Description>Jump-Tuck-1 somersault half twist</Description>
+				<Image>D-39.jpg</Image>
+				<DD>2.00</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Js1B+f</MovementCode>
+				<Description>Jump head-up with 1 somersault backwards and open in Jay (flexibility)</Description>
+				<Image>D-43.jpg</Image>
+				<DD>2.10</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Js1B+pf</MovementCode>
+				<Description>Jump head-up with 1 somersault backwards+ pike + open in Jay</Description>
+				<Image>D-44.jpg</Image>
+				<DD>2.15</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>W!s1F</MovementCode>
+				<Description>Throw legs-up with 1 somersault forwards</Description>
+				<Image>D-36.jpg</Image>
+				<DD>2.20</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>JsF1B</MovementCode>
+				<Description>Jump head-up-Backwards-Frontal 360° somersault</Description>
+				<Image>D-40.jpg</Image>
+				<DD>2.20</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>W!fr1.5</MovementCode>
+				<Description>Throw legs up with flexibility and rotation 540°</Description>
+				<Image>D-46.jpg</Image>
+				<DD>1.80</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Jfs1B</MovementCode>
+				<Description>Jump head-up with 1 somersault backwards and flexibility</Description>
+				<Image>D-47.jpg</Image>
+				<DD>2.00</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Js1F</MovementCode>
+				<Description>Jump head-up with 1 somersault forwards</Description>
+				<Image>D-48.jpg</Image>
+				<DD>2.00</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Jdf</MovementCode>
+				<Description>Jump head-up, with flexibility and dive</Description>
+				<Image>D-49.jpg</Image>
+				<DD>1.50</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Js0.5B</MovementCode>
+				<Description>Jump head-up with 180° backwards somersault</Description>
+				<Image>D-50.jpg</Image>
+				<DD>1.20</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>SL!f2+r1></MovementCode>
+				<Description>Sustained Lift with traveling and 2 consecutive flexibility pushes with a clear catch + rotation 360°</Description>
+				<Image>D-51.jpg</Image>
+				<DD>2.10</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>SL!f2r0.5+r1></MovementCode>
+				<Description>Sustained lift legs up with traveling and 2 consecutive flexibility pushes with a clear catch + rotation 180° and rotation 360°</Description>
+				<Image></Image>
+				<DD>2.20</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>W!s0.5p</MovementCode>
+				<Description>Throw legs-up with 180° somersault in Pike</Description>
+				<Image></Image>
+				<DD>1.45</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>JBs1t1</MovementCode>
+				<Description>Jump head up with 1 somersault + 1 twist</Description>
+				<Image></Image>
+				<DD>2.40</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>JBss1t1</MovementCode>
+				<Description>Jump head up - 1 straight somersault + 1 twist</Description>
+				<Image></Image>
+				<DD>2.80</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>SL!f2r1+r1</MovementCode>
+				<Description>Sustained lift legs-up with 2 consecutive flexibility pushes with a clear catch + rotation 360° in each</Description>
+				<Image></Image>
+				<DD>2.20</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Jdt1</MovementCode>
+				<Description>Jump Dive Full Twist</Description>
+				<Image></Image>
+				<DD>1.80</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Js1.5B</MovementCode>
+				<Description>Jump head-up with 1.5 backward somersault</Description>
+				<Image></Image>
+				<DD>2.20</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Js1Ro</MovementCode>
+				<Description>Jump head-up with 1 reverse somersault + open</Description>
+				<Image></Image>
+				<DD>2.80</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Js1R</MovementCode>
+				<Description>Jump head-up with 1 reverse somersault</Description>
+				<Image></Image>
+				<DD>2.20</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>SL!2+r2</MovementCode>
+				<Description>Sustained lift head-down with 2 or 3 consecutive lifts + rotation 720 or more (with or without flex and/or travel and/or crash)</Description>
+				<Image></Image>
+				<DD>2.40</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Js1Bo</MovementCode>
+				<Description>Jump head-up with 1 somersault backwards + open</Description>
+				<Image></Image>
+				<DD>2.40</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>W!+catchSL</MovementCode>
+				<Description>Throw legs-up with/without flexibility + catch in sustained lift</Description>
+				<Image></Image>
+				<DD>2.40</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>W!+catchSL+r1</MovementCode>
+				<Description>Throw legs-up + catch in sustained lift + 360 rotation</Description>
+				<Image></Image>
+				<DD>2.50</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Js1p</MovementCode>
+				<Description>Jump head-up with 1 somersault in Pike</Description>
+				<Image></Image>
+				<DD>2.20</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Js1t0.5B+pt</MovementCode>
+				<Description>Jump head-up with 1 somersault, half twist and pike-to-tuck position change</Description>
+				<Image></Image>
+				<DD>2.10</DD>
+			</Movement>
+			<Movement>
+				<MovementCode>Js1B+pt</MovementCode>
+				<Description>Jump head up with 1 somersault backwards in pike + tuck</Description>
+				<Image></Image>
+				<DD>1.90</DD>
+			</Movement>
+		</Elements>
+	</ACRO-PAIRS>
+</Artistic_Swimming>
