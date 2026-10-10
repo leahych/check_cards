@@ -106,70 +106,103 @@ impl DDPos2 for APos {
 }
 
 #[allow(non_camel_case_types)]
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, EnumString, Eq, PartialEq)]
 pub enum ARotation {
+    #[strum(to_string = "t0.5")]
     t0_5,
     t1,
+    #[strum(to_string = "t1.5")]
     t1_5,
     t2,
+    #[strum(to_string = "t2.5")]
     t2_5,
     t3,
     f1,
+    #[strum(to_string = "f1.5")]
     f1_5,
     f2,
     D,
+    #[strum(to_string = "dt0.5")]
     dt0_5,
     dt1,
+    #[strum(to_string = "dt1.5")]
     dt1_5,
     dt2,
     s1,
     s1f,
     ss1,
     ss1f,
+    #[strum(to_string = "s1t0.5")]
     s1t0_5,
+    #[strum(to_string = "s1t0.5f")]
     s1t0_5f,
     s1t1,
     s1t1f,
+    #[strum(to_string = "s1t1.5")]
     s1t1_5,
     s1t2,
+    #[strum(to_string = "ss1t0.5")]
     ss1t0_5,
+    #[strum(to_string = "ss1t0.5f")]
     ss1t0_5f,
     ss1t1,
     ss1t1f,
+    #[strum(to_string = "ss1t1.5")]
     ss1t1_5,
     ss1t2,
+    #[strum(to_string = "ss1t2.5")]
     ss1t2_5,
     ss1t3,
+    #[strum(to_string = "s1.5")]
     s1_5,
+    #[strum(to_string = "s1.5f")]
     s1_5f,
+    #[strum(to_string = "s1.5o")]
     s1_5o,
+    #[strum(to_string = "s1.5fo")]
     s1_5fo,
+    #[strum(to_string = "s1.5t0.5")]
     s1_5t0_5,
+    #[strum(to_string = "s1.5t0.5f")]
     s1_5t0_5f,
+    #[strum(to_string = "s1.5t0.5o")]
     s1_5t0_5o,
+    #[strum(to_string = "s1.5t0.5fo")]
     s1_5t0_5fo,
+    #[strum(to_string = "s1.5t1fo")]
     s1_5t1fo,
+    #[strum(to_string = "s1.5t1")]
     s1_5t1,
+    #[strum(to_string = "s1.5t1.5")]
     s1_5t1_5,
     s2,
     s2o,
     s2f,
     s2fo,
+    #[strum(to_string = "s2t0.5")]
     s2t0_5,
+    #[strum(to_string = "s2t0.5f")]
     s2t0_5f,
+    #[strum(to_string = "s2t0.5o")]
     s2t0_5o,
+    #[strum(to_string = "s2t0.5fo")]
     s2t0_5fo,
     s2t1,
     s2t1o,
     s2t1fo,
+    #[strum(to_string = "s2.5")]
     s2_5,
+    #[strum(to_string = "s2.5f")]
     s2_5f,
     s3,
+    #[strum(to_string = "ss1.5")]
     ss1_5,
     C,
+    #[strum(to_string = "ct0.5")]
     ct0_5,
     ct1,
     H,
+    #[strum(to_string = "ht0.5")]
     ht0_5,
     ht1,
     hd,
@@ -258,82 +291,6 @@ impl DD for ARotation {
             Self::hd => 125,
             Self::hs1 => 400,
         })
-    }
-}
-
-impl FromStr for ARotation {
-    type Err = anyhow::Error;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "t0.5" => Ok(Self::t0_5),
-            "t1" => Ok(Self::t1),
-            "t1.5" => Ok(Self::t1_5),
-            "t2" => Ok(Self::t2),
-            "t2.5" => Ok(Self::t2_5),
-            "t3" => Ok(Self::t3),
-            "f1" => Ok(Self::f1),
-            "f1.5" => Ok(Self::f1_5),
-            "f2" => Ok(Self::f2),
-            "D" => Ok(Self::D),
-            "dt0.5" => Ok(Self::dt0_5),
-            "dt1" => Ok(Self::dt1),
-            "dt1.5" => Ok(Self::dt1_5),
-            "dt2" => Ok(Self::dt2),
-            "s1" => Ok(Self::s1),
-            "s1f" => Ok(Self::s1f),
-            "ss1" => Ok(Self::ss1),
-            "ss1f" => Ok(Self::ss1f),
-            "s1t0.5" => Ok(Self::s1t0_5),
-            "s1t0.5f" => Ok(Self::s1t0_5f),
-            "s1t1" => Ok(Self::s1t1),
-            "s1t1f" => Ok(Self::s1t1f),
-            "s1t1.5" => Ok(Self::s1t1_5),
-            "s1t2" => Ok(Self::s1t2),
-            "ss1t0.5" => Ok(Self::ss1t0_5),
-            "ss1t0.5f" => Ok(Self::ss1t0_5f),
-            "ss1t1" => Ok(Self::ss1t1),
-            "ss1t1f" => Ok(Self::ss1t1f),
-            "ss1t1.5" => Ok(Self::ss1t1_5),
-            "ss1t2" => Ok(Self::ss1t2),
-            "ss1t2.5" => Ok(Self::ss1t2_5),
-            "ss1t3" => Ok(Self::ss1t3),
-            "s1.5" => Ok(Self::s1_5),
-            "s1.5f" => Ok(Self::s1_5f),
-            "s1.5o" => Ok(Self::s1_5o),
-            "s1.5fo" => Ok(Self::s1_5fo),
-            "s1.5t0.5" => Ok(Self::s1_5t0_5),
-            "s1.5t0.5f" => Ok(Self::s1_5t0_5f),
-            "s1.5t0.5o" => Ok(Self::s1_5t0_5o),
-            "s1.5t0.5fo" => Ok(Self::s1_5t0_5fo),
-            "s1.5t1fo" => Ok(Self::s1_5t1fo),
-            "s1.5t1" => Ok(Self::s1_5t1),
-            "s1.5t1.5" => Ok(Self::s1_5t1_5),
-            "s2" => Ok(Self::s2),
-            "s2o" => Ok(Self::s2o),
-            "s2f" => Ok(Self::s2f),
-            "s2fo" => Ok(Self::s2fo),
-            "s2t0.5" => Ok(Self::s2t0_5),
-            "s2t0.5f" => Ok(Self::s2t0_5f),
-            "s2t0.5o" => Ok(Self::s2t0_5o),
-            "s2t0.5fo" => Ok(Self::s2t0_5fo),
-            "s2t1" => Ok(Self::s2t1),
-            "s2t1o" => Ok(Self::s2t1o),
-            "s2t1fo" => Ok(Self::s2t1fo),
-            "s2.5" => Ok(Self::s2_5),
-            "s2.5f" => Ok(Self::s2_5f),
-            "s3" => Ok(Self::s3),
-            "ss1.5" => Ok(Self::ss1_5),
-            "C" => Ok(Self::C),
-            "ct0.5" => Ok(Self::ct0_5),
-            "ct1" => Ok(Self::ct1),
-            "H" => Ok(Self::H),
-            "ht0.5" => Ok(Self::ht0_5),
-            "ht1" => Ok(Self::ht1),
-            "hd" => Ok(Self::hd),
-            "hs1" => Ok(Self::hs1),
-            &_ => Err(anyhow!("unknown airborne rotation {s}")),
-        }
     }
 }
 
@@ -1549,92 +1506,63 @@ impl CBRotation {
     }
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, EnumString, Eq, PartialEq)]
 pub enum CFRotation {
+    #[strum(to_string = "Ct0.5")]
     Ct0_5,
     Ct1,
+    #[strum(to_string = "Ct1.5")]
     Ct1_5,
     Ct2,
+    #[strum(to_string = "Ct2.5")]
     Ct2_5,
     Ct3,
     Cd,
+    #[strum(to_string = "Cdt0.5")]
     Cdt0_5,
     Cdt1,
+    #[strum(to_string = "Cdt1.5")]
     Cdt1_5,
     Cs1,
     Css1,
+    #[strum(to_string = "Cs1.5")]
     Cs1_5,
+    #[strum(to_string = "Cs1.5o")]
     Cs1_5o,
     Cf1,
+    #[strum(to_string = "Cf1.5")]
     Cf1_5,
     Cc,
+    #[strum(to_string = "Cct0.5")]
     Cct0_5,
     Cct1,
     Ch,
+    #[strum(to_string = "Cht0.5")]
     Cht0_5,
     Cht1,
+    #[strum(to_string = "Cs1t0.5")]
     Cs1t0_5,
     Cs1t1,
+    #[strum(to_string = "Cs1t1.5")]
     Cs1t1_5,
     Cs1t2,
+    #[strum(to_string = "Css1t0.5")]
     Css1t0_5,
     Css1t1,
+    #[strum(to_string = "Css1t1.5")]
     Css1t1_5,
     Css1t2,
     Cs1t1o,
+    #[strum(to_string = "Cs1t1.5o")]
     Cs1t1_5o,
     Cs1t2o,
+    #[strum(to_string = "Chs0.5")]
     Chs0_5,
     Cs2,
+    #[strum(to_string = "Cs1.5t0.5o")]
     Cs1_5t0_5o,
+    #[strum(to_string = "Cs2t0.5")]
     Cs2t0_5,
-}
-
-impl FromStr for CFRotation {
-    type Err = anyhow::Error;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "Ct0.5" => Ok(Self::Ct0_5),
-            "Ct1" => Ok(Self::Ct1),
-            "Ct1.5" => Ok(Self::Ct1_5),
-            "Ct2" => Ok(Self::Ct2),
-            "Ct2.5" => Ok(Self::Ct2_5),
-            "Ct3" => Ok(Self::Ct3),
-            "Cd" => Ok(Self::Cd),
-            "Cdt0.5" => Ok(Self::Cdt0_5),
-            "Cdt1" => Ok(Self::Cdt1),
-            "Cdt1.5" => Ok(Self::Cdt1_5),
-            "Cs1" => Ok(Self::Cs1),
-            "Css1" => Ok(Self::Css1),
-            "Cs1.5" => Ok(Self::Cs1_5),
-            "Cs1.5o" => Ok(Self::Cs1_5o),
-            "Cf1" => Ok(Self::Cf1),
-            "Cf1.5" => Ok(Self::Cf1_5),
-            "Cc" => Ok(Self::Cc),
-            "Cct0.5" => Ok(Self::Cct0_5),
-            "Cct1" => Ok(Self::Cct1),
-            "Ch" => Ok(Self::Ch),
-            "Cht0.5" => Ok(Self::Cht0_5),
-            "Cht1" => Ok(Self::Cht1),
-            "Cs1t0.5" => Ok(Self::Cs1t0_5),
-            "Cs1t1" => Ok(Self::Cs1t1),
-            "Cs1t1.5" => Ok(Self::Cs1t1_5),
-            "Cs1t2" => Ok(Self::Cs1t2),
-            "Css1t0.5" => Ok(Self::Css1t0_5),
-            "Css1t1" => Ok(Self::Css1t1),
-            "Css1t1.5" => Ok(Self::Css1t1_5),
-            "Css1t2" => Ok(Self::Css1t2),
-            "Cs1t1o" => Ok(Self::Cs1t1o),
-            "Cs1t1.5o" => Ok(Self::Cs1t1_5o),
-            "Cs1t2o" => Ok(Self::Cs1t2o),
-            "Chs0.5" => Ok(Self::Chs0_5),
-            "Cs2" => Ok(Self::Cs2),
-            "Cs1.5t0.5o" => Ok(Self::Cs1_5t0_5o),
-            "Cs2t0.5" => Ok(Self::Cs2t0_5),
-            _ => Err(anyhow!("unknown rotation: '{s}'")),
-        }
-    }
 }
 
 impl DD for CFRotation {
