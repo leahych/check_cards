@@ -119,7 +119,7 @@ mod tests {
                     None
                 )
             )
-        )
+        );
     }
 
     #[test]

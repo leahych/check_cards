@@ -574,7 +574,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_parse_hybrid() {
+    fn test_parse_hybrid_good() {
         const GOOD_CASES: &[(&str, &str)] = &[
             ("just_pc", "2PC"),
             ("spin_base", "SB"),
@@ -595,7 +595,10 @@ mod tests {
         for (name, s) in GOOD_CASES {
             s.parse::<HybridDecl>().expect(format!("{name}: failed to parse '{s}'").as_str());
         }
+    }
 
+    #[test]
+    fn test_parse_hybrid_bad() {
         const BAD_CASES: &[(&str, &str)] = &[
             ("factored_pc", "2PC*0.3"),
             ("too_many_pc", "7PC"),
@@ -616,8 +619,7 @@ mod tests {
         ];
         for (name, s) in BAD_CASES {
             s.parse::<HybridDecl>()
-                .err()
-                .expect(format!("{name}: unexpectedly parsed '{s}'").as_str());
+                .expect_err(format!("{name}: unexpectedly parsed '{s}'").as_str());
         }
     }
 

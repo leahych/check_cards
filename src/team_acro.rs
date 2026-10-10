@@ -2505,37 +2505,37 @@ mod tests {
 
     #[test]
     fn test_parse_team_acro() {
-        assert!("Q-Sq-Forw-ln".parse::<TeamAcroKind>().is_err());
-        assert!("A-S-Back-ln".parse::<TeamAcroKind>().is_err());
-        assert!("A-Sq-Bln-ln".parse::<TeamAcroKind>().is_err());
-        assert!("A-Sq-Down-ln".parse::<TeamAcroKind>().is_err());
-        assert!("A-Sq-Back-sd".parse::<TeamAcroKind>().is_err());
-        assert!("P-Hand-HA-bb/2ow-Ph0.5".parse::<TeamAcroKind>().is_err());
-        assert!("A-Sq-Back".parse::<TeamAcroKind>().is_err());
-        assert!("A-Sq-Back-".parse::<TeamAcroKind>().is_err());
-        assert!("A-Sq-Back-ja/2ln/2tk".parse::<TeamAcroKind>().is_err());
-        assert!("A-Sq-Back-2ln".parse::<TeamAcroKind>().is_err());
-        assert!("A-Sq-Back-pk/3rg".parse::<TeamAcroKind>().is_err());
-        assert!("A-Sq-Back-pk/2r".parse::<TeamAcroKind>().is_err());
-        assert!("A-Thr-Forw-ln-Dbbl".parse::<TeamAcroKind>().is_err());
-        assert!("B-S-FS-sd".parse::<TeamAcroKind>().is_err());
-        assert!("B-St-F-sd".parse::<TeamAcroKind>().is_err());
-        assert!("B-St-FS-ln".parse::<TeamAcroKind>().is_err());
-        assert!("B-St-FS-sd-SdU".parse::<TeamAcroKind>().is_err());
-        assert!("C-Thr^3F-Back-ow/2tk".parse::<TeamAcroKind>().is_err());
-        assert!("C-Thr^2F-Bac-ow/2tk".parse::<TeamAcroKind>().is_err());
-        assert!("C-Thr^2F-Back-ow2tk".parse::<TeamAcroKind>().is_err());
-        assert!("C-Thr^2F-Back-ow/2tk-Pos4".parse::<TeamAcroKind>().is_err());
-        assert!("P-O-F2A-sd".parse::<TeamAcroKind>().is_err());
-        assert!("P-P-F2-sd".parse::<TeamAcroKind>().is_err());
-        assert!("P-P-F2A-ln".parse::<TeamAcroKind>().is_err());
-        assert!("P-P-F2A-sd-Pss1".parse::<TeamAcroKind>().is_err());
-        assert!("A-Sq-Side-ln-ct0.5+s1".parse::<TeamAcroKind>().is_err());
-        assert!("C-Thr^2F-Back-ow/2tk-2F0.5+2F1+Ct1".parse::<TeamAcroKind>().is_err());
-        assert!("C-Thr^2F-Back-ow/2tk-2F0.5+Cs1+Ct1".parse::<TeamAcroKind>().is_err());
-        assert!("C-Thr^2F-Back-ow/2tk-Cs1+Ct1".parse::<TeamAcroKind>().is_err());
-        assert!("B-St-FS-ln/2he-Hold/Mov/Dbl".parse::<TeamAcroKind>().is_err());
-        assert!("C-Thr^2F-Back-ow/2tk-Pos3/Dbl/Cx".parse::<TeamAcroKind>().is_err());
+        "Q-Sq-Forw-ln".parse::<TeamAcroKind>().unwrap_err();
+        "A-S-Back-ln".parse::<TeamAcroKind>().unwrap_err();
+        "A-Sq-Bln-ln".parse::<TeamAcroKind>().unwrap_err();
+        "A-Sq-Down-ln".parse::<TeamAcroKind>().unwrap_err();
+        "A-Sq-Back-sd".parse::<TeamAcroKind>().unwrap_err();
+        "P-Hand-HA-bb/2ow-Ph0.5".parse::<TeamAcroKind>().unwrap_err();
+        "A-Sq-Back".parse::<TeamAcroKind>().unwrap_err();
+        "A-Sq-Back-".parse::<TeamAcroKind>().unwrap_err();
+        "A-Sq-Back-ja/2ln/2tk".parse::<TeamAcroKind>().unwrap_err();
+        "A-Sq-Back-2ln".parse::<TeamAcroKind>().unwrap_err();
+        "A-Sq-Back-pk/3rg".parse::<TeamAcroKind>().unwrap_err();
+        "A-Sq-Back-pk/2r".parse::<TeamAcroKind>().unwrap_err();
+        "A-Thr-Forw-ln-Dbbl".parse::<TeamAcroKind>().unwrap_err();
+        "B-S-FS-sd".parse::<TeamAcroKind>().unwrap_err();
+        "B-St-F-sd".parse::<TeamAcroKind>().unwrap_err();
+        "B-St-FS-ln".parse::<TeamAcroKind>().unwrap_err();
+        "B-St-FS-sd-SdU".parse::<TeamAcroKind>().unwrap_err();
+        "C-Thr^3F-Back-ow/2tk".parse::<TeamAcroKind>().unwrap_err();
+        "C-Thr^2F-Bac-ow/2tk".parse::<TeamAcroKind>().unwrap_err();
+        "C-Thr^2F-Back-ow2tk".parse::<TeamAcroKind>().unwrap_err();
+        "C-Thr^2F-Back-ow/2tk-Pos4".parse::<TeamAcroKind>().unwrap_err();
+        "P-O-F2A-sd".parse::<TeamAcroKind>().unwrap_err();
+        "P-P-F2-sd".parse::<TeamAcroKind>().unwrap_err();
+        "P-P-F2A-ln".parse::<TeamAcroKind>().unwrap_err();
+        "P-P-F2A-sd-Pss1".parse::<TeamAcroKind>().unwrap_err();
+        "A-Sq-Side-ln-ct0.5+s1".parse::<TeamAcroKind>().unwrap_err();
+        "C-Thr^2F-Back-ow/2tk-2F0.5+2F1+Ct1".parse::<TeamAcroKind>().unwrap_err();
+        "C-Thr^2F-Back-ow/2tk-2F0.5+Cs1+Ct1".parse::<TeamAcroKind>().unwrap_err();
+        "C-Thr^2F-Back-ow/2tk-Cs1+Ct1".parse::<TeamAcroKind>().unwrap_err();
+        "B-St-FS-ln/2he-Hold/Mov/Dbl".parse::<TeamAcroKind>().unwrap_err();
+        "C-Thr^2F-Back-ow/2tk-Pos3/Dbl/Cx".parse::<TeamAcroKind>().unwrap_err();
 
         assert_eq!(
             "A-Sq-Back-ln-D".parse::<TeamAcroKind>().unwrap(),
@@ -2654,7 +2654,7 @@ mod tests {
         ];
         for (s, expect_dd) in CASES {
             let acro = s.parse::<TeamAcroKind>();
-            assert!(acro.is_ok(), "failed to parse {}", s);
+            assert!(acro.is_ok(), "failed to parse {s}");
             let calc_dd = acro.unwrap().dd();
             assert_eq!(calc_dd, MilliDD(*expect_dd), "{s}: expected DD {expect_dd} got {calc_dd}");
         }

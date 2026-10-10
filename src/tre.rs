@@ -283,7 +283,7 @@ mod tests {
     use crate::{Events, Gender};
 
     #[test]
-    fn test_parse_tre() {
+    fn test_parse_tre_good() {
         const GOOD_CASES: &[(&str, Events, &str)] = &[
             ("team_tre4b", Team, "TRE4b"),
             ("solo_tre2a", Solo(Gender::Man), "TRE2a"),
@@ -293,7 +293,10 @@ mod tests {
         for (name, evt, s) in GOOD_CASES {
             parse_tre(*evt, s).expect(format!("{name}: failed to parse '{s}'").as_str());
         }
+    }
 
+    #[test]
+    fn test_parse_tre_bad() {
         const BAD_CASES: &[(&str, Events, &str)] = &[
             ("solo_invalid_tre", Solo(Gender::Man), "TRE2"),
             ("solo_invalid_tre", Solo(Gender::Woman), "TRE5m"),
@@ -302,7 +305,7 @@ mod tests {
             ("tre_in_combo", Combo, "TRE4a"),
         ];
         for (name, evt, s) in BAD_CASES {
-            parse_tre(*evt, s).err().expect(format!("{name}: unexpectedly parsed '{s}'").as_str());
+            parse_tre(*evt, s).expect_err(format!("{name}: unexpectedly parsed '{s}'").as_str());
         }
     }
 }

@@ -288,7 +288,7 @@ mod tests {
 
     #[test]
     fn test_parse_pair_acro() {
-        assert!("L>>>".parse::<PairAcroKind>().is_err());
+        "L>>>".parse::<PairAcroKind>().unwrap_err();
         assert_eq!("L>>".parse::<PairAcroKind>().unwrap(), PairAcroKind::LCrash);
         assert_eq!("L»".parse::<PairAcroKind>().unwrap(), PairAcroKind::LCrash);
     }

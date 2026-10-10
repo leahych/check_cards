@@ -101,7 +101,7 @@ mod tests {
     use crate::tre::{MensSoloTRE, SoloTRE};
 
     #[test]
-    fn test_parse_elem_kind() {
+    fn test_parse_elem_kind_good() {
         use ElementKind::*;
         use Events::*;
         let good_cases: &[(Events, bool, &str, ElementKind)] = &[
@@ -155,7 +155,11 @@ mod tests {
             // reported DD vs the calculated DD.
             assert_eq!(parse_elem_kind(*evt, *free, s, Some(MilliDD(123))).unwrap(), *expected);
         }
+    }
 
+    #[test]
+    fn test_parse_elem_kind() {
+        use Events::*;
         const BAD_CASES: &[(Events, bool, &str)] = &[
             (Combo, true, "chohy"),
             (MixedDuet, true, "suconn"),
@@ -172,9 +176,8 @@ mod tests {
             (Duet, true, "L!fr10"),
         ];
         for (evt, free, s) in BAD_CASES {
-            parse_elem_kind(*evt, *free, *s, None)
-                .err()
-                .expect(format!("unexpectedly parsed '{s}'").as_str());
+            parse_elem_kind(*evt, *free, s, None)
+                .expect_err(format!("unexpectedly parsed '{s}'").as_str());
         }
     }
 }
