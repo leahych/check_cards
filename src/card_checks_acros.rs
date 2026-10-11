@@ -396,7 +396,7 @@ fn check_positions(acro: &TeamAcroKind) -> Box<[CardIssue]> {
     }
 
     let (positions, allow_stand_up) = if let Balance(acro) = acro {
-        (&acro.positions, acro.bonuses.contains(&BBonus::SdUp))
+        (&acro.positions, acro.bonuses.iter().any(|b| b == &BBonus::SdUp || b == &BBonus::ChangeL))
     } else if let Platform(acro) = acro {
         // this assumes that when platforms stand they go to a two leg
         // stand. This will warn more than is needed, but not claiming
@@ -1391,6 +1391,8 @@ mod tests {
             ("C-Thr>F-Side-sd/2ja", 2),
             ("C-Thr>F-Side-sd", 0),
             ("P-B-L/SiF+P-wi/2ow-Dive", 0),
+            ("B-LH-LiH-ow/2spl", 1),
+            ("B-LH-LiH-ow/2spl-ChangeL", 0),
         ];
         let cat = Category::default();
         for (s, expected_num_issues) in acros {
