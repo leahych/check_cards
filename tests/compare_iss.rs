@@ -44,15 +44,15 @@ struct PairAcro {
 #[serde(rename = "Artistic_Swimming")]
 struct MovementsFile {
     #[serde(rename = "ACRO-A")]
-    acro_a: TeamAcro,
+    a: TeamAcro,
     #[serde(rename = "ACRO-B")]
-    acro_b: TeamAcro,
+    b: TeamAcro,
     #[serde(rename = "ACRO-C")]
-    acro_c: TeamAcro,
+    c: TeamAcro,
     #[serde(rename = "ACRO-P")]
-    acro_p: TeamAcro,
+    p: TeamAcro,
     #[serde(rename = "ACRO-PAIRS")]
-    acro_pairs: PairAcro,
+    pair: PairAcro,
 }
 
 #[derive(Debug, Deserialize)]
@@ -96,9 +96,10 @@ struct RequiredElements {
 struct DifficultyFile {
     #[serde(rename = "Hybrids")]
     hybrids: Hybrids,
-    // TODO add men's solo once ISS supports
     #[serde(rename = "Required_Elements_Solo")]
     solo: RequiredElements,
+    #[serde(rename = "Required_Elements_Men_Solo")]
+    mens_solo: RequiredElements,
     #[serde(rename = "Required_Elements_Duet")]
     duet: RequiredElements,
     #[serde(rename = "Required_Elements_Mixed_Duet")]
@@ -151,11 +152,11 @@ fn parse_validate_tre(evt: Events, r: RequiredElements) {
 
 #[test]
 fn compare_iss_difficulty_codes() -> Result<(), Box<dyn Error>> {
-    let data = include_bytes!("Difficulty_Chart2024-utf8.xml");
+    let data = include_bytes!("Difficulty_Chart2026-utf8.xml");
     let reader = Cursor::new(data);
 
     let iss: DifficultyFile = quick_xml::de::from_reader(reader)?;
-    // TODO Men's Solo
+    parse_validate_tre(Events::Solo(Gender::Man), iss.mens_solo);
     parse_validate_tre(Events::Solo(Gender::Woman), iss.solo);
     parse_validate_tre(Events::Duet, iss.duet);
     parse_validate_tre(Events::MixedDuet, iss.mixed_duet);
@@ -175,31 +176,31 @@ fn compare_iss_difficulty_codes() -> Result<(), Box<dyn Error>> {
 
 #[test]
 fn compare_iss_movement_codes() -> Result<(), Box<dyn Error>> {
-    let data = include_bytes!("Movements2024-utf8.xml");
+    let data = include_bytes!("Movements2026-utf8.xml");
     let reader = Cursor::new(data);
 
-    let iss: MovementsFile = quick_xml::de::from_reader(reader)?;
-    parse_validate_acro::<AConst>(iss.acro_a.construction);
-    parse_validate_acro::<ADir>(iss.acro_a.direction);
-    parse_validate_acro::<APos>(iss.acro_a.positions);
-    parse_validate_acro::<ABonus>(iss.acro_a.bonus);
-    parse_validate_acro::<ARotation>(iss.acro_a.rotation);
-    parse_validate_acro::<BConst>(iss.acro_b.construction);
-    parse_validate_acro::<BConn>(iss.acro_b.support);
-    parse_validate_acro::<BPos>(iss.acro_b.positions);
-    parse_validate_acro::<BRotation>(iss.acro_b.rotation_base);
-    parse_validate_acro::<BBonus>(iss.acro_b.bonus);
-    parse_validate_acro::<CConst>(iss.acro_c.construction);
-    parse_validate_acro::<CDir>(iss.acro_c.direction);
-    parse_validate_acro::<CBRotation>(iss.acro_c.rotation_base);
-    parse_validate_acro::<CFRotation>(iss.acro_c.rotation);
-    parse_validate_acro::<CBonus>(iss.acro_c.bonus);
-    parse_validate_acro::<PConst>(iss.acro_p.construction);
-    parse_validate_acro::<PConn>(iss.acro_p.support);
-    parse_validate_acro::<PRotation>(iss.acro_p.rotation_base);
-    parse_validate_acro::<PBonus>(iss.acro_p.bonus);
+    let acros: MovementsFile = quick_xml::de::from_reader(reader)?;
+    parse_validate_acro::<AConst>(acros.a.construction);
+    parse_validate_acro::<ADir>(acros.a.direction);
+    parse_validate_acro::<APos>(acros.a.positions);
+    parse_validate_acro::<ABonus>(acros.a.bonus);
+    parse_validate_acro::<ARotation>(acros.a.rotation);
+    parse_validate_acro::<BConst>(acros.b.construction);
+    parse_validate_acro::<BConn>(acros.b.support);
+    parse_validate_acro::<BPos>(acros.b.positions);
+    parse_validate_acro::<BRotation>(acros.b.rotation_base);
+    parse_validate_acro::<BBonus>(acros.b.bonus);
+    parse_validate_acro::<CConst>(acros.c.construction);
+    parse_validate_acro::<CDir>(acros.c.direction);
+    parse_validate_acro::<CBRotation>(acros.c.rotation_base);
+    parse_validate_acro::<CFRotation>(acros.c.rotation);
+    parse_validate_acro::<CBonus>(acros.c.bonus);
+    parse_validate_acro::<PConst>(acros.p.construction);
+    parse_validate_acro::<PConn>(acros.p.support);
+    parse_validate_acro::<PRotation>(acros.p.rotation_base);
+    parse_validate_acro::<PBonus>(acros.p.bonus);
 
-    parse_validate_acro::<PairAcroKind>(iss.acro_pairs.elements);
+    parse_validate_acro::<PairAcroKind>(acros.pair.elements);
 
     Ok(())
 }

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="windows-1252" ?>
 <Artistic_Swimming>
-	<Date>2026-10-09</Date>
-	<Version>2026 Catalogue</Version>
+	<Date>2026-10-13</Date>
+	<Version>2026</Version>
 	<Description>Difficulty charts</Description>
 	<Creator>Integrated Sports Systems (ISS) Inc.</Creator>
 	<Reference>Appendix 2</Reference>
@@ -1268,6 +1268,88 @@
 			</Category>
 		</Element>
 	</Required_Elements_Solo>
+	<Required_Elements_Men_Solo>
+		<Element>
+			<Family>Element 1</Family>
+			<Code>TRE</Code>
+			<Category>
+				<CategoryDesc>Element 1</CategoryDesc>
+				<CategoryCode>1a</CategoryCode>
+				<Description>Thrust Continuous Spin 720°</Description>
+				<DD>2.70</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Element 1</CategoryDesc>
+				<CategoryCode>1b</CategoryCode>
+				<Description>Thrust Continuous Spin 360°</Description>
+				<DD>2.00</DD>
+			</Category>
+		</Element>
+		<Element>
+			<Family>Element 2</Family>
+			<Code>TRE</Code>
+			<Category>
+				<CategoryDesc>Element 2</CategoryDesc>
+				<CategoryCode>2a</CategoryCode>
+				<Description>Poseidon Full Twist</Description>
+				<DD>2.40</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Element 2</CategoryDesc>
+				<CategoryCode>2b</CategoryCode>
+				<Description>Poseidon Half Twist</Description>
+				<DD>1.90</DD>
+			</Category>
+		</Element>
+		<Element>
+			<Family>Element 3</Family>
+			<Code>TRE</Code>
+			<Category>
+				<CategoryDesc>Element 3</CategoryDesc>
+				<CategoryCode>3a</CategoryCode>
+				<Description>Triton Full Twist</Description>
+				<DD>3.20</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Element 3</CategoryDesc>
+				<CategoryCode>3b</CategoryCode>
+				<Description>Triton Half Twist</Description>
+				<DD>3.00</DD>
+			</Category>
+		</Element>
+		<Element>
+			<Family>Element 4</Family>
+			<Code>TRE</Code>
+			<Category>
+				<CategoryDesc>Element 4</CategoryDesc>
+				<CategoryCode>4a</CategoryCode>
+				<Description>Sylpha Spinning 360°</Description>
+				<DD>2.20</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Element 4</CategoryDesc>
+				<CategoryCode>4b</CategoryCode>
+				<Description>Sylpha Spinning 180°</Description>
+				<DD>2.10</DD>
+			</Category>
+		</Element>
+		<Element>
+			<Family>Element 5</Family>
+			<Code>TRE</Code>
+			<Category>
+				<CategoryDesc>Element 5</CategoryDesc>
+				<CategoryCode>5a</CategoryCode>
+				<Description>Atlas Continuous Spin 1080°</Description>
+				<DD>2.60</DD>
+			</Category>
+			<Category>
+				<CategoryDesc>Element 5</CategoryDesc>
+				<CategoryCode>5b</CategoryCode>
+				<Description>Atlas Continuous Spin 360°</Description>
+				<DD>1.90</DD>
+			</Category>
+		</Element>
+	</Required_Elements_Men_Solo>
 	<Required_Elements_Duet>
 		<Element>
 			<Family>Element 1</Family>
